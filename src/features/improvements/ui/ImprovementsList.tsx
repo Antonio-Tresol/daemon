@@ -4,21 +4,25 @@ import { cn } from '@/shared/lib/cn';
 import { ImprovementCard } from '@/features/improvements/ui/ImprovementCard';
 import { useImprovements } from '@/features/improvements/model/use-improvements';
 import { AnalysisBadge } from '@/entities/analysis/ui/AnalysisBadge';
-import type { Improvement } from '@/entities/analysis/model';
+import type { Improvement, ImprovementArea } from '@/entities/analysis/model';
 
 type ImprovementsListProps = {
   sessionId?: string;
   className?: string;
 };
 
-const AREA_ORDER: Improvement['area'][] = ['hooks', 'permissions', 'workflow', 'claude_md', 'tooling'];
+const AREA_ORDER: ImprovementArea[] = [
+  'hooks', 'context', 'subagents', 'architecture', 'tools', 'skills', 'legibility',
+];
 
-const areaLabels: Record<Improvement['area'], string> = {
+const areaLabels: Record<ImprovementArea, string> = {
   hooks: 'Hooks',
-  permissions: 'Permissions',
-  workflow: 'Workflow',
-  claude_md: 'CLAUDE.md',
-  tooling: 'Tooling',
+  skills: 'Skills',
+  subagents: 'Agent Teams',
+  tools: 'MCP Tools',
+  context: 'CLAUDE.md & Context',
+  architecture: 'Architecture Enforcement',
+  legibility: 'Agent Legibility',
 };
 
 export function ImprovementsList({ sessionId, className }: ImprovementsListProps) {

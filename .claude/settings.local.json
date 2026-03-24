@@ -19,7 +19,10 @@
       "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\" echo \"Say hello\")",
       "Bash(claude -p - --output-format json)",
       "Bash(curl -s \"http://localhost:3000/api/analysis?sessionId=test-session-001&type=timeline\")",
-      "Bash(python -m json.tool)"
+      "Bash(python -m json.tool)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\" curl -s \"http://localhost:3000/api/sessions\")",
+      "Bash(curl -s \"http://localhost:3000/api/analysis?type=failures&sessionId=23ebf1d3-ddad-497c-bc18-30a304028ad3\")",
+      "Bash(node -e \":*)"
     ]
   }
 }

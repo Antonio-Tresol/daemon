@@ -46,9 +46,11 @@ export async function GET(request: NextRequest) {
       // If result contains rawOutput with markdown code fences, parse it
       if (result && typeof result === 'object' && 'rawOutput' in result) {
         const raw = (result as { rawOutput: string }).rawOutput;
-        const stripped = raw.replace(/^[\s\S]*?```(?:json)?\s*\n?/m, '').replace(/\n?```[\s\S]*$/m, '').trim();
+        // Only strip the opening ```json and closing ``` at the very boundaries
+        const fenceMatch = raw.match(/^[\s\n]*```(?:json)?\s*\n([\s\S]*)\n```[\s\n]*$/);
+        const content = fenceMatch ? fenceMatch[1] : raw.trim();
         try {
-          result = JSON.parse(stripped);
+          result = JSON.parse(content);
         } catch {
           // keep rawOutput as-is
         }
@@ -156,8 +158,9 @@ export async function POST(request: NextRequest) {
         // Claude --output-format json wraps result in { result: "...", ... }
         let resultText = typeof parsed.result === 'string' ? parsed.result : stdout;
 
-        // Strip markdown code fences (```json ... ```)
-        resultText = resultText.replace(/^[\s\S]*?```(?:json)?\s*\n?/m, '').replace(/\n?```[\s\S]*$/m, '').trim();
+        // Strip outermost markdown code fences only
+        const fenceMatch = resultText.match(/^[\s\n]*```(?:json)?\s*\n([\s\S]*)\n```[\s\n]*$/);
+        if (fenceMatch) resultText = fenceMatch[1];
 
         try {
           result = JSON.parse(resultText);
