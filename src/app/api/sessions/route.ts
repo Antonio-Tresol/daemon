@@ -4,6 +4,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const group = searchParams.get('group');
     const limit = Math.min(Number(searchParams.get('limit') ?? 50), 200);
 
     const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
@@ -24,6 +25,11 @@ export async function GET(request: NextRequest) {
     if (status) {
       query += ' AND s.status = ?';
       params.push(status);
+    }
+
+    if (group) {
+      query += ' AND s.group_label = ?';
+      params.push(group);
     }
 
     query += ' ORDER BY s.start_time DESC LIMIT ?';

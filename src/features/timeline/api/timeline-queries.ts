@@ -5,8 +5,8 @@ type TimelineResponse = {
   analyses: RawAnalysisResult[];
 };
 
-export async function fetchTimeline(sessionId?: string): Promise<AnalysisResult[]> {
-  const params = new URLSearchParams({ type: 'timeline' });
+export async function fetchTimeline(sessionId?: string, level = 0): Promise<AnalysisResult[]> {
+  const params = new URLSearchParams({ type: 'timeline', level: String(level) });
   if (sessionId) params.set('sessionId', sessionId);
 
   const res = await fetch(`/api/analysis?${params.toString()}`);

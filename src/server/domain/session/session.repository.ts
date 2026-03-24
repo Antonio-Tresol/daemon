@@ -6,4 +6,8 @@ export interface SessionRepository {
   findById(id: string): Session | null;
   findAll(): Session[];
   findActive(): Session[];
+  updateName(id: string, name: string): void;
+  updateGroup(id: string, groupLabel: string | null): void;
+  findByGroup(groupLabel: string): Session[];
+  findGroups(): string[];
 }

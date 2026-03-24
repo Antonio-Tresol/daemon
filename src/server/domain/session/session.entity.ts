@@ -9,4 +9,6 @@ export type Session = {
   projectHash: string | null;
   totalEvents: number;
   totalCostUsd: number;
+  name: string | null;
+  groupLabel: string | null;
 };

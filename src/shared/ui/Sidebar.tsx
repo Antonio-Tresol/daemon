@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { cn } from '@/shared/lib/cn';
 import { StatusIndicator } from '@/shared/ui/StatusIndicator';
 
@@ -13,18 +14,53 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { label: 'Timeline', href: '/', icon: '|' },
-  { label: 'Failures', href: '/failures', icon: '!' },
   { label: 'Harness', href: '/improvements', icon: '{*}' },
   { label: 'Sessions', href: '/sessions', icon: '>' },
+  { label: 'Setup', href: '/setup', icon: '~' },
 ];
+
+type CurrentSession = {
+  id: string;
+  name: string | null;
+  status: string;
+  total_events: number;
+  start_time: string;
+};
 
 type SidebarProps = {
   connectedSessions?: number;
   className?: string;
 };
 
+function formatElapsed(startTime: string): string {
+  const start = new Date(startTime).getTime();
+  const now = Date.now();
+  const diffMs = now - start;
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHrs = Math.floor(diffMin / 60);
+  if (diffHrs < 24) return `${diffHrs}h ${diffMin % 60}m ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  return `${diffDays}d ago`;
+}
+
 export function Sidebar({ connectedSessions = 0, className }: SidebarProps) {
   const pathname = usePathname();
+  const [currentSession, setCurrentSession] = useState<CurrentSession | null>(null);
+
+  useEffect(() => {
+    fetch('/api/sessions?limit=1')
+      .then((res) => res.json())
+      .then((data: { sessions: CurrentSession[] }) => {
+        const sessions = data.sessions ?? [];
+        if (sessions.length > 0) {
+          setCurrentSession(sessions[0]);
+        }
+      })
+      .catch(() => {
+        // silently fail
+      });
+  }, []);
 
   return (
     <aside
@@ -67,6 +103,24 @@ export function Sidebar({ connectedSessions = 0, className }: SidebarProps) {
           );
         })}
       </nav>
+
+      {/* Current Session Indicator */}
+      {currentSession && (
+        <div className="border-t border-card-border px-4 py-3">
+          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted">
+            Current Session
+          </p>
+          <div className="flex items-center gap-2">
+            <StatusIndicator status={currentSession.status === 'active' ? 'active' : 'completed'} />
+            <span className="truncate text-xs font-medium text-foreground">
+              {currentSession.name ?? currentSession.id.slice(0, 12)}
+            </span>
+          </div>
+          <p className="mt-1 text-[10px] text-muted">
+            {currentSession.total_events} events &middot; {formatElapsed(currentSession.start_time)}
+          </p>
+        </div>
+      )}
 
       <div className="border-t border-card-border px-5 py-4">
         <div className="flex items-center gap-2 text-xs text-muted">

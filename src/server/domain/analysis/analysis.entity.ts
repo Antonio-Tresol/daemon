@@ -38,6 +38,7 @@ export type AnalysisResult = {
   id: string;
   sessionId: string;
   analysisType: AnalysisType;
+  level: number;
   triggeredAt: string;
   completedAt: string | null;
   status: 'pending' | 'running' | 'completed' | 'failed';

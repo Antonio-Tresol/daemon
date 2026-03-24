@@ -1,173 +1,273 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/shared/lib/cn';
 import { Badge } from '@/shared/ui/Badge';
 import { formatTimestamp } from '@/shared/lib/format';
+import { TimelineEvent } from '@/features/timeline/ui/TimelineEvent';
 import type { TimelinePlan } from '@/entities/analysis/model';
+import type { HookEvent } from '@/entities/event/model';
 
 type TrajectoryViewProps = {
   plans: TimelinePlan[];
+  sessionId?: string;
+  level?: number;
   className?: string;
 };
 
 type Orientation = 'horizontal' | 'vertical';
-
 type Task = TimelinePlan['tasks'][number];
 
-const PHASE_COLORS: Record<TimelinePlan['phase'], string> = {
+const PHASE_COLORS: Record<string, string> = {
   research: '#6b8aed',
   implementation: '#4a9e6d',
+  scaffolding: '#d4a574',
   testing: '#d4a040',
   debugging: '#c45a5a',
+  refinement: '#9b8aed',
   other: '#8a8078',
 };
 
-const PHASE_BG: Record<TimelinePlan['phase'], string> = {
+const PHASE_BG: Record<string, string> = {
   research: 'bg-blue-500/8 border-blue-500/20',
   implementation: 'bg-status-green/8 border-status-green/20',
+  scaffolding: 'bg-accent/8 border-accent/20',
   testing: 'bg-status-amber/8 border-status-amber/20',
   debugging: 'bg-status-red/8 border-status-red/20',
+  refinement: 'bg-purple-500/8 border-purple-500/20',
   other: 'bg-muted/8 border-muted/20',
 };
 
-function getTaskIcon(taskName: string): string {
+function getPhaseColor(phase: string): string {
+  return PHASE_COLORS[phase] ?? PHASE_COLORS.other;
+}
+
+function getPhaseBg(phase: string): string {
+  return PHASE_BG[phase] ?? PHASE_BG.other;
+}
+
+/* Monochrome SVG icons that adapt to currentColor */
+function TaskIcon({ taskName, className }: { taskName: string; className?: string }) {
+  const cls = cn('h-4 w-4', className);
   const lower = taskName.toLowerCase();
-  if (lower.includes('read') || lower.includes('inspect') || lower.includes('search')) return '\u{1F50D}';
-  if (lower.includes('edit') || lower.includes('replace') || lower.includes('write') || lower.includes('update')) return '\u{270F}\uFE0F';
-  if (lower.includes('test') || lower.includes('verify') || lower.includes('check') || lower.includes('health')) return '\u2705';
-  if (lower.includes('bash') || lower.includes('run') || lower.includes('npm') || lower.includes('build') || lower.includes('trigger')) return '\u25B6\uFE0F';
-  if (lower.includes('commit') || lower.includes('git') || lower.includes('stage')) return '\u{1F4BE}';
-  if (lower.includes('navigate') || lower.includes('screenshot') || lower.includes('preview') || lower.includes('visually')) return '\u{1F441}\uFE0F';
-  if (lower.includes('fix') || lower.includes('debug') || lower.includes('diagnose')) return '\u{1F527}';
-  if (lower.includes('create') || lower.includes('scaffold') || lower.includes('install') || lower.includes('plan')) return '\u2795';
-  if (lower.includes('report') || lower.includes('confirm') || lower.includes('todo') || lower.includes('explain')) return '\u{1F4CB}';
-  if (lower.includes('delete') || lower.includes('remove')) return '\u{1F5D1}\uFE0F';
-  if (lower.includes('send') || lower.includes('curl') || lower.includes('fetch') || lower.includes('api')) return '\u{1F4E1}';
-  if (lower.includes('list') || lower.includes('session')) return '\u{1F4C4}';
-  return '\u25CF';
-}
 
-function statusColor(status: string): string {
-  switch (status) {
-    case 'completed': return 'border-status-green text-status-green';
-    case 'failed': return 'border-status-red text-status-red';
-    case 'in_progress': return 'border-blue-400 text-blue-400';
-    default: return 'border-muted text-muted';
+  if (lower.includes('read') || lower.includes('inspect') || lower.includes('search') || lower.includes('explore')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Search</title><circle cx="7" cy="7" r="4" /><path d="M10 10l4 4" /></svg>);
   }
-}
-
-function statusBadgeVariant(status: string) {
-  switch (status) {
-    case 'completed': return 'success' as const;
-    case 'failed': return 'error' as const;
-    case 'in_progress': return 'info' as const;
-    default: return 'neutral' as const;
+  if (lower.includes('edit') || lower.includes('write') || lower.includes('update') || lower.includes('replace') || lower.includes('refine') || lower.includes('polish')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Edit</title><path d="M11 2l3 3-8 8H3v-3z" /><path d="M9 4l3 3" /></svg>);
   }
+  if (lower.includes('test') || lower.includes('verify') || lower.includes('check') || lower.includes('health') || lower.includes('integration')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Check</title><path d="M3 8l3 3 7-7" /></svg>);
+  }
+  if (lower.includes('bash') || lower.includes('run') || lower.includes('npm') || lower.includes('build') || lower.includes('trigger') || lower.includes('set up')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Run</title><rect x="1" y="2" width="14" height="12" rx="2" /><path d="M4 6l3 2-3 2" /><path d="M9 10h3" /></svg>);
+  }
+  if (lower.includes('fix') || lower.includes('debug') || lower.includes('diagnose')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Fix</title><path d="M10 2l-1 4 4-1 1-3zM6 14l1-4-4 1-1 3z" /><path d="M5 5l6 6" /></svg>);
+  }
+  if (lower.includes('create') || lower.includes('scaffold') || lower.includes('install') || lower.includes('plan')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Create</title><path d="M8 3v10M3 8h10" /></svg>);
+  }
+  if (lower.includes('navigate') || lower.includes('screenshot') || lower.includes('preview') || lower.includes('visually')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Preview</title><circle cx="8" cy="7" r="3" /><path d="M1 7s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" /></svg>);
+  }
+  if (lower.includes('implement') || lower.includes('major') || lower.includes('feature')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Implement</title><path d="M4 2v12l4-3 4 3V2z" /></svg>);
+  }
+  if (lower.includes('agent') || lower.includes('delegate') || lower.includes('team')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Agent</title><circle cx="6" cy="5" r="2.5" /><circle cx="11" cy="5" r="2" /><path d="M1 14c0-3 2-5 5-5s5 2 5 5" /></svg>);
+  }
+  if (lower.includes('investigate') || lower.includes('remaining') || lower.includes('issue')) {
+    return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Investigate</title><circle cx="8" cy="8" r="6" /><path d="M8 5v3M8 11v.5" /></svg>);
+  }
+  return (<svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Task</title><circle cx="8" cy="8" r="5" /><path d="M8 5v3h3" /></svg>);
 }
 
-type TaskNodeProps = {
-  task: Task;
-  isSelected: boolean;
-  onSelect: () => void;
+const STATUS_DOT: Record<string, string> = {
+  completed: 'bg-status-green',
+  failed: 'bg-status-red',
+  in_progress: 'bg-accent animate-pulse',
 };
 
-function TaskNode({ task, isSelected, onSelect }: TaskNodeProps) {
-  const icon = getTaskIcon(task.name);
-  const isFailed = task.status === 'failed';
+const LEVEL_LABELS = ['Events', 'Plans', 'Phases'] as const;
+
+/* ─── Recursive Plan Card ─── */
+
+type PlanCardProps = {
+  plan: TimelinePlan;
+  sessionId?: string;
+  level: number;
+  isNested?: boolean;
+};
+
+function PlanCard({ plan, sessionId, level, isNested }: PlanCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [childPlans, setChildPlans] = useState<TimelinePlan[]>([]);
+  const [childEvents, setChildEvents] = useState<HookEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const phaseColor = getPhaseColor(plan.phase);
+  const completedCount = plan.tasks.filter((t) => t.status === 'completed').length;
+  const totalEvents = plan.tasks.reduce((sum, t) => sum + t.eventIds.length, 0);
+
+  const fetchChildren = useCallback(async () => {
+    if (!sessionId || isLoading) return;
+    setIsLoading(true);
+
+    if (level > 0) {
+      // Fetch level-1 plans
+      try {
+        const res = await fetch(`/api/analysis?sessionId=${sessionId}&type=timeline&level=${level - 1}&limit=1`);
+        const data = await res.json();
+        const analysis = data.analyses?.[0];
+        if (analysis?.status === 'completed' && analysis?.result?.plans) {
+          setChildPlans(analysis.result.plans);
+        }
+      } catch { /* silently fail */ }
+    } else {
+      // Level 0: fetch raw events for all tasks
+      try {
+        const allEventIds = new Set(plan.tasks.flatMap((t) => t.eventIds));
+        const res = await fetch(`/api/agent/events?sessionId=${sessionId}&limit=500`);
+        const data = await res.json();
+        const allEvents = (data.data ?? []) as HookEvent[];
+        const matched = allEvents.filter((e) => allEventIds.has(e.id));
+        matched.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        setChildEvents(matched);
+      } catch { /* silently fail */ }
+    }
+
+    setIsLoading(false);
+  }, [sessionId, level, isLoading, plan.tasks]);
+
+  useEffect(() => {
+    if (isExpanded && childPlans.length === 0 && childEvents.length === 0) {
+      fetchChildren();
+    }
+  }, [isExpanded, childPlans.length, childEvents.length, fetchChildren]);
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'group flex flex-col items-center gap-1.5 transition-all',
-        isSelected && 'scale-110',
-      )}
-    >
-      <span className="text-[9px] text-muted">{task.eventIds.length}e</span>
-      <div
-        className={cn(
-          'flex h-10 w-10 items-center justify-center rounded-full border-2 bg-card transition-all',
-          statusColor(task.status),
-          isSelected && 'ring-2 ring-accent/40 ring-offset-1 ring-offset-background',
-          isFailed && 'border-dashed',
-          'group-hover:ring-2 group-hover:ring-accent/20',
-        )}
+    <div className={cn(
+      'rounded-xl border transition-all',
+      getPhaseBg(plan.phase),
+      isNested ? 'ml-2' : '',
+    )}>
+      {/* Plan header — clickable to expand */}
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center gap-2 p-4 text-left group"
       >
-        <span className="text-base leading-none">{icon}</span>
-      </div>
-      <span className="max-w-[140px] text-[9px] text-muted group-hover:text-foreground transition-colors text-center leading-tight break-words">
-        {task.name}
-      </span>
-    </button>
-  );
-}
+        <span
+          className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+          style={{ background: phaseColor }}
+        />
+        <span className="flex-1 text-xs font-medium text-foreground break-words">{plan.name}</span>
+        <Badge variant="neutral" size="sm">{plan.phase}</Badge>
+        <span className="text-[10px] text-muted shrink-0">
+          {completedCount}/{plan.tasks.length}
+        </span>
+        {level > 0 && (
+          <span className="text-[10px] text-muted shrink-0">
+            {totalEvents}e
+          </span>
+        )}
+        <span className="text-xs text-muted group-hover:text-foreground transition-colors">
+          {isExpanded ? '\u25BC' : '\u25B6'}
+        </span>
+      </button>
 
-type TaskDetailPanelProps = {
-  task: Task;
-  planName: string;
-  onClose: () => void;
-};
-
-function TaskDetailPanel({ task, planName, onClose }: TaskDetailPanelProps) {
-  return (
-    <div className="rounded-xl border border-card-border bg-card p-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{getTaskIcon(task.name)}</span>
-          <h4 className="text-sm font-medium text-foreground">{task.name}</h4>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-xs text-muted hover:text-foreground transition-colors"
-        >
-          x
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted">Status</span>
-          <div className="mt-0.5">
-            <Badge variant={statusBadgeVariant(task.status)} size="sm">
-              {task.status.replace('_', ' ')}
-            </Badge>
-          </div>
-        </div>
-        <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted">Plan</span>
-          <p className="mt-0.5 text-foreground/80">{planName}</p>
-        </div>
-        <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted">Started</span>
-          <p className="mt-0.5 text-foreground/80 font-mono">{formatTimestamp(task.startTime)}</p>
-        </div>
-        <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted">Ended</span>
-          <p className="mt-0.5 text-foreground/80 font-mono">
-            {task.endTime ? formatTimestamp(task.endTime) : 'In progress'}
-          </p>
-        </div>
-        <div className="col-span-2">
-          <span className="text-[10px] uppercase tracking-wider text-muted">Events ({task.eventIds.length})</span>
-          <div className="mt-1 flex flex-wrap gap-1">
-            {task.eventIds.map((id) => (
-              <span key={id} className="rounded bg-background/60 px-1.5 py-0.5 font-mono text-[9px] text-muted">
-                {id.slice(0, 8)}
+      {/* Task nodes row — always visible */}
+      <div className="px-4 pb-3 flex flex-wrap gap-2 items-center">
+        {plan.tasks.map((task, i) => (
+          <div key={`task-${i}`} className="flex items-center gap-1.5">
+            <div className="relative flex flex-col items-center gap-1">
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-full border-2 bg-card"
+                style={{ borderColor: phaseColor, color: phaseColor }}
+              >
+                <TaskIcon taskName={task.name} className="h-3.5 w-3.5" />
+              </div>
+              <span className={cn(
+                'absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full border border-card',
+                STATUS_DOT[task.status] ?? 'bg-muted',
+              )} />
+              <span className="max-w-[100px] text-[8px] text-muted text-center leading-tight break-words">
+                {task.name}
               </span>
-            ))}
+            </div>
+            {i < plan.tasks.length - 1 && (
+              <div className="h-px w-3 bg-muted/30 mb-4" />
+            )}
           </div>
-        </div>
+        ))}
       </div>
+
+      {/* Expanded content — recursive drill-down */}
+      {isExpanded && (
+        <div className="border-t border-card-border/30 px-4 py-3">
+          {isLoading && (
+            <div className="text-xs text-muted py-2">
+              Loading {level > 0 ? LEVEL_LABELS[level - 1] ?? 'data' : 'events'}...
+            </div>
+          )}
+
+          {/* Level > 0: show child plans recursively */}
+          {level > 0 && childPlans.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted">
+                {LEVEL_LABELS[level - 1] ?? `Level ${level - 1}`} ({childPlans.length})
+              </span>
+              <div className="space-y-2">
+                {childPlans.map((childPlan, i) => (
+                  <PlanCard
+                    key={`child-${i}`}
+                    plan={childPlan}
+                    sessionId={sessionId}
+                    level={level - 1}
+                    isNested
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Level 0: show raw events */}
+          {level === 0 && childEvents.length > 0 && (
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase tracking-wider text-muted">
+                Events ({childEvents.length})
+              </span>
+              <div className="space-y-0.5 max-h-[400px] overflow-y-auto">
+                {childEvents.map((event) => (
+                  <TimelineEvent key={event.id} event={event} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!isLoading && level > 0 && childPlans.length === 0 && (
+            <div className="text-xs text-muted py-1">
+              No Level {level - 1} analysis available. Run Level {level - 1} first.
+            </div>
+          )}
+
+          {!isLoading && level === 0 && childEvents.length === 0 && (
+            <div className="text-xs text-muted py-1">
+              No events available for drill-down.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-export function TrajectoryView({ plans, className }: TrajectoryViewProps) {
-  const [orientation, setOrientation] = useState<Orientation>('horizontal');
-  const [selectedTask, setSelectedTask] = useState<{ task: Task; planName: string } | null>(null);
+/* ─── Main Trajectory View ─── */
+
+export function TrajectoryView({ plans, sessionId, level = 0, className }: TrajectoryViewProps) {
+  const [orientation, setOrientation] = useState<Orientation>('vertical');
 
   if (plans.length === 0) {
     return (
@@ -180,8 +280,6 @@ export function TrajectoryView({ plans, className }: TrajectoryViewProps) {
   const allTasks = plans.flatMap((p) => p.tasks);
   const completedTasks = allTasks.filter((t) => t.status === 'completed').length;
   const failedTasks = allTasks.filter((t) => t.status === 'failed').length;
-
-  const isHorizontal = orientation === 'horizontal';
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -245,115 +343,29 @@ export function TrajectoryView({ plans, className }: TrajectoryViewProps) {
         </div>
       </div>
 
-      {/* Trajectory flow */}
+      {/* Plan cards */}
       <div
         className={cn(
-          'rounded-xl border border-card-border bg-card p-6',
-          isHorizontal ? 'overflow-x-auto' : 'overflow-y-auto max-h-[70vh]',
+          'flex gap-4',
+          orientation === 'vertical' ? 'flex-col' : 'flex-row items-start overflow-x-auto',
         )}
       >
-        <div
-          className={cn(
-            'flex gap-6',
-            isHorizontal ? 'flex-row items-start' : 'flex-col',
-          )}
-        >
-          {plans.map((plan, planIndex) => {
-            const phaseColor = PHASE_COLORS[plan.phase];
-            const completedCount = plan.tasks.filter((t) => t.status === 'completed').length;
-
-            return (
-              <div key={`plan-${planIndex}`} className="flex-shrink-0">
-                {/* Plan connector */}
-                {planIndex > 0 && (
-                  <div
-                    className={cn(
-                      'flex items-center justify-center',
-                      isHorizontal ? 'hidden' : 'py-2',
-                    )}
-                  >
-                    <div className="h-6 w-px border-l-2 border-dashed border-accent/30" />
-                  </div>
-                )}
-
-                {/* Plan container */}
-                <div className={cn('rounded-xl border p-4', PHASE_BG[plan.phase])}>
-                  {/* Plan header */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <span
-                      className="inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ background: phaseColor }}
-                    />
-                    <span className="text-xs font-medium text-foreground">{plan.name}</span>
-                    <Badge variant="neutral" size="sm">{plan.phase}</Badge>
-                    <span className="text-[10px] text-muted ml-auto">
-                      {completedCount}/{plan.tasks.length}
-                    </span>
-                  </div>
-
-                  {/* Tasks flow */}
-                  <div
-                    className={cn(
-                      'flex gap-2 items-center',
-                      isHorizontal ? 'flex-row' : 'flex-col',
-                    )}
-                  >
-                    {plan.tasks.map((task, taskIndex) => {
-                      const isSelected =
-                        selectedTask?.task === task &&
-                        selectedTask?.planName === plan.name;
-
-                      return (
-                        <div
-                          key={`task-${planIndex}-${taskIndex}`}
-                          className={cn(
-                            'flex items-center gap-2',
-                            isHorizontal ? 'flex-row' : 'flex-col',
-                          )}
-                        >
-                          <TaskNode
-                            task={task}
-                            isSelected={isSelected}
-                            onSelect={() =>
-                              setSelectedTask(
-                                isSelected ? null : { task, planName: plan.name },
-                              )
-                            }
-                          />
-                          {/* Connector between tasks */}
-                          {taskIndex < plan.tasks.length - 1 && (
-                            <div
-                              className={cn(
-                                isHorizontal
-                                  ? 'h-px w-4 bg-muted/30'
-                                  : 'w-px h-4 bg-muted/30',
-                              )}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Horizontal plan connector */}
-                {isHorizontal && planIndex < plans.length - 1 && (
-                  <div className="hidden" />
-                )}
+        {plans.map((plan, i) => (
+          <div key={`plan-${i}`} className={cn(orientation === 'horizontal' && 'flex-shrink-0 min-w-[300px]')}>
+            {/* Connector between plans */}
+            {i > 0 && orientation === 'vertical' && (
+              <div className="flex justify-center py-1">
+                <div className="h-4 w-px border-l-2 border-dashed border-accent/30" />
               </div>
-            );
-          })}
-        </div>
+            )}
+            <PlanCard
+              plan={plan}
+              sessionId={sessionId}
+              level={level}
+            />
+          </div>
+        ))}
       </div>
-
-      {/* Selected task detail panel */}
-      {selectedTask && (
-        <TaskDetailPanel
-          task={selectedTask.task}
-          planName={selectedTask.planName}
-          onClose={() => setSelectedTask(null)}
-        />
-      )}
     </div>
   );
 }

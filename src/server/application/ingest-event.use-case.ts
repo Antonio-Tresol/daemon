@@ -82,6 +82,8 @@ export class IngestEventUseCase {
         projectHash: null,
         totalEvents: 1,
         totalCostUsd: 0,
+        name: null,
+        groupLabel: null,
       };
       this.sessionRepo.save(newSession);
       return;

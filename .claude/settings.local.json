@@ -22,7 +22,13 @@
       "Bash(python -m json.tool)",
       "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\" curl -s \"http://localhost:3000/api/sessions\")",
       "Bash(curl -s \"http://localhost:3000/api/analysis?type=failures&sessionId=23ebf1d3-ddad-497c-bc18-30a304028ad3\")",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(curl -s \"http://localhost:3000/api/sessions?limit=3\")",
+      "Bash(curl -s \"http://localhost:3000/api/sessions\")",
+      "Bash(npm install:*)",
+      "Bash(curl -s -X POST http://localhost:3000/api/analysis -H 'Content-Type: application/json' -d '{\"\"\"\"sessionId\"\"\"\":\"\"\"\"23ebf1d3-ddad-497c-bc18-30a304028ad3\"\"\"\",\"\"\"\"type\"\"\"\":\"\"\"\"timeline\"\"\"\",\"\"\"\"level\"\"\"\":1}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/analysis -H 'Content-Type: application/json' -d '{\"\"\"\"sessionId\"\"\"\":\"\"\"\"23ebf1d3-ddad-497c-bc18-30a304028ad3\"\"\"\",\"\"\"\"type\"\"\"\":\"\"\"\"failures\"\"\"\",\"\"\"\"level\"\"\"\":0}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/analysis -H 'Content-Type: application/json' -d '{\"\"\"\"sessionId\"\"\"\":\"\"\"\"23ebf1d3-ddad-497c-bc18-30a304028ad3\"\"\"\",\"\"\"\"type\"\"\"\":\"\"\"\"improvements\"\"\"\",\"\"\"\"level\"\"\"\":0}')"
     ]
   }
 }

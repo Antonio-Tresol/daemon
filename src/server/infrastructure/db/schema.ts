@@ -21,7 +21,9 @@ CREATE TABLE IF NOT EXISTS sessions (
   cwd TEXT,
   project_hash TEXT,
   total_events INTEGER NOT NULL DEFAULT 0,
-  total_cost_usd REAL NOT NULL DEFAULT 0
+  total_cost_usd REAL NOT NULL DEFAULT 0,
+  name TEXT,
+  group_label TEXT
 )`;
 
 export const CREATE_ANALYSES_TABLE = `
@@ -29,6 +31,7 @@ CREATE TABLE IF NOT EXISTS analyses (
   id TEXT PRIMARY KEY,
   session_id TEXT NOT NULL,
   analysis_type TEXT NOT NULL,
+  level INTEGER NOT NULL DEFAULT 0,
   triggered_at TEXT NOT NULL,
   completed_at TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
@@ -56,4 +59,5 @@ export const CREATE_INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_analyses_type ON analyses(analysis_type)',
   'CREATE INDEX IF NOT EXISTS idx_otel_metrics_session_id ON otel_metrics(session_id)',
   'CREATE INDEX IF NOT EXISTS idx_otel_metrics_timestamp ON otel_metrics(timestamp)',
+  'CREATE INDEX IF NOT EXISTS idx_analyses_session_type_level ON analyses(session_id, analysis_type, level)',
 ];

@@ -58,6 +58,7 @@ export type AnalysisResult = {
   id: string;
   sessionId: string;
   analysisType: AnalysisType;
+  level: number;
   triggeredAt: string;
   completedAt: string | null;
   status: 'pending' | 'running' | 'completed' | 'failed';
@@ -76,6 +77,7 @@ export type RawAnalysisResult = {
   id: string;
   session_id: string;
   analysis_type: AnalysisType;
+  level: number;
   triggered_at: string;
   completed_at: string | null;
   status: 'pending' | 'running' | 'completed' | 'failed';
@@ -92,6 +94,7 @@ export function normalizeAnalysis(raw: RawAnalysisResult): AnalysisResult {
     id: raw.id,
     sessionId: raw.session_id,
     analysisType: raw.analysis_type,
+    level: raw.level,
     triggeredAt: raw.triggered_at,
     completedAt: raw.completed_at,
     status: raw.status,

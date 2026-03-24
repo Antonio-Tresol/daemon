@@ -212,11 +212,10 @@ export function DashboardContent() {
       </div>
 
       {/* Quick links */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {[
           { label: 'Timeline', href: '/timeline', desc: 'Session activity plans' },
-          { label: 'Failures', href: '/failures', desc: 'Error analysis' },
-          { label: 'Improvements', href: '/improvements', desc: 'Optimization tips' },
+          { label: 'Harness', href: '/improvements', desc: 'Failures & improvements' },
           { label: 'Sessions', href: '/sessions', desc: 'All sessions' },
         ].map((link) => (
           <Link key={link.href} href={link.href}>

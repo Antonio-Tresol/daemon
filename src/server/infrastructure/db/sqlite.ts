@@ -19,11 +19,33 @@ function getDbPath(): string {
   return path.join(dataDir, 'command-center.db');
 }
 
+function migrateAnalysesAddLevel(db: Database.Database): void {
+  const columns = db.prepare("PRAGMA table_info('analyses')").all() as Array<{ name: string }>;
+  const hasLevel = columns.some((col) => col.name === 'level');
+  if (!hasLevel) {
+    db.exec('ALTER TABLE analyses ADD COLUMN level INTEGER NOT NULL DEFAULT 0');
+  }
+}
+
+function migrateSessionsAddNameAndGroup(db: Database.Database): void {
+  const columns = db.prepare("PRAGMA table_info('sessions')").all() as Array<{ name: string }>;
+  if (!columns.some((col) => col.name === 'name')) {
+    db.exec('ALTER TABLE sessions ADD COLUMN name TEXT');
+  }
+  if (!columns.some((col) => col.name === 'group_label')) {
+    db.exec('ALTER TABLE sessions ADD COLUMN group_label TEXT');
+  }
+}
+
 function initializeTables(db: Database.Database): void {
   db.exec(CREATE_SESSIONS_TABLE);
   db.exec(CREATE_EVENTS_TABLE);
   db.exec(CREATE_ANALYSES_TABLE);
   db.exec(CREATE_OTEL_METRICS_TABLE);
+
+  // Run migrations for existing databases
+  migrateAnalysesAddLevel(db);
+  migrateSessionsAddNameAndGroup(db);
 
   for (const indexSql of CREATE_INDEXES) {
     db.exec(indexSql);

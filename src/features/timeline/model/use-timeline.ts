@@ -9,28 +9,35 @@ type UseTimelineReturn = {
   analysis: AnalysisResult | null;
   isLoading: boolean;
   error: string | null;
+  level: number;
+  setLevel: (level: number) => void;
   refetch: () => void;
 };
 
-export function useTimeline(sessionId?: string): UseTimelineReturn {
+export function useTimeline(sessionId?: string, initialLevel = 0): UseTimelineReturn {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [level, setLevel] = useState(initialLevel);
 
   const refetch = useCallback(() => {
     setIsLoading(true);
     setError(null);
 
-    fetchTimeline(sessionId)
+    fetchTimeline(sessionId, level)
       .then((results) => {
-        const latest = results.length > 0 ? results[0] : null;
-        setAnalysis(latest ?? null);
+        // Prefer the latest completed analysis with actual plans
+        const completed = results.find(
+          (r) => r.status === 'completed' && r.result?.plans?.length,
+        );
+        const latest = completed ?? results.find((r) => r.status === 'completed') ?? results[0] ?? null;
+        setAnalysis(latest);
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Unknown error');
       })
       .finally(() => setIsLoading(false));
-  }, [sessionId]);
+  }, [sessionId, level]);
 
   useEffect(() => {
     refetch();
@@ -38,5 +45,5 @@ export function useTimeline(sessionId?: string): UseTimelineReturn {
 
   const plans = analysis?.result?.plans ?? [];
 
-  return { plans, analysis, isLoading, error, refetch };
+  return { plans, analysis, isLoading, error, level, setLevel, refetch };
 }

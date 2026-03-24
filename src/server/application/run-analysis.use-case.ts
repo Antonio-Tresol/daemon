@@ -21,6 +21,7 @@ export class RunAnalysisUseCase {
       id: analysisId,
       sessionId,
       analysisType,
+      level: 0,
       triggeredAt: now,
       completedAt: null,
       status: 'pending',

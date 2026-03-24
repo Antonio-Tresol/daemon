@@ -9,6 +9,7 @@ interface AnalysisRow {
   id: string;
   session_id: string;
   analysis_type: string;
+  level: number;
   triggered_at: string;
   completed_at: string | null;
   status: string;
@@ -21,6 +22,7 @@ function rowToEntity(row: AnalysisRow): AnalysisResult {
     id: row.id,
     sessionId: row.session_id,
     analysisType: row.analysis_type as AnalysisType,
+    level: row.level,
     triggeredAt: row.triggered_at,
     completedAt: row.completed_at,
     status: row.status as AnalysisResult['status'],
@@ -35,13 +37,14 @@ export class SqliteAnalysisRepository implements AnalysisRepository {
   save(analysis: AnalysisResult): void {
     const db = getDatabase();
     const stmt = db.prepare(`
-      INSERT OR REPLACE INTO analyses (id, session_id, analysis_type, triggered_at, completed_at, status, result, error)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO analyses (id, session_id, analysis_type, level, triggered_at, completed_at, status, result, error)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       analysis.id,
       analysis.sessionId,
       analysis.analysisType,
+      analysis.level,
       analysis.triggeredAt,
       analysis.completedAt,
       analysis.status,
@@ -73,8 +76,15 @@ export class SqliteAnalysisRepository implements AnalysisRepository {
     return row ? rowToEntity(row) : null;
   }
 
-  findBySessionId(sessionId: string): AnalysisResult[] {
+  findBySessionId(sessionId: string, level?: number): AnalysisResult[] {
     const db = getDatabase();
+    if (level !== undefined) {
+      const stmt = db.prepare(
+        'SELECT * FROM analyses WHERE session_id = ? AND level = ? ORDER BY triggered_at DESC',
+      );
+      const rows = stmt.all(sessionId, level) as AnalysisRow[];
+      return rows.map(rowToEntity);
+    }
     const stmt = db.prepare(
       'SELECT * FROM analyses WHERE session_id = ? ORDER BY triggered_at DESC',
     );
@@ -85,12 +95,33 @@ export class SqliteAnalysisRepository implements AnalysisRepository {
   findLatestByType(
     sessionId: string,
     analysisType: AnalysisType,
+    level?: number,
   ): AnalysisResult | null {
     const db = getDatabase();
+    if (level !== undefined) {
+      const stmt = db.prepare(
+        'SELECT * FROM analyses WHERE session_id = ? AND analysis_type = ? AND level = ? ORDER BY triggered_at DESC LIMIT 1',
+      );
+      const row = stmt.get(sessionId, analysisType, level) as AnalysisRow | undefined;
+      return row ? rowToEntity(row) : null;
+    }
     const stmt = db.prepare(
       'SELECT * FROM analyses WHERE session_id = ? AND analysis_type = ? ORDER BY triggered_at DESC LIMIT 1',
     );
     const row = stmt.get(sessionId, analysisType) as AnalysisRow | undefined;
+    return row ? rowToEntity(row) : null;
+  }
+
+  findBySessionIdAndLevel(
+    sessionId: string,
+    analysisType: AnalysisType,
+    level: number,
+  ): AnalysisResult | null {
+    const db = getDatabase();
+    const stmt = db.prepare(
+      'SELECT * FROM analyses WHERE session_id = ? AND analysis_type = ? AND level = ? AND status = \'completed\' ORDER BY triggered_at DESC LIMIT 1',
+    );
+    const row = stmt.get(sessionId, analysisType, level) as AnalysisRow | undefined;
     return row ? rowToEntity(row) : null;
   }
 }

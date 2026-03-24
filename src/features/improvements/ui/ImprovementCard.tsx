@@ -7,6 +7,7 @@ import type { Improvement, ImprovementArea } from '@/entities/analysis/model';
 
 type ImprovementCardProps = {
   improvement: Improvement;
+  isQuickWin?: boolean;
   className?: string;
 };
 
@@ -28,7 +29,7 @@ const AREA_META: Record<ImprovementArea, { label: string; icon: string }> = {
   legibility: { label: 'Legibility', icon: '...' },
 };
 
-export function ImprovementCard({ improvement, className }: ImprovementCardProps) {
+export function ImprovementCard({ improvement, isQuickWin, className }: ImprovementCardProps) {
   const [copiedConfig, setCopiedConfig] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -48,7 +49,7 @@ export function ImprovementCard({ improvement, className }: ImprovementCardProps
   }
 
   return (
-    <div className={cn('rounded-xl border border-card-border bg-card overflow-hidden', className)}>
+    <div className={cn('rounded-xl border border-card-border bg-card overflow-hidden', isQuickWin && 'ring-1 ring-status-green/30', className)}>
       {/* Header */}
       <button
         type="button"

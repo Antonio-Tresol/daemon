@@ -5,8 +5,8 @@ export default function TimelinePage() {
   return (
     <div>
       <Header
-        title="Timeline"
-        subtitle="Structured view of session plans and tasks"
+        title="Matryoshka Timelines"
+        subtitle="Nested views of session activity — zoom from events to narrative"
         breadcrumbs={[
           { label: 'Dashboard', href: '/' },
           { label: 'Timeline' },

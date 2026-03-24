@@ -9,6 +9,8 @@ export type Session = {
   projectHash: string | null;
   totalEvents: number;
   totalCostUsd: number;
+  name: string | null;
+  groupLabel: string | null;
 };
 
 /**
@@ -23,6 +25,8 @@ export type RawSession = {
   project_hash: string | null;
   total_events: number;
   total_cost_usd: number;
+  name: string | null;
+  group_label: string | null;
 };
 
 export function normalizeSession(raw: RawSession): Session {
@@ -35,5 +39,7 @@ export function normalizeSession(raw: RawSession): Session {
     projectHash: raw.project_hash,
     totalEvents: raw.total_events ?? 0,
     totalCostUsd: raw.total_cost_usd ?? 0,
+    name: raw.name ?? null,
+    groupLabel: raw.group_label ?? null,
   };
 }

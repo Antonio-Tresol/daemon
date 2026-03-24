@@ -1,18 +1,18 @@
 import { Header } from '@/shared/ui/Header';
-import { ImprovementsList } from '@/features/improvements/ui/ImprovementsList';
+import { HarnessContent } from '@/features/harness/ui/HarnessContent';
 
-export default function ImprovementsPage() {
+export default function HarnessPage() {
   return (
     <div>
       <Header
         title="Harness Engineering"
-        subtitle="Hooks, skills, subagents, tools, and context improvements for your Claude Code harness"
+        subtitle="Failures, improvements, and optimization suggestions for your Claude Code harness"
         breadcrumbs={[
           { label: 'Timeline', href: '/' },
           { label: 'Harness' },
         ]}
       />
-      <ImprovementsList />
+      <HarnessContent />
     </div>
   );
 }

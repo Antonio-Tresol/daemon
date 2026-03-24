@@ -8,6 +8,7 @@ import type { TimelinePlan } from '@/entities/analysis/model';
 
 type PlanGroupProps = {
   plan: TimelinePlan;
+  sessionId?: string;
   className?: string;
 };
 
@@ -21,7 +22,7 @@ function phaseVariant(phase: TimelinePlan['phase']) {
   }
 }
 
-export function PlanGroup({ plan, className }: PlanGroupProps) {
+export function PlanGroup({ plan, sessionId, className }: PlanGroupProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   const completedCount = plan.tasks.filter((t) => t.status === 'completed').length;
@@ -45,7 +46,7 @@ export function PlanGroup({ plan, className }: PlanGroupProps) {
       {isExpanded && (
         <div className="border-t border-card-border px-4 py-2 space-y-0.5">
           {plan.tasks.map((task, i) => (
-            <TaskGroup key={`${task.name}-${i}`} task={task} />
+            <TaskGroup key={`${task.name}-${i}`} task={task} sessionId={sessionId} />
           ))}
         </div>
       )}

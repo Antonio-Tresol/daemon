@@ -1,5 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface SessionRow {
+  id: string;
+  start_time: string;
+  end_time: string | null;
+  status: string;
+  cwd: string | null;
+  name: string | null;
+  group_label: string | null;
+  total_events: number;
+  total_cost_usd: number;
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json() as { name?: string; groupLabel?: string };
+
+    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
+    const db = getDatabase();
+
+    // Verify session exists
+    const existing = db.prepare('SELECT id FROM sessions WHERE id = ?').get(id) as { id: string } | undefined;
+    if (!existing) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
+    // Build dynamic update
+    const sets: string[] = [];
+    const values: (string | number)[] = [];
+
+    if (body.name !== undefined) {
+      sets.push('name = ?');
+      values.push(body.name);
+    }
+    if (body.groupLabel !== undefined) {
+      sets.push('group_label = ?');
+      values.push(body.groupLabel);
+    }
+
+    if (sets.length === 0) {
+      return NextResponse.json({ error: 'No fields to update. Provide name or groupLabel.' }, { status: 400 });
+    }
+
+    values.push(id);
+    db.prepare(`UPDATE sessions SET ${sets.join(', ')} WHERE id = ?`).run(...values);
+
+    // Return updated session
+    const updated = db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) as SessionRow;
+
+    return NextResponse.json({ session: updated });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
