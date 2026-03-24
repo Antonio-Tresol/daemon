@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find E:/Antonio-Uni/Claude-Command-Center/src -name *onsole* -o -name *dashboard*)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$HOME/AppData/Roaming/npm:$PATH\")",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(\"E:/Antonio-Uni/Claude-Command-Center/.gitignore\")",
+      "Bash(ls -1 Dockerfile docker-compose.yml .dockerignore biome.json vitest.config.ts scripts/*.sh .claude/settings.json CLAUDE.md)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(export 'PATH=/c/Program Files/nodejs:$PATH')",
+      "Bash(ls E:/Antonio-Uni/Claude-Command-Center/node_modules/.bin/next*)",
+      "WebSearch",
+      "Bash(bash scripts/setup-hooks.sh)",
+      "Bash(curl -s -X POST http://localhost:3000/api/events -H \"Content-Type: application/json\" -d '{:*)",
+      "Bash(where claude:*)",
+      "Read(//e/Antonio-Uni/Claude-Command-Center/$HOME/**)",
+      "Bash(claude -p \"Return this JSON back to me exactly\" --output-format json)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\" echo \"Say hello\")",
+      "Bash(claude -p - --output-format json)",
+      "Bash(curl -s \"http://localhost:3000/api/analysis?sessionId=test-session-001&type=timeline\")",
+      "Bash(python -m json.tool)"
+    ]
+  }
+}

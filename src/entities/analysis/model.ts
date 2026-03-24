@@ -26,12 +26,32 @@ export type Failure = {
   eventId: string | null;
 };
 
+export type ImprovementArea =
+  | 'hooks'
+  | 'skills'
+  | 'subagents'
+  | 'tools'
+  | 'context'
+  | 'architecture'
+  | 'legibility';
+
+export type ImprovementCategory =
+  | 'feedback-loop'
+  | 'enforcement'
+  | 'progressive-disclosure'
+  | 'parallelization'
+  | 'auto-approval'
+  | 'validation'
+  | 'context-management';
+
 export type Improvement = {
-  area: 'hooks' | 'permissions' | 'workflow' | 'claude_md' | 'tooling';
+  area: ImprovementArea;
   problem: string;
   suggestion: string;
-  hookConfig: Record<string, unknown> | null;
+  config: Record<string, unknown> | null;
   severity: 'high' | 'medium' | 'low';
+  category: ImprovementCategory | string;
+  effort: string;
 };
 
 export type AnalysisResult = {

@@ -1,14 +1,14 @@
 import { Header } from '@/shared/ui/Header';
-import { DashboardContent } from '@/app/dashboard-content';
+import { TimelineContent } from '@/app/timeline/timeline-content';
 
-export default function DashboardPage() {
+export default function TimelinePage() {
   return (
     <div>
       <Header
-        title="Dashboard"
-        subtitle="Monitor your Claude Code sessions in real-time"
+        title="Timeline"
+        subtitle="Structured view of session plans and tasks"
       />
-      <DashboardContent />
+      <TimelineContent />
     </div>
   );
 }

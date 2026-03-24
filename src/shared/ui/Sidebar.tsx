@@ -12,10 +12,9 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: '///' },
-  { label: 'Timeline', href: '/timeline', icon: '|' },
+  { label: 'Timeline', href: '/', icon: '|' },
   { label: 'Failures', href: '/failures', icon: '!' },
-  { label: 'Improvements', href: '/improvements', icon: '*' },
+  { label: 'Harness', href: '/improvements', icon: '{*}' },
   { label: 'Sessions', href: '/sessions', icon: '>' },
 ];
 

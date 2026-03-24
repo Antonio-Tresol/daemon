@@ -8,7 +8,7 @@ export default function FailuresPage() {
         title="Failures"
         subtitle="Identified errors and their root causes"
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Timeline', href: '/' },
           { label: 'Failures' },
         ]}
       />

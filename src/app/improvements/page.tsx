@@ -5,11 +5,11 @@ export default function ImprovementsPage() {
   return (
     <div>
       <Header
-        title="Improvements"
-        subtitle="Suggestions to optimize your Claude Code workflow"
+        title="Harness Engineering"
+        subtitle="Hooks, skills, subagents, tools, and context improvements for your Claude Code harness"
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Improvements' },
+          { label: 'Timeline', href: '/' },
+          { label: 'Harness' },
         ]}
       />
       <ImprovementsList />
