@@ -142,7 +142,7 @@ export function TimelineContent() {
           <select
             value={selectedSessionId ?? ''}
             onChange={(e) => setSelectedSessionId(e.target.value || undefined)}
-            className="rounded-lg border border-card-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
+            className="rounded-sm border border-border bg-depth-1 px-3 py-2 text-sm font-mono text-text-primary outline-none focus:border-signal-green transition-colors duration-300"
           >
             <option value="">All sessions</option>
             {filteredSessions.map((s) => (
@@ -166,17 +166,17 @@ export function TimelineContent() {
 
         {/* Matryoshka Level Selector */}
         {selectedSessionId && (
-          <div className="flex items-center rounded-lg border border-card-border bg-card overflow-hidden">
+          <div className="flex items-center border border-border bg-depth-1 overflow-hidden">
             {LEVELS.map((l) => (
               <button
                 key={l.value}
                 type="button"
                 onClick={() => setLevel(l.value)}
                 title={l.description}
-                className={`px-3 py-2 text-xs font-medium transition-colors ${
+                className={`px-3 py-2 text-xs font-mono font-medium transition-colors duration-300 ${
                   level === l.value
-                    ? 'bg-accent text-white'
-                    : 'text-muted hover:text-foreground hover:bg-card-hover'
+                    ? 'bg-signal-green/10 text-signal-green'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-depth-2'
                 }`}
               >
                 {l.label}
@@ -190,7 +190,7 @@ export function TimelineContent() {
             type="button"
             onClick={() => handleRerunAnalysis()}
             disabled={isAnalyzing}
-            className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs font-medium text-accent hover:bg-accent/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="border border-signal-green/40 bg-transparent px-3 py-2 text-xs font-mono font-medium text-signal-green hover:bg-signal-green/10 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isAnalyzing
               ? `Analyzing: ${analyzingType}...`
@@ -199,7 +199,7 @@ export function TimelineContent() {
         )}
 
         {selectedSession && (
-          <span className="text-xs text-muted ml-auto">
+          <span className="text-xs font-mono text-text-muted ml-auto">
             {selectedSession.totalEvents} events captured
           </span>
         )}

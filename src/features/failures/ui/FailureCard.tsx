@@ -18,9 +18,9 @@ function impactVariant(impact: Failure['impact']) {
 
 function impactBorderColor(impact: Failure['impact']): string {
   switch (impact) {
-    case 'critical': return 'border-l-status-red';
-    case 'warning': return 'border-l-status-amber';
-    case 'info': return 'border-l-accent';
+    case 'critical': return 'border-l-signal-red';
+    case 'warning': return 'border-l-signal-amber';
+    case 'info': return 'border-l-signal-blue';
   }
 }
 
@@ -32,7 +32,7 @@ export function FailureCard({ failure, className }: FailureCardProps) {
   return (
     <div
       className={cn(
-        'rounded-xl border border-card-border bg-card p-4 border-l-4',
+        'border border-border bg-depth-1 fracture-bg p-4 border-l-2',
         impactBorderColor(failure.impact),
         className,
       )}
@@ -42,22 +42,22 @@ export function FailureCard({ failure, className }: FailureCardProps) {
           {failure.impact}
         </Badge>
         <Badge variant="neutral" size="sm">{typeLabel(failure.type)}</Badge>
-        <span className="ml-auto text-[10px] text-muted">
+        <span className="ml-auto text-[10px] text-text-muted font-mono">
           {formatTimestamp(failure.timestamp)}
         </span>
       </div>
 
-      <p className="mt-2.5 text-sm text-foreground">{failure.description}</p>
+      <p className="mt-2.5 text-sm text-text-primary">{failure.description}</p>
 
-      <div className="mt-3 rounded-lg bg-background/50 p-3">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-muted mb-1">
+      <div className="mt-3 bg-depth-2 p-3">
+        <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted mb-1">
           Root Cause
         </p>
-        <p className="text-xs text-foreground/80">{failure.rootCause}</p>
+        <p className="text-xs text-text-primary/80">{failure.rootCause}</p>
       </div>
 
       {failure.eventId && (
-        <div className="mt-2 text-[10px] text-muted font-mono">
+        <div className="mt-2 text-[10px] text-text-muted font-mono">
           Event: {failure.eventId.slice(0, 12)}
         </div>
       )}

@@ -7,17 +7,27 @@ type CardProps = {
   children: ReactNode;
   className?: string;
   onClick?: () => void;
+  depthLevel?: 0 | 1 | 2 | 3 | 4;
 };
 
-export function Card({ title, subtitle, children, className, onClick }: CardProps) {
+const depthColors: Record<number, string> = {
+  0: 'depth-indicator-0',
+  1: 'depth-indicator-1',
+  2: 'depth-indicator-2',
+  3: 'depth-indicator-3',
+  4: 'depth-indicator-4',
+};
+
+export function Card({ title, subtitle, children, className, onClick, depthLevel }: CardProps) {
   const isClickable = typeof onClick === 'function';
 
   return (
     <div
       className={cn(
-        'rounded-xl border border-card-border bg-card p-5',
-        'transition-all duration-200',
-        isClickable && 'cursor-pointer hover:shadow-lg hover:shadow-black/10 hover:-translate-y-0.5',
+        'border-t border-border bg-transparent p-5',
+        'transition-colors duration-200',
+        isClickable && 'cursor-pointer hover:bg-depth-1',
+        depthLevel !== undefined && `depth-indicator ${depthColors[depthLevel]}`,
         className,
       )}
       onClick={onClick}
@@ -27,8 +37,8 @@ export function Card({ title, subtitle, children, className, onClick }: CardProp
     >
       {(title || subtitle) && (
         <div className="mb-3">
-          {title && <h3 className="text-sm font-semibold text-foreground">{title}</h3>}
-          {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
+          {title && <h3 className="text-sm font-semibold text-text-primary">{title}</h3>}
+          {subtitle && <p className="mt-0.5 font-mono text-[11px] text-text-secondary">{subtitle}</p>}
         </div>
       )}
       {children}

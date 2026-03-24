@@ -68,9 +68,9 @@ export function EditableText({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={cn(
-          'rounded-md border border-accent/40 bg-card px-2 py-0.5 text-sm text-foreground outline-none',
-          'focus:border-accent focus:ring-1 focus:ring-accent/30',
-          'placeholder:text-muted/60',
+          'border border-border bg-depth-1 px-2 py-0.5 text-sm text-text-primary outline-none',
+          'focus:border-signal-green focus:ring-1 focus:ring-signal-green/30',
+          'placeholder:text-text-muted',
           className,
         )}
       />
@@ -83,19 +83,19 @@ export function EditableText({
       onClick={() => setIsEditing(true)}
       title="Click to rename"
       className={cn(
-        'group inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-sm text-foreground',
-        'hover:bg-card-border/40 transition-colors cursor-text',
+        'group inline-flex items-center gap-1.5 px-2 py-0.5 text-sm text-text-primary',
+        'hover:bg-depth-1 transition-colors cursor-text',
         className,
       )}
     >
-      <span className={value ? '' : 'text-muted/60'}>
+      <span className={value ? '' : 'text-text-muted'}>
         {value || placeholder}
       </span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 16 16"
         fill="currentColor"
-        className="h-3 w-3 text-muted opacity-0 group-hover:opacity-60 transition-opacity"
+        className="h-3 w-3 text-sediment opacity-0 group-hover:opacity-60 transition-opacity"
       >
         <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.22 10.306a1 1 0 0 0-.26.445l-.813 3.04a.5.5 0 0 0 .608.608l3.04-.813a1 1 0 0 0 .445-.26l7.793-7.793a1.75 1.75 0 0 0 0-2.475l-.544-.544ZM11.72 3.22a.25.25 0 0 1 .354 0l.544.544a.25.25 0 0 1 0 .354L5.664 11.072l-1.596.427.427-1.596L11.72 3.22Z" />
       </svg>

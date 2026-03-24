@@ -12,6 +12,16 @@ type PlanGroupProps = {
   className?: string;
 };
 
+const PHASE_COLORS: Record<string, string> = {
+  research: '#4080e5',
+  implementation: '#00e5a0',
+  scaffolding: '#00c5c0',
+  testing: '#e5a040',
+  debugging: '#e54060',
+  refinement: '#8060e5',
+  other: '#4a6080',
+};
+
 function phaseVariant(phase: TimelinePlan['phase']) {
   switch (phase) {
     case 'research': return 'info' as const;
@@ -27,24 +37,32 @@ export function PlanGroup({ plan, sessionId, className }: PlanGroupProps) {
 
   const completedCount = plan.tasks.filter((t) => t.status === 'completed').length;
   const totalCount = plan.tasks.length;
+  const phaseColor = PHASE_COLORS[plan.phase] ?? PHASE_COLORS.other;
 
   return (
-    <div className={cn('rounded-xl border border-card-border bg-card', className)}>
+    <div
+      className={cn('border border-border bg-depth-1', className)}
+      style={{ borderLeftWidth: '2px', borderLeftColor: phaseColor }}
+    >
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex w-full items-center gap-3 p-4 text-left"
       >
-        <span className="text-xs text-muted">{isExpanded ? 'v' : '>'}</span>
-        <span className="flex-1 text-sm font-medium text-foreground">{plan.name}</span>
-        <Badge variant={phaseVariant(plan.phase)} size="sm">{plan.phase}</Badge>
-        <span className="text-xs text-muted">
+        <span className="text-xs font-mono text-text-muted">{isExpanded ? '\u25BC' : '\u25B6'}</span>
+        <span className="flex-1 text-sm font-medium text-text-primary">{plan.name}</span>
+        <span className="text-[10px] font-mono px-1.5 py-0.5 bg-depth-2 border border-border"
+          style={{ color: phaseColor }}
+        >
+          {plan.phase}
+        </span>
+        <span className="text-xs font-mono text-text-secondary">
           {completedCount}/{totalCount} tasks
         </span>
       </button>
 
       {isExpanded && (
-        <div className="border-t border-card-border px-4 py-2 space-y-0.5">
+        <div className="border-t border-border px-4 py-2 space-y-0.5 bg-depth-2">
           {plan.tasks.map((task, i) => (
             <TaskGroup key={`${task.name}-${i}`} task={task} sessionId={sessionId} />
           ))}

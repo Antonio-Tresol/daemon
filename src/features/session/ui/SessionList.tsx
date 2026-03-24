@@ -24,10 +24,10 @@ export function SessionList({ className }: SessionListProps) {
             type="button"
             onClick={() => setFilter(f)}
             className={cn(
-              'rounded-lg px-3 py-1.5 text-xs transition-colors',
+              'px-3 py-1.5 text-xs font-mono transition-colors',
               filter === f
-                ? 'bg-accent/15 text-accent font-medium'
-                : 'text-muted hover:text-foreground hover:bg-card-border/30',
+                ? 'bg-signal-green/15 text-signal-green font-medium'
+                : 'text-text-secondary hover:text-text-primary hover:bg-border/30',
             )}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -42,8 +42,8 @@ export function SessionList({ className }: SessionListProps) {
       )}
 
       {error && (
-        <div className="rounded-xl border border-status-red/30 bg-status-red/5 p-4">
-          <p className="text-sm text-status-red">Failed to load sessions: {error}</p>
+        <div className="border border-signal-red/30 bg-signal-red/5 p-4">
+          <p className="text-sm text-signal-red">Failed to load sessions: {error}</p>
         </div>
       )}
 

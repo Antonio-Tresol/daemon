@@ -65,21 +65,18 @@ export function Sidebar({ connectedSessions = 0, className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'flex h-full w-56 flex-col border-r border-card-border bg-card',
+        'flex h-full w-56 flex-col border-r border-border bg-depth-1',
         className,
       )}
     >
-      <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15">
-          <span className="text-sm font-bold text-accent">CC</span>
-        </div>
-        <div>
-          <h1 className="text-sm font-semibold text-foreground">Command Center</h1>
-          <p className="text-[10px] text-muted">Claude Monitor</p>
-        </div>
+      {/* Logo */}
+      <div className="flex items-center gap-2.5 border-b border-border px-5 py-5">
+        <span className="font-mono text-sm font-bold text-signal-green">daemon</span>
+        <span className="font-mono text-[10px] text-text-muted">v0.1</span>
       </div>
 
-      <nav className="mt-2 flex flex-1 flex-col gap-0.5 px-3">
+      {/* Navigation */}
+      <nav className="mt-1 flex flex-1 flex-col">
         {navItems.map((item) => {
           const isActive =
             item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
@@ -89,10 +86,10 @@ export function Sidebar({ connectedSessions = 0, className }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                'flex items-center gap-3 border-l-2 px-4 py-2.5 text-sm transition-colors',
                 isActive
-                  ? 'bg-accent/10 text-accent font-medium'
-                  : 'text-muted hover:bg-card-border/50 hover:text-foreground',
+                  ? 'border-l-signal-green text-signal-green font-medium'
+                  : 'border-l-transparent text-text-secondary hover:bg-depth-2 hover:text-text-primary',
               )}
             >
               <span className="w-4 text-center font-mono text-xs opacity-60">
@@ -106,24 +103,25 @@ export function Sidebar({ connectedSessions = 0, className }: SidebarProps) {
 
       {/* Current Session Indicator */}
       {currentSession && (
-        <div className="border-t border-card-border px-4 py-3">
-          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted">
+        <div className="border-t border-border px-4 py-3">
+          <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-text-muted">
             Current Session
           </p>
           <div className="flex items-center gap-2">
             <StatusIndicator status={currentSession.status === 'active' ? 'active' : 'completed'} />
-            <span className="truncate text-xs font-medium text-foreground">
+            <span className="truncate font-mono text-xs font-medium text-text-primary">
               {currentSession.name ?? currentSession.id.slice(0, 12)}
             </span>
           </div>
-          <p className="mt-1 text-[10px] text-muted">
+          <p className="mt-1 font-mono text-[10px] text-text-muted">
             {currentSession.total_events} events &middot; {formatElapsed(currentSession.start_time)}
           </p>
         </div>
       )}
 
-      <div className="border-t border-card-border px-5 py-4">
-        <div className="flex items-center gap-2 text-xs text-muted">
+      {/* Connection footer — instrument readout */}
+      <div className="border-t border-border px-5 py-4">
+        <div className="flex items-center gap-2 font-mono text-[10px] text-sediment">
           <StatusIndicator status={connectedSessions > 0 ? 'active' : 'pending'} />
           <span>
             {connectedSessions} session{connectedSessions !== 1 ? 's' : ''} connected

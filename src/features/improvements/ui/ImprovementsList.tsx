@@ -19,13 +19,13 @@ const AREA_ORDER: ImprovementArea[] = [
 type AreaMeta = { label: string; color: string; desc: string };
 
 const areaMeta: Record<ImprovementArea, AreaMeta> = {
-  hooks: { label: 'Hooks', color: '#d4a574', desc: 'Pre/post tool hooks and automation' },
-  skills: { label: 'Skills', color: '#9b8aed', desc: 'Reusable agent capabilities' },
-  subagents: { label: 'Agent Teams', color: '#4a9e6d', desc: 'Parallel work strategies' },
-  tools: { label: 'MCP Tools', color: '#6b8aed', desc: 'External tool integration' },
-  context: { label: 'CLAUDE.md', color: '#d4a040', desc: 'Context and documentation' },
-  architecture: { label: 'Architecture', color: '#c45a5a', desc: 'Structure enforcement' },
-  legibility: { label: 'Legibility', color: '#8a8078', desc: 'Agent readability' },
+  hooks: { label: 'Hooks', color: '#00e5a0', desc: 'Pre/post tool hooks and automation' },
+  skills: { label: 'Skills', color: '#4080e5', desc: 'Reusable agent capabilities' },
+  subagents: { label: 'Agent Teams', color: '#00c5c0', desc: 'Parallel work strategies' },
+  tools: { label: 'MCP Tools', color: '#0080e5', desc: 'External tool integration' },
+  context: { label: 'CLAUDE.md', color: '#e5a040', desc: 'Context and documentation' },
+  architecture: { label: 'Architecture', color: '#e54060', desc: 'Structure enforcement' },
+  legibility: { label: 'Legibility', color: '#6b7f99', desc: 'Agent readability' },
 };
 
 type ViewMode = 'priority' | 'category';
@@ -39,7 +39,7 @@ function priorityScore(imp: Improvement): number {
 
 function QuickWinBadge() {
   return (
-    <span className="inline-flex items-center gap-0.5 text-[9px] font-medium uppercase tracking-wider text-status-green bg-status-green/10 px-1.5 py-0.5 rounded">
+    <span className="inline-flex items-center gap-0.5 text-[9px] font-mono font-medium uppercase tracking-wider text-signal-green bg-signal-green/15 px-1.5 py-0.5">
       quick win
     </span>
   );
@@ -60,8 +60,8 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
 
   if (error) {
     return (
-      <div className={cn('rounded-xl border border-status-red/30 bg-status-red/5 p-4', className)}>
-        <p className="text-sm text-status-red">Failed to load: {error}</p>
+      <div className={cn('border border-signal-red/30 bg-signal-red/5 p-4', className)}>
+        <p className="text-sm text-signal-red">Failed to load: {error}</p>
       </div>
     );
   }
@@ -100,18 +100,18 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
       {/* Summary row */}
       <div className="flex items-center gap-4 flex-wrap">
         {analysis && <AnalysisBadge status={analysis.status} />}
-        <span className="text-xs text-muted">{improvements.length} suggestions</span>
+        <span className="font-mono text-xs text-text-secondary">{improvements.length} suggestions</span>
 
-        <div className="flex items-center gap-1.5 text-xs text-muted">
-          <span className="inline-block h-2 w-2 rounded-full bg-status-red" />
+        <div className="flex items-center gap-1.5 font-mono text-xs text-text-secondary">
+          <span className="inline-block h-2 w-2 bg-signal-red" />
           {highCount} high
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted">
-          <span className="inline-block h-2 w-2 rounded-full bg-status-amber" />
+        <div className="flex items-center gap-1.5 font-mono text-xs text-text-secondary">
+          <span className="inline-block h-2 w-2 bg-signal-amber" />
           {medCount} med
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted">
-          <span className="inline-block h-2 w-2 rounded-full bg-accent" />
+        <div className="flex items-center gap-1.5 font-mono text-xs text-text-secondary">
+          <span className="inline-block h-2 w-2 bg-signal-green" />
           {lowCount} low
         </div>
 
@@ -123,13 +123,13 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
       {/* Controls */}
       <div className="flex items-center gap-2 flex-wrap">
         {/* View mode toggle */}
-        <div className="flex items-center rounded-lg border border-card-border bg-card">
+        <div className="flex items-center border border-border bg-depth-1">
           <button
             type="button"
             onClick={() => setViewMode('priority')}
             className={cn(
-              'px-3 py-1 text-xs rounded-l-lg transition-colors',
-              viewMode === 'priority' ? 'bg-accent/15 text-accent font-medium' : 'text-muted hover:text-foreground',
+              'px-3 py-1 text-xs transition-colors',
+              viewMode === 'priority' ? 'bg-signal-green/15 text-signal-green font-medium' : 'text-text-secondary hover:text-text-primary',
             )}
           >
             Priority
@@ -138,8 +138,8 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
             type="button"
             onClick={() => setViewMode('category')}
             className={cn(
-              'px-3 py-1 text-xs rounded-r-lg border-l border-card-border transition-colors',
-              viewMode === 'category' ? 'bg-accent/15 text-accent font-medium' : 'text-muted hover:text-foreground',
+              'px-3 py-1 text-xs border-l border-border transition-colors',
+              viewMode === 'category' ? 'bg-signal-green/15 text-signal-green font-medium' : 'text-text-secondary hover:text-text-primary',
             )}
           >
             Category
@@ -152,8 +152,8 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
             type="button"
             onClick={() => setFilterArea(null)}
             className={cn(
-              'px-2 py-0.5 text-[10px] rounded-full transition-colors',
-              filterArea === null ? 'bg-card-border/60 text-foreground' : 'text-muted hover:text-foreground',
+              'px-2 py-0.5 text-[10px] rounded-sm transition-colors',
+              filterArea === null ? 'bg-border/60 text-text-primary' : 'text-text-secondary hover:text-text-primary',
             )}
           >
             All
@@ -166,14 +166,14 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
                 type="button"
                 onClick={() => setFilterArea(filterArea === area ? null : area)}
                 className={cn(
-                  'flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full transition-colors',
-                  filterArea === area ? 'text-foreground' : 'text-muted hover:text-foreground',
+                  'flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-sm transition-colors',
+                  filterArea === area ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary',
                 )}
                 style={filterArea === area ? { background: `${meta.color}20` } : undefined}
               >
-                <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.color }} />
+                <span className="inline-block h-1.5 w-1.5 rounded-sm" style={{ background: meta.color }} />
                 {meta.label}
-                <span className="text-muted">({grouped.get(area)?.length})</span>
+                <span className="text-text-muted">({grouped.get(area)?.length})</span>
               </button>
             );
           })}

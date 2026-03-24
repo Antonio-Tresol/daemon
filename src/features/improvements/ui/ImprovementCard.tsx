@@ -49,60 +49,58 @@ export function ImprovementCard({ improvement, isQuickWin, className }: Improvem
   }
 
   return (
-    <div className={cn('rounded-xl border border-card-border bg-card overflow-hidden', isQuickWin && 'ring-1 ring-status-green/30', className)}>
+    <div className={cn('border border-border bg-signal-green/[0.03] overflow-hidden border-l-3 border-l-signal-green', isQuickWin && 'ring-1 ring-signal-green/30', className)}>
       {/* Header */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 text-left hover:bg-background/30 transition-colors"
+        className="w-full p-4 text-left hover:bg-depth-1/50 transition-colors"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-accent">{meta.icon}</span>
+            <span className="font-mono text-[11px] text-signal-green uppercase tracking-wider">
+              ADVISORY — {improvement.category ?? meta.label}
+            </span>
             <Badge variant={severityVariant(improvement.severity)} size="sm">
               {improvement.severity}
             </Badge>
-            <Badge variant="neutral" size="sm">{meta.label}</Badge>
-            {improvement.category && (
-              <span className="text-[10px] text-muted">{improvement.category}</span>
-            )}
           </div>
           <div className="flex items-center gap-2">
             {improvement.effort && (
-              <span className="text-[10px] text-muted bg-background/50 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-text-muted bg-depth-2 px-2 py-0.5">
                 {improvement.effort}
               </span>
             )}
-            <span className="text-muted text-xs">{expanded ? '-' : '+'}</span>
+            <span className="text-text-muted text-xs">{expanded ? '-' : '+'}</span>
           </div>
         </div>
 
-        <p className="mt-2 text-sm text-foreground">{improvement.suggestion}</p>
+        <p className="mt-2 text-sm text-text-primary">{improvement.suggestion}</p>
       </button>
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="border-t border-card-border px-4 pb-4">
+        <div className="border-t border-border px-4 pb-4 depth-reveal">
           <div className="mt-3">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted mb-1">Problem</p>
-            <p className="text-sm text-foreground/80">{improvement.problem}</p>
+            <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted mb-1">Problem</p>
+            <p className="text-sm text-text-primary/80">{improvement.problem}</p>
           </div>
 
           {improvement.config && (
             <div className="mt-3">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-muted">
+                <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted">
                   Configuration
                 </p>
                 <button
                   type="button"
                   onClick={handleCopyConfig}
-                  className="text-[10px] text-accent hover:text-accent-hover transition-colors"
+                  className="text-[10px] font-mono text-signal-green hover:text-signal-green/80 transition-colors"
                 >
                   {copiedConfig ? 'Copied!' : 'Copy JSON'}
                 </button>
               </div>
-              <pre className="rounded-lg bg-background/50 p-3 text-[11px] text-foreground/70 font-mono overflow-x-auto whitespace-pre-wrap">
+              <pre className="bg-depth-2 p-3 text-[11px] text-text-primary/70 font-mono overflow-x-auto whitespace-pre-wrap">
                 {JSON.stringify(improvement.config, null, 2)}
               </pre>
             </div>

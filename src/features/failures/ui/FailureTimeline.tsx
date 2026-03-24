@@ -33,9 +33,9 @@ function FailureTypeIcon({ type, className }: { type: Failure['type']; className
 }
 
 const IMPACT_STYLES: Record<string, { border: string; bg: string; dot: string }> = {
-  critical: { border: 'border-l-status-red', bg: 'bg-status-red/5', dot: 'bg-status-red' },
-  warning: { border: 'border-l-status-amber', bg: 'bg-status-amber/5', dot: 'bg-status-amber' },
-  info: { border: 'border-l-accent', bg: 'bg-accent/5', dot: 'bg-accent' },
+  critical: { border: 'border-l-signal-red', bg: 'bg-signal-red/5', dot: 'bg-signal-red' },
+  warning: { border: 'border-l-signal-amber', bg: 'bg-signal-amber/5', dot: 'bg-signal-amber' },
+  info: { border: 'border-l-signal-blue', bg: 'bg-signal-blue/5', dot: 'bg-signal-blue' },
 };
 
 function CompactFailureCard({ failure, isLast }: { failure: Failure; isLast: boolean }) {
@@ -46,16 +46,16 @@ function CompactFailureCard({ failure, isLast }: { failure: Failure; isLast: boo
     <div className="flex gap-3">
       {/* Timeline connector */}
       <div className="flex flex-col items-center">
-        <div className={cn('h-3 w-3 rounded-full shrink-0 mt-1', styles.dot)} />
-        {!isLast && <div className="w-px flex-1 bg-card-border/50 mt-1" />}
+        <div className={cn('h-3 w-3 shrink-0 mt-1', styles.dot)} />
+        {!isLast && <div className="w-px flex-1 bg-border/50 mt-1" />}
       </div>
 
       {/* Card */}
-      <div className={cn('flex-1 mb-4 rounded-xl border border-card-border bg-card border-l-4 overflow-hidden', styles.border)}>
+      <div className={cn('flex-1 mb-4 border border-border bg-depth-1 fracture-bg border-l-2 overflow-hidden', styles.border)}>
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="w-full p-3 text-left hover:bg-background/20 transition-colors"
+          className="w-full p-3 text-left hover:bg-depth-2/50 transition-colors"
         >
           <div className="flex items-center gap-2">
             <FailureTypeIcon type={failure.type} className="text-muted shrink-0" />
@@ -73,14 +73,14 @@ function CompactFailureCard({ failure, isLast }: { failure: Failure; isLast: boo
         </button>
 
         {expanded && (
-          <div className="border-t border-card-border/50 px-3 pb-3 space-y-2">
-            <p className="text-xs text-foreground/80 pt-2">{failure.description}</p>
-            <div className="rounded-lg bg-background/40 p-2.5">
-              <p className="text-[9px] font-medium uppercase tracking-wider text-muted mb-0.5">Root Cause</p>
-              <p className="text-xs text-foreground/70">{failure.rootCause}</p>
+          <div className="border-t border-border/50 px-3 pb-3 space-y-2 depth-reveal">
+            <p className="text-xs text-text-primary/80 pt-2">{failure.description}</p>
+            <div className="bg-depth-2 p-2.5">
+              <p className="text-[9px] font-mono font-medium uppercase tracking-wider text-text-muted mb-0.5">Root Cause</p>
+              <p className="text-xs text-text-primary/70">{failure.rootCause}</p>
             </div>
             {failure.eventId && (
-              <p className="text-[10px] text-muted font-mono">
+              <p className="text-[10px] text-text-muted font-mono">
                 Evidence: {failure.eventId.slice(0, 16)}
               </p>
             )}
@@ -105,8 +105,8 @@ export function FailureTimeline({ sessionId, className }: FailureTimelineProps) 
 
   if (error) {
     return (
-      <div className={cn('rounded-xl border border-status-red/30 bg-status-red/5 p-4', className)}>
-        <p className="text-sm text-status-red">Failed to load: {error}</p>
+      <div className={cn('border border-signal-red/30 bg-signal-red/5 p-4', className)}>
+        <p className="text-sm text-signal-red">Failed to load: {error}</p>
       </div>
     );
   }
@@ -138,8 +138,8 @@ export function FailureTimeline({ sessionId, className }: FailureTimelineProps) 
           type="button"
           onClick={() => setFilterImpact(filterImpact === null ? null : null)}
           className={cn(
-            'text-xs px-2 py-1 rounded-md transition-colors',
-            filterImpact === null ? 'bg-card-border/50 text-foreground' : 'text-muted hover:text-foreground',
+            'font-mono text-xs px-2 py-1 transition-colors',
+            filterImpact === null ? 'bg-border/50 text-text-primary' : 'text-text-secondary hover:text-text-primary',
           )}
         >
           All ({failures.length})
@@ -150,11 +150,11 @@ export function FailureTimeline({ sessionId, className }: FailureTimelineProps) 
             type="button"
             onClick={() => setFilterImpact(filterImpact === 'critical' ? null : 'critical')}
             className={cn(
-              'flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors',
-              filterImpact === 'critical' ? 'bg-status-red/15 text-status-red' : 'text-muted hover:text-foreground',
+              'flex items-center gap-1.5 font-mono text-xs px-2 py-1 transition-colors',
+              filterImpact === 'critical' ? 'bg-signal-red/15 text-signal-red' : 'text-text-secondary hover:text-text-primary',
             )}
           >
-            <span className="inline-block h-2 w-2 rounded-full bg-status-red" />
+            <span className="inline-block h-2 w-2 bg-signal-red" />
             {criticalCount} critical
           </button>
         )}
@@ -164,11 +164,11 @@ export function FailureTimeline({ sessionId, className }: FailureTimelineProps) 
             type="button"
             onClick={() => setFilterImpact(filterImpact === 'warning' ? null : 'warning')}
             className={cn(
-              'flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors',
-              filterImpact === 'warning' ? 'bg-status-amber/15 text-status-amber' : 'text-muted hover:text-foreground',
+              'flex items-center gap-1.5 font-mono text-xs px-2 py-1 transition-colors',
+              filterImpact === 'warning' ? 'bg-signal-amber/15 text-signal-amber' : 'text-text-secondary hover:text-text-primary',
             )}
           >
-            <span className="inline-block h-2 w-2 rounded-full bg-status-amber" />
+            <span className="inline-block h-2 w-2 bg-signal-amber" />
             {warningCount} warning
           </button>
         )}
@@ -178,11 +178,11 @@ export function FailureTimeline({ sessionId, className }: FailureTimelineProps) 
             type="button"
             onClick={() => setFilterImpact(filterImpact === 'info' ? null : 'info')}
             className={cn(
-              'flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors',
-              filterImpact === 'info' ? 'bg-accent/15 text-accent' : 'text-muted hover:text-foreground',
+              'flex items-center gap-1.5 font-mono text-xs px-2 py-1 transition-colors',
+              filterImpact === 'info' ? 'bg-signal-blue/15 text-signal-blue' : 'text-text-secondary hover:text-text-primary',
             )}
           >
-            <span className="inline-block h-2 w-2 rounded-full bg-accent" />
+            <span className="inline-block h-2 w-2 bg-signal-blue" />
             {infoCount} info
           </button>
         )}

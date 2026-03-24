@@ -1,49 +1,163 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-border: var(--card-border);
-  --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-muted: var(--muted);
-  --color-status-green: var(--status-green);
-  --color-status-amber: var(--status-amber);
-  --color-status-red: var(--status-red);
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+@theme {
+  /* Depth backgrounds — each level darker */
+  --color-depth-0: #0a1628;
+  --color-depth-1: #091320;
+  --color-depth-2: #080f1a;
+  --color-depth-3: #060c15;
+  --color-depth-4: #050810;
+
+  /* Bioluminescent accents */
+  --color-signal-green: #00e5a0;
+  --color-signal-amber: #e5a040;
+  --color-signal-red: #e54060;
+  --color-signal-blue: #4080e5;
+
+  /* Sediment/inactive */
+  --color-sediment: #4a6080;
+  --color-silt: #6b7f99;
+
+  /* Text */
+  --color-text-primary: #c8d6e5;
+  --color-text-secondary: #6b7f99;
+  --color-text-muted: #4a6080;
+
+  /* Surfaces */
+  --color-surface: #0d1926;
+  --color-surface-raised: #111f33;
+  --color-border: rgba(200, 214, 229, 0.06);
+  --color-border-accent: rgba(0, 229, 160, 0.15);
+
+  /* Legacy aliases for existing components */
+  --color-background: #0a1628;
+  --color-foreground: #c8d6e5;
+  --color-card: #0d1926;
+  --color-card-border: rgba(200, 214, 229, 0.06);
+  --color-muted: #6b7f99;
+  --color-accent: #00e5a0;
+  --color-accent-hover: #00cc8e;
+  --color-status-green: #00e5a0;
+  --color-status-amber: #e5a040;
+  --color-status-red: #e54060;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
-:root {
-  --background: #f5f0eb;
-  --foreground: #2d2d2d;
-  --card: #ffffff;
-  --card-border: #e0d8d0;
-  --accent: #d4a574;
-  --accent-hover: #c4955e;
-  --muted: #8a8078;
-  --status-green: #4a9e6d;
-  --status-amber: #d4a040;
-  --status-red: #c45a5a;
-}
-
-.dark {
-  --background: #1a1a1a;
-  --foreground: #e8e0d8;
-  --card: #242424;
-  --card-border: #2a2a2a;
-  --accent: #d4a574;
-  --accent-hover: #e0b588;
-  --muted: #8a8078;
-  --status-green: #4a9e6d;
-  --status-amber: #d4a040;
-  --status-red: #c45a5a;
-}
-
+/* Base styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: var(--color-depth-0);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* No light mode — the ocean floor has no sun */
+
+/* Pressure Pulse animation — heartbeat for active sessions */
+@keyframes pressure-pulse {
+  0%, 100% { opacity: 0.4; box-shadow: 0 0 8px currentColor; }
+  50% { opacity: 1.0; box-shadow: 0 0 20px currentColor; }
+}
+
+/* Fast pulse for errors */
+@keyframes pressure-pulse-fast {
+  0%, 100% { opacity: 0.5; box-shadow: 0 0 6px currentColor; }
+  50% { opacity: 1.0; box-shadow: 0 0 16px currentColor; }
+}
+
+/* Sonar sweep — data refresh animation */
+@keyframes sonar-sweep {
+  0% { transform: translateY(-100%); opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+/* Current flow on connections */
+@keyframes current-flow {
+  0% { stroke-dashoffset: 20; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Bathymetric descent — drill-down transition */
+@keyframes depth-reveal {
+  0% { transform: translateY(40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Flatline — error state */
+@keyframes flatline {
+  0%, 100% { opacity: 1; }
+}
+
+/* Loading sequence */
+@keyframes ocean-fade-in {
+  0% { background: #000000; }
+  100% { background: var(--color-depth-0); }
+}
+
+/* Utility classes */
+.pulse-active {
+  animation: pressure-pulse 2s ease-in-out infinite;
+  color: var(--color-signal-green);
+}
+
+.pulse-warning {
+  animation: pressure-pulse-fast 1.2s ease-in-out infinite;
+  color: var(--color-signal-amber);
+}
+
+.pulse-error {
+  color: var(--color-signal-red);
+  /* No animation — flatline */
+}
+
+.depth-reveal {
+  animation: depth-reveal 400ms ease-out;
+}
+
+.sonar-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(0, 229, 160, 0.3);
+  animation: sonar-sweep 600ms ease-out forwards;
+  pointer-events: none;
+}
+
+/* Band layout — full-bleed horizontal bands instead of cards */
+.band {
+  width: 100%;
+  border-top: 1px solid var(--color-border);
+  padding: 16px 0;
+}
+
+/* Depth indicator — left-edge color bar */
+.depth-indicator {
+  border-left: 2px solid;
+  padding-left: 16px;
+}
+
+.depth-indicator-0 { border-left-color: var(--color-signal-green); }
+.depth-indicator-1 { border-left-color: #00c5c0; }
+.depth-indicator-2 { border-left-color: #00a0d5; }
+.depth-indicator-3 { border-left-color: #0080e5; }
+.depth-indicator-4 { border-left-color: #4060e5; }
+
+/* Fracture texture for failures */
+.fracture-bg {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(229, 64, 96, 0.04) 10px,
+    rgba(229, 64, 96, 0.04) 11px
+  );
 }
 
 /* Scrollbar styling */
@@ -51,28 +165,25 @@ body {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--muted);
+  background: var(--color-sediment);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
+  background: var(--color-silt);
 }
 
 /* Selection */
 ::selection {
-  background: var(--accent);
-  color: var(--background);
+  background: rgba(0, 229, 160, 0.2);
+  color: var(--color-text-primary);
 }
 
 /* Focus ring */
 *:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }

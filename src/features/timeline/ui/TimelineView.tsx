@@ -46,15 +46,15 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
   if (isLoading) {
     return (
       <div className={cn('flex items-center justify-center py-12', className)}>
-        <span className="text-sm text-muted">Loading timeline...</span>
+        <span className="text-sm font-mono text-text-muted">Loading timeline...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={cn('rounded-xl border border-status-red/30 bg-status-red/5 p-4', className)}>
-        <p className="text-sm text-status-red">Failed to load timeline: {error}</p>
+      <div className={cn('border-l-2 border-signal-red bg-signal-red/5 p-4', className)}>
+        <p className="text-sm text-signal-red">Failed to load timeline: {error}</p>
       </div>
     );
   }
@@ -62,8 +62,8 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
   if (plans.length === 0 && level === 0) {
     return (
       <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
-        <p className="text-sm text-muted">No timeline data available yet.</p>
-        <p className="mt-1 text-xs text-muted">Analysis runs automatically when events are captured.</p>
+        <p className="text-sm text-text-secondary">No timeline data available yet.</p>
+        <p className="mt-1 text-xs text-text-muted">Analysis runs automatically when events are captured.</p>
       </div>
     );
   }
@@ -75,8 +75,8 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
         <div className="flex items-center gap-3">
           {/* Matryoshka level selector */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-muted font-medium hidden sm:inline">Matryoshka</span>
-            <div className="flex items-center rounded-lg border border-card-border bg-card">
+            <span className="text-[10px] uppercase tracking-wider text-text-muted font-mono hidden sm:inline">Depth</span>
+            <div className="flex items-center border border-border bg-depth-1">
               {MATRYOSHKA_LEVELS.map((lvl, i) => (
                 <button
                   key={lvl.label}
@@ -84,13 +84,11 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
                   onClick={() => setLevel(i)}
                   title={lvl.description}
                   className={cn(
-                    'px-3 py-1.5 text-xs transition-colors flex items-center gap-1.5',
-                    i === 0 && 'rounded-l-lg',
-                    i === MATRYOSHKA_LEVELS.length - 1 && 'rounded-r-lg',
-                    i > 0 && 'border-l border-card-border',
+                    'px-3 py-1.5 text-xs font-mono transition-colors duration-300 flex items-center gap-1.5',
+                    i > 0 && 'border-l border-border',
                     level === i
-                      ? 'bg-accent/15 text-accent font-medium'
-                      : 'text-muted hover:text-foreground',
+                      ? 'bg-signal-green/10 text-signal-green font-medium'
+                      : 'text-text-secondary hover:text-text-primary',
                   )}
                 >
                   <span className="text-sm leading-none">{lvl.icon}</span>
@@ -106,29 +104,29 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
               type="button"
               onClick={() => handleBuildLevel(level)}
               disabled={isBuildingLevel}
-              className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
+              className="border border-signal-green/40 bg-transparent px-3 py-1.5 text-xs font-mono font-medium text-signal-green hover:bg-signal-green/10 transition-colors duration-300 disabled:opacity-50"
             >
               {isBuildingLevel ? 'Nesting...' : `Open ${MATRYOSHKA_LEVELS[level].label}`}
             </button>
           )}
 
           {analysis && (
-            <div className="flex items-center gap-2 text-xs text-muted">
+            <div className="flex items-center gap-2 text-xs text-text-muted">
               <AnalysisBadge status={analysis.status} />
             </div>
           )}
         </div>
 
         {/* View mode switcher */}
-        <div className="flex items-center rounded-lg border border-card-border bg-card">
+        <div className="flex items-center border border-border bg-depth-1">
           <button
             type="button"
             onClick={() => setViewMode('list')}
             className={cn(
-              'px-3 py-1.5 text-xs transition-colors rounded-l-lg',
+              'px-3 py-1.5 text-xs font-mono transition-colors duration-300',
               viewMode === 'list'
-                ? 'bg-accent/15 text-accent font-medium'
-                : 'text-muted hover:text-foreground',
+                ? 'bg-signal-green/10 text-signal-green font-medium'
+                : 'text-text-secondary hover:text-text-primary',
             )}
           >
             List
@@ -137,10 +135,10 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
             type="button"
             onClick={() => setViewMode('trajectory')}
             className={cn(
-              'px-3 py-1.5 text-xs transition-colors rounded-r-lg border-l border-card-border',
+              'px-3 py-1.5 text-xs font-mono transition-colors duration-300 border-l border-border',
               viewMode === 'trajectory'
-                ? 'bg-accent/15 text-accent font-medium'
-                : 'text-muted hover:text-foreground',
+                ? 'bg-signal-green/10 text-signal-green font-medium'
+                : 'text-text-secondary hover:text-text-primary',
             )}
           >
             Trajectory
@@ -151,9 +149,9 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
       {/* Empty state for higher levels */}
       {plans.length === 0 && level > 0 && !isBuildingLevel && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <span className="text-4xl mb-3">{MATRYOSHKA_LEVELS[level].icon}</span>
-          <p className="text-sm text-muted">This Matryoshka level hasn&apos;t been opened yet.</p>
-          <p className="mt-1 text-xs text-muted">
+          <span className="text-4xl mb-3 text-text-muted">{MATRYOSHKA_LEVELS[level].icon}</span>
+          <p className="text-sm text-text-secondary">This depth level hasn&apos;t been charted yet.</p>
+          <p className="mt-1 text-xs text-text-muted">
             {MATRYOSHKA_LEVELS[level].description}
           </p>
         </div>
@@ -162,10 +160,10 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
       {/* View content */}
       {plans.length > 0 && viewMode === 'list' && (
         <div className="relative space-y-3">
-          <div className="absolute left-5 top-0 bottom-0 w-px bg-accent/20" />
+          <div className="absolute left-5 top-0 bottom-0 w-px bg-signal-green/20" />
           {plans.map((plan, i) => (
             <div key={`${plan.name}-${i}`} className="relative pl-12">
-              <div className="absolute left-4 top-5 h-3 w-3 rounded-full border-2 border-accent bg-card" />
+              <div className="absolute left-4 top-5 h-3 w-3 border-2 border-signal-green bg-depth-0" />
               <PlanGroup plan={plan} sessionId={sessionId} />
             </div>
           ))}

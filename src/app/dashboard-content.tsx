@@ -107,36 +107,36 @@ export function DashboardContent() {
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card>
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted">
+          <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-secondary">
             Active Sessions
           </p>
-          <p className="mt-1 text-2xl font-semibold text-foreground">
+          <p className="mt-1 text-2xl font-mono font-semibold text-text-primary">
             {stats.activeSessions}
           </p>
         </Card>
         <Card>
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted">
+          <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-secondary">
             Total Events
           </p>
-          <p className="mt-1 text-2xl font-semibold text-foreground">
+          <p className="mt-1 text-2xl font-mono font-semibold text-text-primary">
             {stats.totalEvents}
           </p>
         </Card>
         <Card>
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted">
+          <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-secondary">
             Total Cost
           </p>
-          <p className="mt-1 text-2xl font-semibold text-foreground">
+          <p className="mt-1 text-2xl font-mono font-semibold text-text-primary">
             {formatCost(stats.totalCost)}
           </p>
         </Card>
         <Card>
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted">
+          <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-secondary">
             WebSocket
           </p>
           <div className="mt-1 flex items-center gap-2">
             <StatusIndicator status={isConnected ? 'active' : 'error'} />
-            <span className="text-sm text-foreground">
+            <span className="text-sm font-mono text-text-primary">
               {isConnected ? 'Connected' : 'Disconnected'}
             </span>
           </div>
@@ -153,7 +153,7 @@ export function DashboardContent() {
               {recentEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-card-border/30 transition-colors"
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-border/30 transition-colors"
                 >
                   <EventBadge eventType={event.eventType} />
                   {event.toolName && (
@@ -186,7 +186,7 @@ export function DashboardContent() {
                 <Link
                   key={session.id}
                   href={`/session/${session.id}`}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs hover:bg-card-border/30 transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-border/30 transition-colors"
                 >
                   <StatusIndicator
                     status={session.status === 'active' ? 'active' : session.status === 'error' ? 'error' : 'completed'}
@@ -219,9 +219,9 @@ export function DashboardContent() {
           { label: 'Sessions', href: '/sessions', desc: 'All sessions' },
         ].map((link) => (
           <Link key={link.href} href={link.href}>
-            <Card className="hover:border-accent/30 transition-colors">
-              <p className="text-sm font-medium text-foreground">{link.label}</p>
-              <p className="mt-0.5 text-xs text-muted">{link.desc}</p>
+            <Card className="hover:border-signal-green/30 transition-colors">
+              <p className="text-sm font-medium text-text-primary">{link.label}</p>
+              <p className="mt-0.5 text-xs font-mono text-text-secondary">{link.desc}</p>
             </Card>
           </Link>
         ))}

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import { Sidebar } from '@/shared/ui/Sidebar';
 import './globals.css';
 
@@ -8,9 +8,14 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-jetbrains',
+  subsets: ['latin'],
+});
+
 export const metadata: Metadata = {
-  title: 'Claude Command Center',
-  description: 'Monitoring dashboard for Claude Code sessions',
+  title: 'Daemon',
+  description: 'Deep operations monitor for Claude Code sessions',
 };
 
 export default function RootLayout({
@@ -19,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable} h-full antialiased`}>
-      <body className="flex h-full min-h-screen bg-background text-foreground font-sans">
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}>
+      <body className="flex h-full min-h-screen bg-depth-0 text-text-primary font-sans">
         <Sidebar />
         <main className="flex-1 overflow-y-auto p-6 lg:p-8">{children}</main>
       </body>

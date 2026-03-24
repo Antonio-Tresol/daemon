@@ -109,7 +109,7 @@ export function HarnessContent({ className }: HarnessContentProps) {
       <div className="flex flex-wrap items-center gap-4">
         <label
           htmlFor="harness-session-select"
-          className="text-sm font-medium text-foreground"
+          className="text-sm font-mono font-medium text-text-secondary uppercase tracking-wider"
         >
           Session
         </label>
@@ -125,7 +125,7 @@ export function HarnessContent({ className }: HarnessContentProps) {
             id="harness-session-select"
             value={selectedSessionId ?? ''}
             onChange={(e) => setSelectedSessionId(e.target.value)}
-            className="rounded-lg border border-card-border bg-card px-3 py-1.5 text-sm text-foreground outline-none focus:border-accent/50 transition-colors max-w-md"
+            className="border border-border bg-depth-1 px-3 py-1.5 text-sm font-mono text-text-primary outline-none focus:border-signal-green/50 transition-colors max-w-md"
           >
             {filteredSessions.map((s) => (
               <option key={s.id} value={s.id}>
@@ -148,17 +148,17 @@ export function HarnessContent({ className }: HarnessContentProps) {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-card-border pb-px">
+      <div className="flex gap-1 border-b border-border pb-px">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
             className={cn(
-              'flex items-center gap-2 rounded-t-lg px-4 py-2 text-sm transition-colors',
+              'flex items-center gap-2 px-4 py-2 text-sm transition-colors',
               activeTab === tab.key
-                ? 'border-b-2 border-accent text-accent font-medium'
-                : 'text-muted hover:text-foreground',
+                ? 'border-b-2 border-signal-green text-signal-green font-medium'
+                : 'text-text-secondary hover:text-text-primary',
             )}
           >
             <span className="font-mono text-xs opacity-60">{tab.icon}</span>

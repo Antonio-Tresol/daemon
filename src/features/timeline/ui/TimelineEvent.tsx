@@ -11,6 +11,15 @@ type TimelineEventProps = {
   className?: string;
 };
 
+const EVENT_BORDER_COLORS: Record<string, string> = {
+  api_error: 'border-l-signal-red',
+  PostToolUseFailure: 'border-l-signal-red',
+  api_request: 'border-l-signal-blue',
+  user_prompt: 'border-l-signal-green',
+  SessionStart: 'border-l-signal-green',
+  SessionEnd: 'border-l-sediment',
+};
+
 function ToolIcon({ name, className }: { name: string; className?: string }) {
   const iconClass = cn('h-3.5 w-3.5 shrink-0', className);
 
@@ -93,7 +102,7 @@ function ToolIcon({ name, className }: { name: string; className?: string }) {
 function EventIcon({ event }: { event: HookEvent }) {
   if (event.eventType === 'api_error' || event.eventType === 'PostToolUseFailure') {
     return (
-      <svg className="h-3.5 w-3.5 text-status-red" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-signal-red" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>Error</title>
         <path d="M8 1L1 14h14L8 1z" />
         <path d="M8 6v4M8 12v.5" />
@@ -102,7 +111,7 @@ function EventIcon({ event }: { event: HookEvent }) {
   }
   if (event.eventType === 'api_request') {
     return (
-      <svg className="h-3.5 w-3.5 text-blue-400" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-signal-blue" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>API</title>
         <path d="M2 4l6-2 6 2v8l-6 2-6-2z" />
         <path d="M2 4l6 2 6-2M8 6v8" />
@@ -111,7 +120,7 @@ function EventIcon({ event }: { event: HookEvent }) {
   }
   if (event.eventType === 'user_prompt') {
     return (
-      <svg className="h-3.5 w-3.5 text-accent" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-signal-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>Prompt</title>
         <path d="M4 6l4 2-4 2" />
         <rect x="1" y="2" width="14" height="12" rx="2" />
@@ -120,7 +129,7 @@ function EventIcon({ event }: { event: HookEvent }) {
   }
   if (event.eventType === 'SessionStart') {
     return (
-      <svg className="h-3.5 w-3.5 text-status-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-signal-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>Start</title>
         <polygon points="5,3 13,8 5,13" />
       </svg>
@@ -128,17 +137,17 @@ function EventIcon({ event }: { event: HookEvent }) {
   }
   if (event.eventType === 'SessionEnd') {
     return (
-      <svg className="h-3.5 w-3.5 text-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-sediment" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>Stop</title>
         <rect x="4" y="4" width="8" height="8" />
       </svg>
     );
   }
   if (event.toolName) {
-    return <ToolIcon name={event.toolName} className="text-foreground/60" />;
+    return <ToolIcon name={event.toolName} className="text-text-secondary" />;
   }
   return (
-    <svg className="h-3.5 w-3.5 text-muted" viewBox="0 0 16 16" fill="currentColor">
+    <svg className="h-3.5 w-3.5 text-sediment" viewBox="0 0 16 16" fill="currentColor">
       <title>Event</title>
       <circle cx="8" cy="8" r="3" />
     </svg>
@@ -147,45 +156,39 @@ function EventIcon({ event }: { event: HookEvent }) {
 
 export function TimelineEvent({ event, className }: TimelineEventProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const borderColor = EVENT_BORDER_COLORS[event.eventType] ?? (event.toolName ? 'border-l-sediment' : 'border-l-border');
 
   return (
-    <div className={cn('group relative pl-6', className)}>
-      {/* Connector dot */}
-      <div className="absolute left-0 top-2 flex h-4 w-4 items-center justify-center">
-        <span
-          className={cn(
-            'h-2 w-2 rounded-full',
-            event.success === false ? 'bg-status-red' : 'bg-accent/60',
-          )}
-        />
-      </div>
-
+    <div className={cn('group relative', className)}>
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full text-left rounded-lg p-2.5 transition-colors hover:bg-card-border/30"
+        className={cn(
+          'w-full text-left border-l-2 p-2.5 transition-colors duration-300 hover:bg-depth-0/50',
+          borderColor,
+        )}
       >
         <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] font-mono text-text-muted shrink-0">
+            {formatTimestamp(event.timestamp)}
+          </span>
           <EventIcon event={event} />
           <EventBadge eventType={event.eventType} />
           {event.toolName && (
-            <span className="text-xs font-mono text-foreground">{event.toolName}</span>
+            <span className="text-xs font-mono text-text-primary">{event.toolName}</span>
           )}
           {event.durationMs !== null && (
-            <span className="text-[10px] text-muted">{formatDuration(event.durationMs)}</span>
+            <span className="text-[10px] font-mono text-text-muted">{formatDuration(event.durationMs)}</span>
           )}
-          <span className="ml-auto text-[10px] text-muted shrink-0">
-            {formatTimestamp(event.timestamp)}
-          </span>
           {event.success === false && (
-            <span className="text-[10px] text-status-red font-medium">failed</span>
+            <span className="text-[10px] font-mono text-signal-red font-medium ml-auto">failed</span>
           )}
         </div>
       </button>
 
       {isExpanded && (
-        <div className="mt-1 ml-6 rounded-lg bg-background/50 p-3 text-xs">
-          <pre className="overflow-x-auto text-[11px] text-muted whitespace-pre-wrap break-words font-mono leading-relaxed">
+        <div className="mt-1 ml-4 bg-depth-2 border border-border p-3 text-xs depth-reveal">
+          <pre className="overflow-x-auto text-[11px] text-text-secondary whitespace-pre-wrap break-words font-mono leading-relaxed">
             {JSON.stringify(event.payload, null, 2)}
           </pre>
         </div>

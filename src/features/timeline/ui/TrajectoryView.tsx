@@ -19,31 +19,17 @@ type Orientation = 'horizontal' | 'vertical';
 type Task = TimelinePlan['tasks'][number];
 
 const PHASE_COLORS: Record<string, string> = {
-  research: '#6b8aed',
-  implementation: '#4a9e6d',
-  scaffolding: '#d4a574',
-  testing: '#d4a040',
-  debugging: '#c45a5a',
-  refinement: '#9b8aed',
-  other: '#8a8078',
-};
-
-const PHASE_BG: Record<string, string> = {
-  research: 'bg-blue-500/8 border-blue-500/20',
-  implementation: 'bg-status-green/8 border-status-green/20',
-  scaffolding: 'bg-accent/8 border-accent/20',
-  testing: 'bg-status-amber/8 border-status-amber/20',
-  debugging: 'bg-status-red/8 border-status-red/20',
-  refinement: 'bg-purple-500/8 border-purple-500/20',
-  other: 'bg-muted/8 border-muted/20',
+  research: '#4080e5',
+  implementation: '#00e5a0',
+  scaffolding: '#00c5c0',
+  testing: '#e5a040',
+  debugging: '#e54060',
+  refinement: '#8060e5',
+  other: '#4a6080',
 };
 
 function getPhaseColor(phase: string): string {
   return PHASE_COLORS[phase] ?? PHASE_COLORS.other;
-}
-
-function getPhaseBg(phase: string): string {
-  return PHASE_BG[phase] ?? PHASE_BG.other;
 }
 
 /* Monochrome SVG icons that adapt to currentColor */
@@ -85,9 +71,9 @@ function TaskIcon({ taskName, className }: { taskName: string; className?: strin
 }
 
 const STATUS_DOT: Record<string, string> = {
-  completed: 'bg-status-green',
-  failed: 'bg-status-red',
-  in_progress: 'bg-accent animate-pulse',
+  completed: 'bg-signal-green',
+  failed: 'bg-signal-red',
+  in_progress: 'bg-signal-amber pulse-warning',
 };
 
 const LEVEL_LABELS = ['Events', 'Plans', 'Phases'] as const;
@@ -149,31 +135,32 @@ function PlanCard({ plan, sessionId, level, isNested }: PlanCardProps) {
 
   return (
     <div className={cn(
-      'rounded-xl border transition-all',
-      getPhaseBg(plan.phase),
+      'border border-border bg-depth-1 transition-all duration-300',
       isNested ? 'ml-2' : '',
-    )}>
+    )}
+      style={{ borderLeftWidth: '2px', borderLeftColor: phaseColor }}
+    >
       {/* Plan header — clickable to expand */}
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex w-full items-center gap-2 p-4 text-left group"
       >
-        <span
-          className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-          style={{ background: phaseColor }}
-        />
-        <span className="flex-1 text-xs font-medium text-foreground break-words">{plan.name}</span>
-        <Badge variant="neutral" size="sm">{plan.phase}</Badge>
-        <span className="text-[10px] text-muted shrink-0">
+        <span className="flex-1 text-xs font-medium text-text-primary break-words">{plan.name}</span>
+        <span className="text-[10px] font-mono text-text-muted px-1.5 py-0.5 bg-depth-2 border border-border"
+          style={{ color: phaseColor }}
+        >
+          {plan.phase}
+        </span>
+        <span className="text-[10px] font-mono text-text-secondary shrink-0">
           {completedCount}/{plan.tasks.length}
         </span>
         {level > 0 && (
-          <span className="text-[10px] text-muted shrink-0">
+          <span className="text-[10px] font-mono text-text-muted shrink-0">
             {totalEvents}e
           </span>
         )}
-        <span className="text-xs text-muted group-hover:text-foreground transition-colors">
+        <span className="text-xs text-text-muted group-hover:text-text-primary transition-colors duration-300">
           {isExpanded ? '\u25BC' : '\u25B6'}
         </span>
       </button>
@@ -181,24 +168,24 @@ function PlanCard({ plan, sessionId, level, isNested }: PlanCardProps) {
       {/* Task nodes row — always visible */}
       <div className="px-4 pb-3 flex flex-wrap gap-2 items-center">
         {plan.tasks.map((task, i) => (
-          <div key={`task-${i}`} className="flex items-center gap-1.5">
+          <div key={`task-${i}`} className="flex items-center gap-1.5 group/task">
             <div className="relative flex flex-col items-center gap-1">
               <div
-                className="flex h-9 w-9 items-center justify-center rounded-full border-2 bg-card"
-                style={{ borderColor: phaseColor, color: phaseColor }}
+                className="flex h-9 w-9 items-center justify-center border-2 bg-depth-0 transition-colors duration-300 group-hover/task:text-inherit"
+                style={{ borderColor: phaseColor }}
               >
-                <TaskIcon taskName={task.name} className="h-3.5 w-3.5" />
+                <TaskIcon taskName={task.name} className="h-3.5 w-3.5 text-text-secondary group-hover/task:text-inherit" />
               </div>
               <span className={cn(
-                'absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full border border-card',
-                STATUS_DOT[task.status] ?? 'bg-muted',
+                'absolute -top-0.5 -right-0.5 h-2 w-2 border border-depth-1',
+                STATUS_DOT[task.status] ?? 'bg-sediment',
               )} />
-              <span className="max-w-[100px] text-[8px] text-muted text-center leading-tight break-words">
+              <span className="max-w-[100px] text-[8px] font-mono text-text-muted text-center leading-tight break-words">
                 {task.name}
               </span>
             </div>
             {i < plan.tasks.length - 1 && (
-              <div className="h-px w-3 bg-muted/30 mb-4" />
+              <div className="h-px w-3 bg-border mb-4" />
             )}
           </div>
         ))}
@@ -206,9 +193,9 @@ function PlanCard({ plan, sessionId, level, isNested }: PlanCardProps) {
 
       {/* Expanded content — recursive drill-down */}
       {isExpanded && (
-        <div className="border-t border-card-border/30 px-4 py-3">
+        <div className="border-t border-border px-4 py-3 bg-depth-2 depth-reveal">
           {isLoading && (
-            <div className="text-xs text-muted py-2">
+            <div className="text-xs font-mono text-text-muted py-2">
               Loading {level > 0 ? LEVEL_LABELS[level - 1] ?? 'data' : 'events'}...
             </div>
           )}
@@ -216,7 +203,7 @@ function PlanCard({ plan, sessionId, level, isNested }: PlanCardProps) {
           {/* Level > 0: show child plans recursively */}
           {level > 0 && childPlans.length > 0 && (
             <div className="space-y-2">
-              <span className="text-[10px] uppercase tracking-wider text-muted">
+              <span className="text-[10px] uppercase tracking-wider text-text-muted font-mono">
                 {LEVEL_LABELS[level - 1] ?? `Level ${level - 1}`} ({childPlans.length})
               </span>
               <div className="space-y-2">
@@ -236,7 +223,7 @@ function PlanCard({ plan, sessionId, level, isNested }: PlanCardProps) {
           {/* Level 0: show raw events */}
           {level === 0 && childEvents.length > 0 && (
             <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-muted">
+              <span className="text-[10px] uppercase tracking-wider text-text-muted font-mono">
                 Events ({childEvents.length})
               </span>
               <div className="space-y-0.5 max-h-[400px] overflow-y-auto">
@@ -248,18 +235,37 @@ function PlanCard({ plan, sessionId, level, isNested }: PlanCardProps) {
           )}
 
           {!isLoading && level > 0 && childPlans.length === 0 && (
-            <div className="text-xs text-muted py-1">
+            <div className="text-xs font-mono text-text-muted py-1">
               No Level {level - 1} analysis available. Run Level {level - 1} first.
             </div>
           )}
 
           {!isLoading && level === 0 && childEvents.length === 0 && (
-            <div className="text-xs text-muted py-1">
+            <div className="text-xs font-mono text-text-muted py-1">
               No events available for drill-down.
             </div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── Connector SVG between plans ─── */
+
+function PlanConnector() {
+  return (
+    <div className="flex justify-center py-1">
+      <svg width="2" height="20" className="overflow-visible">
+        <line
+          x1="1" y1="0" x2="1" y2="20"
+          stroke="var(--color-signal-green)"
+          strokeWidth="1"
+          strokeDasharray="4 4"
+          strokeOpacity="0.3"
+          style={{ animation: 'current-flow 1s linear infinite' }}
+        />
+      </svg>
     </div>
   );
 }
@@ -272,7 +278,7 @@ export function TrajectoryView({ plans, sessionId, level = 0, className }: Traje
   if (plans.length === 0) {
     return (
       <div className={cn('flex items-center justify-center py-12', className)}>
-        <span className="text-sm text-muted">No trajectory data.</span>
+        <span className="text-sm font-mono text-text-muted">No trajectory data.</span>
       </div>
     );
   }
@@ -285,14 +291,14 @@ export function TrajectoryView({ plans, sessionId, level = 0, className }: Traje
     <div className={cn('space-y-4', className)}>
       {/* Stats + orientation toggle */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-5 text-xs text-muted">
+        <div className="flex items-center gap-5 text-xs font-mono text-text-secondary">
           <div className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-status-green" />
+            <span className="inline-block h-2.5 w-2.5 bg-signal-green" />
             <span>{completedTasks} completed</span>
           </div>
           {failedTasks > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-status-red" />
+              <span className="inline-block h-2.5 w-2.5 bg-signal-red" />
               <span>{failedTasks} failed</span>
             </div>
           )}
@@ -304,8 +310,8 @@ export function TrajectoryView({ plans, sessionId, level = 0, className }: Traje
               if (!plans.some((p) => p.phase === phase)) return null;
               return (
                 <div key={phase} className="flex items-center gap-1">
-                  <span className="inline-block h-2 w-2 rounded" style={{ background: color, opacity: 0.6 }} />
-                  <span className="text-[10px]">{phase}</span>
+                  <span className="inline-block h-2 w-2" style={{ background: color, opacity: 0.6 }} />
+                  <span className="text-[10px] font-mono">{phase}</span>
                 </div>
               );
             })}
@@ -313,15 +319,15 @@ export function TrajectoryView({ plans, sessionId, level = 0, className }: Traje
         </div>
 
         {/* Orientation toggle */}
-        <div className="flex items-center rounded-lg border border-card-border bg-card">
+        <div className="flex items-center border border-border bg-depth-1">
           <button
             type="button"
             onClick={() => setOrientation('horizontal')}
             className={cn(
-              'px-2.5 py-1 text-xs transition-colors rounded-l-lg',
+              'px-2.5 py-1 text-xs font-mono transition-colors duration-300',
               orientation === 'horizontal'
-                ? 'bg-accent/15 text-accent font-medium'
-                : 'text-muted hover:text-foreground',
+                ? 'bg-signal-green/10 text-signal-green font-medium'
+                : 'text-text-secondary hover:text-text-primary',
             )}
             title="Horizontal layout"
           >
@@ -331,10 +337,10 @@ export function TrajectoryView({ plans, sessionId, level = 0, className }: Traje
             type="button"
             onClick={() => setOrientation('vertical')}
             className={cn(
-              'px-2.5 py-1 text-xs transition-colors rounded-r-lg border-l border-card-border',
+              'px-2.5 py-1 text-xs font-mono transition-colors duration-300 border-l border-border',
               orientation === 'vertical'
-                ? 'bg-accent/15 text-accent font-medium'
-                : 'text-muted hover:text-foreground',
+                ? 'bg-signal-green/10 text-signal-green font-medium'
+                : 'text-text-secondary hover:text-text-primary',
             )}
             title="Vertical layout"
           >
@@ -353,11 +359,7 @@ export function TrajectoryView({ plans, sessionId, level = 0, className }: Traje
         {plans.map((plan, i) => (
           <div key={`plan-${i}`} className={cn(orientation === 'horizontal' && 'flex-shrink-0 min-w-[300px]')}>
             {/* Connector between plans */}
-            {i > 0 && orientation === 'vertical' && (
-              <div className="flex justify-center py-1">
-                <div className="h-4 w-px border-l-2 border-dashed border-accent/30" />
-              </div>
-            )}
+            {i > 0 && orientation === 'vertical' && <PlanConnector />}
             <PlanCard
               plan={plan}
               sessionId={sessionId}

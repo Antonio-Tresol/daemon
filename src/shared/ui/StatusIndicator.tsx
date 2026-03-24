@@ -7,30 +7,21 @@ type StatusIndicatorProps = {
   className?: string;
 };
 
-const statusColors: Record<Status, string> = {
-  active: 'bg-status-green',
-  completed: 'bg-muted',
-  error: 'bg-status-red',
-  pending: 'bg-status-amber',
+const statusStyles: Record<Status, string> = {
+  active: 'bg-signal-green pulse-active',
+  completed: 'bg-sediment',
+  error: 'bg-signal-red pulse-error',
+  pending: 'bg-text-muted',
 };
 
 export function StatusIndicator({ status, className }: StatusIndicatorProps) {
   return (
-    <span className={cn('relative inline-flex h-2.5 w-2.5', className)}>
-      {status === 'active' && (
-        <span
-          className={cn(
-            'absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping',
-            statusColors[status],
-          )}
-        />
+    <span
+      className={cn(
+        'inline-flex h-2 w-2 rounded-full',
+        statusStyles[status],
+        className,
       )}
-      <span
-        className={cn(
-          'relative inline-flex h-2.5 w-2.5 rounded-full',
-          statusColors[status],
-        )}
-      />
-    </span>
+    />
   );
 }

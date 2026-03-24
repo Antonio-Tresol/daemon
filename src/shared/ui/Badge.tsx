@@ -12,11 +12,11 @@ type BadgeProps = {
 };
 
 const variantStyles: Record<BadgeVariant, string> = {
-  success: 'bg-status-green/15 text-status-green',
-  warning: 'bg-status-amber/15 text-status-amber',
-  error: 'bg-status-red/15 text-status-red',
-  info: 'bg-accent/15 text-accent',
-  neutral: 'bg-muted/15 text-muted',
+  success: 'bg-signal-green/10 text-signal-green',
+  warning: 'bg-signal-amber/10 text-signal-amber',
+  error: 'bg-signal-red/10 text-signal-red',
+  info: 'bg-signal-blue/10 text-signal-blue',
+  neutral: 'bg-sediment/15 text-silt',
 };
 
 const sizeStyles: Record<BadgeSize, string> = {
@@ -28,7 +28,7 @@ export function Badge({ variant = 'neutral', size = 'md', children, className }:
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-md font-medium',
+        'inline-flex items-center rounded-sm font-mono font-medium',
         variantStyles[variant],
         sizeStyles[size],
         className,
