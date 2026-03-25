@@ -1,4 +1,5 @@
 export type { AnalysisType } from '@/entities/analysis/analysis-types';
+
 import type { AnalysisType } from '@/entities/analysis/analysis-types';
 
 export type TimelinePlan = {
@@ -15,12 +16,7 @@ export type TimelinePlan = {
 
 export type Failure = {
   timestamp: string;
-  type:
-    | 'tool_failure'
-    | 'api_error'
-    | 'permission_denied'
-    | 'logic_error'
-    | 'timeout';
+  type: 'tool_failure' | 'api_error' | 'permission_denied' | 'logic_error' | 'timeout';
   description: string;
   rootCause: string;
   impact: 'critical' | 'warning' | 'info';

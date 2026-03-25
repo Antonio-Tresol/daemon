@@ -27,7 +27,7 @@ Examine the session events below and group them into logical **plans** (high-lev
 1. Identify distinct phases of work by looking at patterns in tool usage, file paths, and prompt content
 2. Group related events into tasks (e.g., "reading auth module", "fixing login bug", "running tests")
 3. Group related tasks into plans (e.g., "Fix authentication bug", "Add user profile feature")
-4. Classify each plan's phase: research, implementation, testing, debugging, or other
+4. Classify each plan's phase: research, scaffolding, implementation, testing, debugging, refinement, or other
 5. Determine task status: completed (success), in_progress (no clear end), or failed (errors)
 
 ## Output Format
@@ -38,7 +38,7 @@ Return a JSON object with this structure:
   "plans": [
     {
       "name": "Human-readable plan name",
-      "phase": "research|implementation|testing|debugging|other",
+      "phase": "research|scaffolding|implementation|testing|debugging|refinement|other",
       "tasks": [
         {
           "name": "Human-readable task name",

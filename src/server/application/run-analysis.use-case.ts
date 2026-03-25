@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { AnalysisType, AnalysisResult } from '../domain/analysis/analysis.entity';
+import type { AnalysisResult, AnalysisType } from '../domain/analysis/analysis.entity';
 import type { AnalysisRepository } from '../domain/analysis/analysis.repository';
-import type { EventRepository } from '../domain/event/event.repository';
 import type { ClaudeRunnerPort } from '../domain/claude/claude-runner.port';
+import type { EventRepository } from '../domain/event/event.repository';
 
 export class RunAnalysisUseCase {
   constructor(
@@ -11,10 +11,7 @@ export class RunAnalysisUseCase {
     private readonly claudeRunner: ClaudeRunnerPort,
   ) {}
 
-  async execute(
-    sessionId: string,
-    analysisType: AnalysisType,
-  ): Promise<AnalysisResult> {
+  async execute(sessionId: string, analysisType: AnalysisType): Promise<AnalysisResult> {
     const analysisId = uuidv4();
     const now = new Date().toISOString();
 
@@ -48,8 +45,7 @@ export class RunAnalysisUseCase {
     } catch (err: unknown) {
       analysis.status = 'failed';
       analysis.completedAt = new Date().toISOString();
-      analysis.error =
-        err instanceof Error ? err.message : 'Unknown analysis error';
+      analysis.error = err instanceof Error ? err.message : 'Unknown analysis error';
       this.analysisRepo.update(analysis);
     }
 
