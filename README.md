@@ -72,12 +72,12 @@ Three levels of depth. Pick the one that matches your question.
 
 ```
   ┌─────────────────────────────────────────────────┐
-  │  Narrative    what happened, in thirty seconds   │
+  │  Narrative    what happened, in thirty seconds  │
   ├─────────────────────────────────────────────────┤
-  │  Phases       research → implementation →        │
-  │               testing → debugging                │
+  │  Phases       research → implementation →       │
+  │               testing → debugging               │
   ├─────────────────────────────────────────────────┤
-  │  Events       every tool call, every decision    │
+  │  Events       every tool call, every decision   │
   └─────────────────────────────────────────────────┘
 ```
 
@@ -158,9 +158,9 @@ See [docs/harness-engineering.md](./docs/harness-engineering.md) for the deep di
 Daemon monitors **Claude Code** sessions through two channels:
 
 ```
-  Claude Code ──── HTTP hooks ───→ POST /api/events ───→ ┐
+  Claude Code ──── HTTP hooks ───→ POST /api/events ───→  ┐
                                                           ├──→ SQLite ──→ Analysis ──→ UI
-  Claude Code ──── OpenTelemetry ─→ POST /api/otel ────→ ┘
+  Claude Code ──── OpenTelemetry ─→ POST /api/otel ────→  ┘
 ```
 
 When you trigger analysis, daemon uses the **Claude Agent SDK** with structured outputs to process the session's event stream and produces typed timeline, failure, and improvement results.
