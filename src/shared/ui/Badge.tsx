@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import clsx from 'clsx';
+import type { ReactNode } from 'react';
 
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'accent';
 type BadgeSize = 'sm' | 'md';

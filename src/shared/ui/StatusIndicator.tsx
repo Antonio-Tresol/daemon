@@ -17,15 +17,5 @@ const statusConfig: Record<Status, { symbol: string; style: string }> = {
 export function StatusIndicator({ status, className }: StatusIndicatorProps) {
   const { symbol, style } = statusConfig[status];
 
-  return (
-    <span
-      className={clsx(
-        'inline-flex font-mono text-xs',
-        style,
-        className,
-      )}
-    >
-      {symbol}
-    </span>
-  );
+  return <span className={clsx('inline-flex font-mono text-xs', style, className)}>{symbol}</span>;
 }

@@ -1,16 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card } from '@/shared/ui/Card';
-import { Badge } from '@/shared/ui/Badge';
-import { StatusIndicator } from '@/shared/ui/StatusIndicator';
-import { EventBadge } from '@/entities/event/ui/EventBadge';
-import { useWebSocket } from '@/shared/hooks/use-websocket';
-import { formatTimestamp, formatDuration, formatCost } from '@/shared/lib/format';
-import type { Session, RawSession } from '@/entities/session/model';
-import { normalizeSession } from '@/entities/session/model';
+import { useEffect, useState } from 'react';
 import type { HookEvent } from '@/entities/event/model';
+import { EventBadge } from '@/entities/event/ui/EventBadge';
+import type { RawSession, Session } from '@/entities/session/model';
+import { normalizeSession } from '@/entities/session/model';
+import { useWebSocket } from '@/shared/hooks/use-websocket';
+import { formatCost, formatDuration, formatTimestamp } from '@/shared/lib/format';
+import { Badge } from '@/shared/ui/Badge';
+import { Card } from '@/shared/ui/Card';
+import { StatusIndicator } from '@/shared/ui/StatusIndicator';
 
 type DashboardStats = {
   activeSessions: number;
@@ -58,7 +58,10 @@ export function DashboardContent() {
         }
 
         if (eventsRes.ok) {
-          const data = (await eventsRes.json()) as { events: Array<Record<string, unknown>>; count: number }; // fetch .json() returns unknown
+          const data = (await eventsRes.json()) as {
+            events: Array<Record<string, unknown>>;
+            count: number;
+          }; // fetch .json() returns unknown
           // Record<string, unknown> values narrowed to expected field types
           const normalizedEvents: HookEvent[] = (data.events ?? []).map((e) => ({
             id: e.id as string,
@@ -166,7 +169,9 @@ export function DashboardContent() {
                     <span className="text-text-muted">{formatDuration(event.durationMs)}</span>
                   )}
                   {event.success === false && (
-                    <Badge variant="error" size="sm">fail</Badge>
+                    <Badge variant="error" size="sm">
+                      fail
+                    </Badge>
                   )}
                   <span className="ml-auto text-[10px] text-text-muted whitespace-nowrap">
                     {formatTimestamp(event.timestamp)}
@@ -190,13 +195,25 @@ export function DashboardContent() {
                   className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-depth-2/50 transition-colors"
                 >
                   <StatusIndicator
-                    status={session.status === 'active' ? 'active' : session.status === 'error' ? 'error' : 'completed'}
+                    status={
+                      session.status === 'active'
+                        ? 'active'
+                        : session.status === 'error'
+                          ? 'error'
+                          : 'completed'
+                    }
                   />
                   <span className="font-mono font-medium text-text-primary">
                     {session.id.slice(0, 8)}
                   </span>
                   <Badge
-                    variant={session.status === 'active' ? 'success' : session.status === 'error' ? 'error' : 'neutral'}
+                    variant={
+                      session.status === 'active'
+                        ? 'success'
+                        : session.status === 'error'
+                          ? 'error'
+                          : 'neutral'
+                    }
                     size="sm"
                   >
                     {session.status}

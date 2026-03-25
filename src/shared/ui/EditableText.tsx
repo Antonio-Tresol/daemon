@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type EditableTextProps = {
   value: string;
@@ -88,9 +88,7 @@ export function EditableText({
         className,
       )}
     >
-      <span className={value ? '' : 'text-text-muted'}>
-        {value || placeholder}
-      </span>
+      <span className={value ? '' : 'text-text-muted'}>{value || placeholder}</span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 16 16"

@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import clsx from 'clsx';
-import { StatusIndicator } from '@/shared/ui/StatusIndicator';
-import { LoadingState } from '@/shared/ui/LoadingState';
-import { formatTimestamp } from '@/shared/lib/format';
-import { TimelineEvent } from '@/features/timeline/ui/TimelineEvent';
-import { useMatchedEvents } from '@/features/timeline/hooks/use-matched-events';
+import { useState } from 'react';
 import type { TimelinePlan } from '@/entities/analysis/model';
+import { useMatchedEvents } from '@/features/timeline/hooks/use-matched-events';
+import { TimelineEvent } from '@/features/timeline/ui/TimelineEvent';
+import { formatTimestamp } from '@/shared/lib/format';
+import { LoadingState } from '@/shared/ui/LoadingState';
+import { StatusIndicator } from '@/shared/ui/StatusIndicator';
 
 type Task = TimelinePlan['tasks'][number];
 
@@ -19,9 +19,12 @@ type TaskGroupProps = {
 
 function taskStatusToIndicator(status: Task['status']) {
   switch (status) {
-    case 'completed': return 'completed' as const;
-    case 'in_progress': return 'active' as const;
-    case 'failed': return 'error' as const;
+    case 'completed':
+      return 'completed' as const;
+    case 'in_progress':
+      return 'active' as const;
+    case 'failed':
+      return 'error' as const;
   }
 }
 
@@ -39,7 +42,10 @@ export function TaskGroup({ task, sessionId, className }: TaskGroupProps) {
     enabled: isExpanded,
   });
 
-  const statusInfo = STATUS_SYMBOLS[task.status] ?? { symbol: '\u25CC', className: 'text-text-muted' };
+  const statusInfo = STATUS_SYMBOLS[task.status] ?? {
+    symbol: '\u25CC',
+    className: 'text-text-muted',
+  };
 
   return (
     <div className={clsx('relative', className)}>
@@ -53,7 +59,9 @@ export function TaskGroup({ task, sessionId, className }: TaskGroupProps) {
         <span className={clsx('text-[10px] font-mono', statusInfo.className)}>
           {statusInfo.symbol} {task.status.replace('_', ' ')}
         </span>
-        <span className="text-[10px] font-mono text-text-muted shrink-0">{task.eventIds.length} events</span>
+        <span className="text-[10px] font-mono text-text-muted shrink-0">
+          {task.eventIds.length} events
+        </span>
         <span className="text-xs text-text-muted">{isExpanded ? '\u2212' : '+'}</span>
       </button>
 

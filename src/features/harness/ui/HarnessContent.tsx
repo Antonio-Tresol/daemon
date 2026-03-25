@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FailureTimeline } from '@/features/failures/ui/FailureTimeline';
 import { ImprovementsList } from '@/features/improvements/ui/ImprovementsList';
-import { GroupFilter } from '@/shared/ui/GroupFilter';
 import { EditableText } from '@/shared/ui/EditableText';
+import { GroupFilter } from '@/shared/ui/GroupFilter';
 import { StatusIndicator } from '@/shared/ui/StatusIndicator';
 
 type SessionSummary = {
@@ -39,9 +39,7 @@ export function HarnessContent({ className }: HarnessContentProps) {
     fetch('/api/sessions?limit=50')
       .then((res) => res.json())
       .then((data: SessionsResponse) => {
-        const sorted = (data.sessions ?? []).sort(
-          (a, b) => b.total_events - a.total_events,
-        );
+        const sorted = (data.sessions ?? []).sort((a, b) => b.total_events - a.total_events);
         setSessions(sorted);
         if (sorted.length > 0 && !selectedSessionId) {
           setSelectedSessionId(sorted[0].id);
@@ -56,7 +54,7 @@ export function HarnessContent({ className }: HarnessContentProps) {
   useEffect(() => {
     loadSessions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadSessions]);
 
   const filteredSessions = useMemo(() => {
     if (!groupFilter) return sessions;
@@ -86,9 +84,7 @@ export function HarnessContent({ className }: HarnessContentProps) {
         .then((res) => res.json())
         .then(() => {
           setSessions((prev) =>
-            prev.map((s) =>
-              s.id === selectedSessionId ? { ...s, name: newName || null } : s,
-            ),
+            prev.map((s) => (s.id === selectedSessionId ? { ...s, name: newName || null } : s)),
           );
         })
         .catch(() => {
@@ -129,7 +125,8 @@ export function HarnessContent({ className }: HarnessContentProps) {
           >
             {filteredSessions.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.status === 'active' ? '\u25CF ' : ''}{s.name ?? s.id.slice(0, 12)} ({s.total_events} events)
+                {s.status === 'active' ? '\u25CF ' : ''}
+                {s.name ?? s.id.slice(0, 12)} ({s.total_events} events)
               </option>
             ))}
           </select>
@@ -137,7 +134,9 @@ export function HarnessContent({ className }: HarnessContentProps) {
 
         {selectedSession && (
           <div className="flex items-center gap-1.5">
-            <StatusIndicator status={selectedSession.status === 'active' ? 'active' : 'completed'} />
+            <StatusIndicator
+              status={selectedSession.status === 'active' ? 'active' : 'completed'}
+            />
             <EditableText
               value={selectedSession.name ?? ''}
               placeholder={selectedSession.id.slice(0, 12)}
@@ -168,12 +167,8 @@ export function HarnessContent({ className }: HarnessContentProps) {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'failures' && (
-        <FailureTimeline sessionId={selectedSessionId} />
-      )}
-      {activeTab === 'improvements' && (
-        <ImprovementsList sessionId={selectedSessionId} />
-      )}
+      {activeTab === 'failures' && <FailureTimeline sessionId={selectedSessionId} />}
+      {activeTab === 'improvements' && <ImprovementsList sessionId={selectedSessionId} />}
     </div>
   );
 }

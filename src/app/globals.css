@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
   /* Depth backgrounds — void with bone layered at increasing opacity */
@@ -60,8 +60,8 @@
   --color-border: rgba(10, 10, 10, 0.08);
   --color-border-bright: rgba(10, 10, 10, 0.15);
 
-  --color-text-primary: rgba(10, 10, 10, 0.90);
-  --color-text-secondary: rgba(10, 10, 10, 0.50);
+  --color-text-primary: rgba(10, 10, 10, 0.9);
+  --color-text-secondary: rgba(10, 10, 10, 0.5);
   --color-text-muted: rgba(10, 10, 10, 0.25);
 
   --color-ember: #d4a574;
@@ -71,13 +71,13 @@
   --color-signal-green: #d4a574;
   --color-signal-amber: #d4a574;
   --color-signal-red: #d4a574;
-  --color-signal-blue: rgba(10, 10, 10, 0.50);
+  --color-signal-blue: rgba(10, 10, 10, 0.5);
 
   --color-background: #f0ece5;
-  --color-foreground: rgba(10, 10, 10, 0.90);
+  --color-foreground: rgba(10, 10, 10, 0.9);
   --color-card: #e8e2da;
   --color-card-border: rgba(10, 10, 10, 0.08);
-  --color-muted: rgba(10, 10, 10, 0.50);
+  --color-muted: rgba(10, 10, 10, 0.5);
   --color-accent: #d4a574;
   --color-accent-hover: #c4955a;
   --color-surface: #e8e2da;
@@ -101,44 +101,85 @@ body {
 
 /* Current flow on SVG connections */
 @keyframes current-flow {
-  0% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -8; }
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -8;
+  }
 }
 
 /* Depth reveal — expanded content fade-in */
 @keyframes depth-reveal {
-  0% { opacity: 0; transform: translateY(4px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Pulse signal — active indicator */
 @keyframes pulse-signal {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Pressure pulse — legacy, kept for backward compat */
 @keyframes pressure-pulse {
-  0%, 100% { opacity: 0.4; box-shadow: 0 0 8px currentColor; }
-  50% { opacity: 1.0; box-shadow: 0 0 20px currentColor; }
+  0%,
+  100% {
+    opacity: 0.4;
+    box-shadow: 0 0 8px currentColor;
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 20px currentColor;
+  }
 }
 
 @keyframes pressure-pulse-fast {
-  0%, 100% { opacity: 0.5; box-shadow: 0 0 6px currentColor; }
-  50% { opacity: 1.0; box-shadow: 0 0 16px currentColor; }
+  0%,
+  100% {
+    opacity: 0.5;
+    box-shadow: 0 0 6px currentColor;
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 16px currentColor;
+  }
 }
 
 /* Sonar sweep — data refresh */
 @keyframes sonar-sweep {
-  0% { transform: translateY(-100%); opacity: 0.3; }
-  50% { opacity: 0.6; }
-  100% { transform: translateY(100vh); opacity: 0; }
+  0% {
+    transform: translateY(-100%);
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
 }
 
 /* Loading sequence */
 @keyframes ocean-fade-in {
-  0% { background: #000000; }
-  100% { background: var(--color-depth-0); }
+  0% {
+    background: #000000;
+  }
+  100% {
+    background: var(--color-depth-0);
+  }
 }
 
 /* --- Utility classes --- */
@@ -195,11 +236,21 @@ body {
   padding-left: 16px;
 }
 
-.depth-indicator-0 { border-left-color: var(--color-ember); }
-.depth-indicator-1 { border-left-color: var(--color-ember); }
-.depth-indicator-2 { border-left-color: var(--color-ember); }
-.depth-indicator-3 { border-left-color: var(--color-ember); }
-.depth-indicator-4 { border-left-color: var(--color-ember); }
+.depth-indicator-0 {
+  border-left-color: var(--color-ember);
+}
+.depth-indicator-1 {
+  border-left-color: var(--color-ember);
+}
+.depth-indicator-2 {
+  border-left-color: var(--color-ember);
+}
+.depth-indicator-3 {
+  border-left-color: var(--color-ember);
+}
+.depth-indicator-4 {
+  border-left-color: var(--color-ember);
+}
 
 /* --- Scrollbar styling --- */
 ::-webkit-scrollbar {

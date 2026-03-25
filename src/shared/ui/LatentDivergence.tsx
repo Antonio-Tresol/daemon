@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import clsx from 'clsx';
+import { useEffect, useRef } from 'react';
 
 type LatentDivergenceProps = {
   width?: number;
@@ -44,7 +44,8 @@ export function LatentDivergence({
 
     // Mouse tracking
     function onMouseMove(e: MouseEvent) {
-      const rect = canvas!.getBoundingClientRect();
+      const rect = canvas?.getBoundingClientRect();
+      if (!rect) return;
       mouseRef.current.x = e.clientX - rect.left;
       mouseRef.current.y = e.clientY - rect.top;
       mouseRef.current.active = true;
@@ -137,7 +138,7 @@ export function LatentDivergence({
       };
     }
 
-    let agents: Agent[] = Array.from({ length: agentCount }, createAgent);
+    const agents: Agent[] = Array.from({ length: agentCount }, createAgent);
     let frame = 0;
     let globalDiv = 0;
 
@@ -180,8 +181,8 @@ export function LatentDivergence({
             // Tangential + radial = spiral orbit
             const normX = mdx / mDist;
             const normY = mdy / mDist;
-            a.vx += (normX * force * 0.4 + -normY * force * 0.3);
-            a.vy += (normY * force * 0.4 + normX * force * 0.3);
+            a.vx += normX * force * 0.4 + -normY * force * 0.3;
+            a.vy += normY * force * 0.4 + normX * force * 0.3;
             // Mouse proximity triggers divergence
             a.latentActivation = Math.min(1, a.latentActivation + force * 0.02);
           }
@@ -201,9 +202,10 @@ export function LatentDivergence({
         angle += (n - 0.5) * Math.PI * 0.6;
 
         // Speed
-        let spd = a.latentActivation > 0.25 && a.latentActivation < 0.7
-          ? 0.4 + Math.abs(a.latentActivation - 0.475) / 0.225 * 0.8
-          : 0.8 + a.latentActivation * 0.6;
+        let spd =
+          a.latentActivation > 0.25 && a.latentActivation < 0.7
+            ? 0.4 + (Math.abs(a.latentActivation - 0.475) / 0.225) * 0.8
+            : 0.8 + a.latentActivation * 0.6;
 
         if (variant === 'strip') spd *= 0.5;
 
@@ -221,13 +223,14 @@ export function LatentDivergence({
 
         // Draw trail
         if (a.trail.length > 1) {
-          const col = t < 0.4
-            ? { r: EMBER.r, g: EMBER.g, b: EMBER.b }
-            : {
-                r: EMBER.r + (BONE.r - EMBER.r) * ((t - 0.4) / 0.6),
-                g: EMBER.g + (BONE.g - EMBER.g) * ((t - 0.4) / 0.6),
-                b: EMBER.b + (BONE.b - EMBER.b) * ((t - 0.4) / 0.6),
-              };
+          const col =
+            t < 0.4
+              ? { r: EMBER.r, g: EMBER.g, b: EMBER.b }
+              : {
+                  r: EMBER.r + (BONE.r - EMBER.r) * ((t - 0.4) / 0.6),
+                  g: EMBER.g + (BONE.g - EMBER.g) * ((t - 0.4) / 0.6),
+                  b: EMBER.b + (BONE.b - EMBER.b) * ((t - 0.4) / 0.6),
+                };
 
           for (let j = 1; j < a.trail.length; j++) {
             const frac = j / a.trail.length;
@@ -273,12 +276,7 @@ export function LatentDivergence({
   return (
     <canvas
       ref={canvasRef}
-      className={clsx(
-        variant === 'strip'
-          ? 'w-full h-full'
-          : 'w-full rounded-lg',
-        className,
-      )}
+      className={clsx(variant === 'strip' ? 'w-full h-full' : 'w-full rounded-lg', className)}
       style={variant === 'hero' ? { height: propHeight ?? 300 } : undefined}
     />
   );

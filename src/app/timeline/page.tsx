@@ -1,5 +1,5 @@
-import { Header } from '@/shared/ui/Header';
 import { TimelineContent } from '@/app/timeline/timeline-content';
+import { Header } from '@/shared/ui/Header';
 
 export default function TimelinePage() {
   return (
@@ -7,10 +7,7 @@ export default function TimelinePage() {
       <Header
         title="Matryoshka Timelines"
         subtitle="Nested views of session activity — zoom from events to narrative"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Timeline' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Timeline' }]}
       />
       <TimelineContent />
     </div>

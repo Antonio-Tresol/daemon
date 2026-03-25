@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import clsx from 'clsx';
+import type { ReactNode } from 'react';
 
 type BorderAccent = 'ember' | 'none';
 
@@ -26,7 +26,15 @@ const accentStyles: Record<BorderAccent, string> = {
   none: '',
 };
 
-export function Card({ title, subtitle, children, className, onClick, depthLevel, borderAccent = 'none' }: CardProps) {
+export function Card({
+  title,
+  subtitle,
+  children,
+  className,
+  onClick,
+  depthLevel,
+  borderAccent = 'none',
+}: CardProps) {
   const isClickable = typeof onClick === 'function';
 
   return (
@@ -40,14 +48,22 @@ export function Card({ title, subtitle, children, className, onClick, depthLevel
         className,
       )}
       onClick={onClick}
-      onKeyDown={isClickable ? (e) => { if (e.key === 'Enter') onClick(); } : undefined}
+      onKeyDown={
+        isClickable
+          ? (e) => {
+              if (e.key === 'Enter') onClick();
+            }
+          : undefined
+      }
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
     >
       {(title || subtitle) && (
         <div className="mb-3">
           {title && <h3 className="text-sm font-semibold text-text-primary">{title}</h3>}
-          {subtitle && <p className="mt-0.5 font-mono text-[11px] text-text-secondary">{subtitle}</p>}
+          {subtitle && (
+            <p className="mt-0.5 font-mono text-[11px] text-text-secondary">{subtitle}</p>
+          )}
         </div>
       )}
       {children}

@@ -1,13 +1,13 @@
 'use client';
 
 import clsx from 'clsx';
+import { EventBadge } from '@/entities/event/ui/EventBadge';
+import type { Session } from '@/entities/session/model';
+import { useSessionEvents } from '@/features/session/model/use-session';
+import { formatCost, formatDuration, formatTimestamp } from '@/shared/lib/format';
+import { Badge } from '@/shared/ui/Badge';
 import { Card } from '@/shared/ui/Card';
 import { StatusIndicator } from '@/shared/ui/StatusIndicator';
-import { Badge } from '@/shared/ui/Badge';
-import { EventBadge } from '@/entities/event/ui/EventBadge';
-import { formatTimestamp, formatDuration, formatCost } from '@/shared/lib/format';
-import { useSessionEvents } from '@/features/session/model/use-session';
-import type { Session } from '@/entities/session/model';
 
 type SessionOverviewProps = {
   session: Session;
@@ -17,10 +17,9 @@ type SessionOverviewProps = {
 export function SessionOverview({ session, className }: SessionOverviewProps) {
   const { events, isLoading } = useSessionEvents(session.id, 20);
 
-  const duration =
-    session.endTime
-      ? new Date(session.endTime).getTime() - new Date(session.startTime).getTime()
-      : Date.now() - new Date(session.startTime).getTime();
+  const duration = session.endTime
+    ? new Date(session.endTime).getTime() - new Date(session.startTime).getTime()
+    : Date.now() - new Date(session.startTime).getTime();
 
   return (
     <div className={clsx('space-y-4', className)}>
@@ -28,13 +27,27 @@ export function SessionOverview({ session, className }: SessionOverviewProps) {
       <Card>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Status</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
+              Status
+            </p>
             <div className="mt-1 flex items-center gap-2">
               <StatusIndicator
-                status={session.status === 'active' ? 'active' : session.status === 'error' ? 'error' : 'completed'}
+                status={
+                  session.status === 'active'
+                    ? 'active'
+                    : session.status === 'error'
+                      ? 'error'
+                      : 'completed'
+                }
               />
               <Badge
-                variant={session.status === 'active' ? 'success' : session.status === 'error' ? 'error' : 'neutral'}
+                variant={
+                  session.status === 'active'
+                    ? 'success'
+                    : session.status === 'error'
+                      ? 'error'
+                      : 'neutral'
+                }
                 size="sm"
               >
                 {session.status}
@@ -42,16 +55,22 @@ export function SessionOverview({ session, className }: SessionOverviewProps) {
             </div>
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Duration</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
+              Duration
+            </p>
             <p className="mt-1 text-sm font-medium text-text-primary">{formatDuration(duration)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Events</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
+              Events
+            </p>
             <p className="mt-1 text-sm font-medium text-text-primary">{session.totalEvents}</p>
           </div>
           <div>
             <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Cost</p>
-            <p className="mt-1 text-sm font-medium text-text-primary">{formatCost(session.totalCostUsd)}</p>
+            <p className="mt-1 text-sm font-medium text-text-primary">
+              {formatCost(session.totalCostUsd)}
+            </p>
           </div>
         </div>
         <div className="mt-3 flex items-center gap-4 text-xs text-text-muted">
