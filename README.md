@@ -1,11 +1,8 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Antonio-Tresol/daemon/main/public/daemon-banner-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Antonio-Tresol/daemon/main/public/daemon-banner-light.svg">
-    <img alt="daemon" width="600">
-  </picture>
+  <img src="public/screenshots/latent-divergence-banner.png" alt="daemon — algorithmic flow field in void, bone, and ember" width="100%">
 </p>
 
+<h1 align="center"><em>daemon</em></h1>
 <h3 align="center"><em>watches the watchers</em></h3>
 
 <p align="center">
