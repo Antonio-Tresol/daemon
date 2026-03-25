@@ -1,4 +1,4 @@
-import { formatTimestamp, formatDuration, formatCost } from './format';
+import { formatCost, formatDuration, formatTimestamp } from './format';
 
 describe('formatTimestamp', () => {
   beforeEach(() => {
