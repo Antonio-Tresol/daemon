@@ -36,8 +36,9 @@
         "matcher": "",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Review the recent changes. Check: 1) New functions/components have corresponding .test.ts files? 2) Imports follow FSD layer rules (shared cannot import entities/features/app; entities cannot import features/app)? 3) Domain free of infrastructure imports? 4) No unused variables or dead code? Reply {\"ok\": true} if clean, or {\"ok\": false, \"reason\": \"list specific issues\"}"
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-review.mjs\"",
+            "timeout": 180
           }
         ]
       }
