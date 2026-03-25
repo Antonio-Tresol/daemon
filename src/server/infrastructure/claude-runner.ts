@@ -1,6 +1,4 @@
 import { spawn } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
 import type {
   AnalysisType,
   AnalysisResult,
@@ -9,27 +7,11 @@ import type {
   ClaudeRunnerPort,
   SendMessageResult,
 } from '../domain/claude/claude-runner.port';
+import { loadPrompt } from './load-prompt';
+import { parseAnalysisResult } from './parse-analysis-result';
 
-const PROMPT_DIR = path.resolve(process.cwd(), 'src', 'prompts');
 const SEND_MESSAGE_TIMEOUT_MS = 60_000;
 const ANALYSIS_TIMEOUT_MS = 120_000;
-
-function getPromptPath(type: AnalysisType): string {
-  const fileMap: Record<AnalysisType, string> = {
-    timeline: 'analyze-session.md',
-    failures: 'detect-failures.md',
-    improvements: 'suggest-improvements.md',
-  };
-  return path.join(PROMPT_DIR, fileMap[type]);
-}
-
-function loadPrompt(type: AnalysisType): string {
-  const promptPath = getPromptPath(type);
-  if (!fs.existsSync(promptPath)) {
-    throw new Error(`Prompt file not found: ${promptPath}`);
-  }
-  return fs.readFileSync(promptPath, 'utf-8');
-}
 
 export class ClaudeRunner implements ClaudeRunnerPort {
   async sendMessage(
@@ -146,39 +128,7 @@ async function runAnalysisImpl(
       }
 
       try {
-        const parsed = JSON.parse(stdout) as Record<string, unknown>; // JSON.parse returns unknown
-
-        const result: AnalysisResult['result'] = {};
-
-        if (
-          'plans' in parsed &&
-          Array.isArray(parsed.plans)
-        ) {
-          // parsed.plans is unknown from JSON.parse; narrowing after Array.isArray check above
-          result.plans = parsed.plans as AnalysisResult['result'] extends null
-            ? never
-            : NonNullable<AnalysisResult['result']>['plans'];
-        }
-
-        if (
-          'failures' in parsed &&
-          Array.isArray(parsed.failures)
-        ) {
-          // parsed.failures is unknown from JSON.parse; narrowing after Array.isArray check above
-          result.failures =
-            parsed.failures as NonNullable<AnalysisResult['result']>['failures'];
-        }
-
-        if (
-          'improvements' in parsed &&
-          Array.isArray(parsed.improvements)
-        ) {
-          // parsed.improvements is unknown from JSON.parse; narrowing after Array.isArray check above
-          result.improvements =
-            parsed.improvements as NonNullable<AnalysisResult['result']>['improvements'];
-        }
-
-        resolve(result);
+        resolve(parseAnalysisResult(stdout));
       } catch {
         reject(
           new Error(

@@ -1,7 +1,9 @@
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { query } from '@anthropic-ai/claude-agent-sdk';
 import { type AnalysisType, PROMPT_FILES } from '@/entities/analysis/analysis-types';
+import { resolveClaudeAuth } from './claude-auth';
 
 const META_PROMPT_FILE = 'meta-analysis.md';
 
@@ -112,7 +114,39 @@ Your analysis ID is: \`${analysisId}\` — use it in the URL above.
 After submitting via the API, output a brief summary of what you found. The actual structured result should be submitted via the API above, not printed to stdout.`;
 }
 
-export function runClaudeAgent(prompt: string): Promise<string> {
+export async function runClaudeAgentSdk(prompt: string): Promise<string> {
+  const abortController = new AbortController();
+  const timeout = setTimeout(
+    () => abortController.abort(),
+    600_000, // 10 min — agent needs time to explore
+  );
+
+  try {
+    const q = query({
+      prompt,
+      options: {
+        allowedTools: ['Bash', 'WebFetch'],
+        abortController,
+      },
+    });
+
+    for await (const message of q) {
+      if (
+        message.type === 'result' &&
+        'subtype' in message &&
+        message.subtype === 'success' &&
+        'result' in message
+      ) {
+        return message.result as string; // SDKResultSuccess.result is typed as string
+      }
+    }
+    return '';
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export function runClaudeAgentCli(prompt: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     const errChunks: Buffer[] = [];
@@ -147,4 +181,16 @@ export function runClaudeAgent(prompt: string): Promise<string> {
     child.stdin.write(prompt);
     child.stdin.end();
   });
+}
+
+export async function runClaudeAgent(prompt: string): Promise<string> {
+  const auth = resolveClaudeAuth();
+  if (auth) {
+    try {
+      return await runClaudeAgentSdk(prompt);
+    } catch {
+      // SDK failed — fall back to CLI
+    }
+  }
+  return runClaudeAgentCli(prompt);
 }

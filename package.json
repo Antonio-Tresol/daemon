@@ -15,6 +15,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.83",
     "better-sqlite3": "^12.8.0",
     "clsx": "^2.1.1",
     "graphql": "^16.13.1",
@@ -29,6 +30,8 @@
     "@biomejs/biome": "^2.4.8",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -38,6 +41,7 @@
     "@vitest/ui": "^4.1.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "jsdom": "^29.0.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.1"
