@@ -1,5 +1,5 @@
 #!/bin/bash
-# Verify Command Center setup (read-only, changes nothing).
+# Verify daemon setup (read-only, changes nothing).
 # Usage: bash scripts/verify-setup.sh
 #
 # Checks: hooks installed, OTel configured, server reachable.
@@ -20,7 +20,7 @@ check() {
   fi
 }
 
-echo "=== Command Center — Setup Verification ==="
+echo "=== daemon — Setup Verification ==="
 echo ""
 
 # Check 1: Hooks installed

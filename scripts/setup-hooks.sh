@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install Claude Code hooks to send events to the Command Center.
+# Install Claude Code hooks to send events to daemon.
 # Usage: bash scripts/setup-hooks.sh
 #
 # Adds native HTTP hooks to your global Claude Code settings (~/.claude/settings.json).
@@ -8,10 +8,10 @@
 set -euo pipefail
 
 SETTINGS_FILE="$HOME/.claude/settings.json"
-SERVER_URL="${COMMAND_CENTER_URL:-http://localhost:3000}"
+SERVER_URL="${DAEMON_URL:-http://localhost:3000}"
 EVENTS_URL="$SERVER_URL/api/events"
 
-echo "=== Claude Command Center - Hook Setup ==="
+echo "=== daemon — Hook Setup ==="
 echo "Settings: $SETTINGS_FILE"
 echo "Endpoint: $EVENTS_URL"
 echo ""
@@ -66,9 +66,9 @@ for (const event of ccEvents) {
 
 settings.hooks = hooks;
 fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
-console.log('Hooks installed for: ' + ccEvents.join(', '));
+console.log('daemon hooks installed for: ' + ccEvents.join(', '));
 " "$SETTINGS_FILE" "$EVENTS_URL"
 
 echo ""
 echo "Done! Restart Claude Code to activate hooks."
-echo "Make sure the Command Center is running: npm run dev"
+echo "Make sure daemon is running: npm run dev"

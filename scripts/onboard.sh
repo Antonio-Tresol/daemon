@@ -9,7 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CC_DIR="$(dirname "$SCRIPT_DIR")"
 
-echo "=== Claude Command Center — Onboard ==="
+echo "=== daemon — Onboard ==="
 echo ""
 
 # Step 1: Install hooks
@@ -27,9 +27,9 @@ source "$SCRIPT_DIR/setup-otel.sh"
 echo ""
 echo "--- Verifying server ---"
 if curl -sf http://localhost:3000/api/agent > /dev/null 2>&1; then
-  echo "  [OK] Command Center running at localhost:3000"
+  echo "  [OK] daemon running at localhost:3000"
 else
-  echo "  [!!] Command Center NOT running"
+  echo "  [!!] daemon NOT running"
   echo "  Start it:  cd $CC_DIR && npm run dev"
 fi
 

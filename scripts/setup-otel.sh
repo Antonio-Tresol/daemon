@@ -4,7 +4,7 @@
 #
 # This must be sourced (not executed) so the env vars persist in your shell.
 
-SERVER_URL="${CCC_SERVER_URL:-http://localhost:3000}"
+SERVER_URL="${DAEMON_URL:-http://localhost:3000}"
 
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_METRICS_EXPORTER=otlp

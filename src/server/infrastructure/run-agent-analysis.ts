@@ -37,7 +37,7 @@ Fetch the Level ${level - 1} analysis and synthesize it into a higher-level summ
 
 ## API Access
 
-Query the Command Center API to get the data you need:
+Query the daemon API to get the data you need:
 
 \`\`\`bash
 # Get the previous level's analysis
@@ -71,7 +71,7 @@ ${eventSummary}
 
 ## API Access (for drill-down only)
 
-You have access to the Command Center API at \`${apiBase}\` if you need more detail. Use curl + jq.
+You have access to the daemon API at \`${apiBase}\` if you need more detail. Use curl + jq.
 
 \`\`\`bash
 # Filter events by type

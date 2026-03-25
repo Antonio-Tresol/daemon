@@ -15,7 +15,7 @@ This guide covers getting daemon running and connecting it to your Claude Code a
 ## Quick start
 
 ```bash
-git clone <repo-url> && cd Claude-Command-Center
+git clone <repo-url> && cd daemon
 npm install
 npm run dev
 ```
@@ -109,8 +109,7 @@ Checks that hooks are installed, environment variables are set, and the server i
 If daemon runs on a machine other than localhost, set the URL before running setup:
 
 ```bash
-export COMMAND_CENTER_URL=http://192.168.1.100:3000
-export CCC_SERVER_URL=http://192.168.1.100:3000
+export DAEMON_URL=http://192.168.1.100:3000
 bash scripts/onboard.sh
 ```
 
@@ -187,14 +186,14 @@ curl -X POST http://localhost:3000/api/agent/graphql \
 
 ## Database
 
-SQLite, stored at `./data/command-center.db`. Auto-creates on first run. Schema includes four tables:
+SQLite, stored at `./data/daemon.db`. Auto-creates on first run. Schema includes four tables:
 
 - **sessions** — agent session metadata (id, timestamps, status, working directory, name, event count, cost)
 - **events** — every hook event (tool calls, errors, session lifecycle)
 - **analyses** — analysis jobs and their results (timeline, failures, improvements)
 - **otel_metrics** — OpenTelemetry metrics (token usage, latency, etc.)
 
-To reset: delete `data/command-center.db` and restart daemon.
+To reset: delete `data/daemon.db` and restart daemon.
 
 ---
 
@@ -214,7 +213,7 @@ Removes only the daemon HTTP hooks from `~/.claude/settings.json`, preserving ev
 
 **Analysis stays pending:** Verify the `claude` CLI is in your PATH (`which claude`). Daemon spawns Claude agents to process events, so the CLI must be accessible.
 
-**Database locked:** Stop all daemon instances, delete `data/command-center.db`, and restart. The schema recreates automatically.
+**Database locked:** Stop all daemon instances, delete `data/daemon.db`, and restart. The schema recreates automatically.
 
 **Windows PATH issues:** Prefix commands with `export PATH="/c/Program Files/nodejs:$HOME/AppData/Roaming/npm:$PATH"` if node/npm aren't found.
 

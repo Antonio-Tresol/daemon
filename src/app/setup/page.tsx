@@ -35,7 +35,7 @@ export default function SetupPage() {
     <div>
       <Header
         title="Setup"
-        subtitle="Instrument your Claude Code sessions to monitor them in the Command Center"
+        subtitle="Instrument your Claude Code sessions to monitor them in daemon"
         breadcrumbs={[
           { label: 'Timeline', href: '/' },
           { label: 'Setup' },
@@ -55,20 +55,20 @@ export default function SetupPage() {
       <div className="max-w-2xl space-y-8">
         <div className="border border-ember/20 bg-ember/5 rounded-lg p-4">
           <p className="text-xs text-text-primary/80 leading-relaxed">
-            The Command Center monitors Claude Code sessions by installing lightweight HTTP hooks
+            daemon monitors Claude Code sessions by installing lightweight HTTP hooks
             that post events to this server. Your existing hooks and settings are preserved — the
-            install merges safely. Uninstall removes only Command Center hooks.
+            install merges safely. Uninstall removes only daemon hooks.
           </p>
         </div>
 
-        <Step number={1} title="Start the Command Center">
+        <Step number={1} title="Start daemon">
           <p>Make sure this server is running. If you&apos;re reading this, it already is.</p>
-          <CodeBlock title="Terminal">{`cd /path/to/Claude-Command-Center\nnpm run dev`}</CodeBlock>
+          <CodeBlock title="Terminal">{`cd /path/to/daemon\nnpm run dev`}</CodeBlock>
         </Step>
 
         <Step number={2} title="Install hooks">
           <p>
-            Run the onboard script from the Command Center directory. This merges HTTP hooks into
+            Run the onboard script from the daemon directory. This merges HTTP hooks into
             your global Claude Code settings without touching your existing hooks.
           </p>
           <CodeBlock title="Terminal">{`bash scripts/onboard.sh`}</CodeBlock>
@@ -81,7 +81,7 @@ export default function SetupPage() {
         <Step number={3} title="Restart Claude Code">
           <p>
             Hooks are loaded at session start. Open a new Claude Code session in any terminal
-            and your events will start flowing into the Command Center automatically.
+            and your events will start flowing into daemon automatically.
           </p>
           <CodeBlock title="Any terminal, any directory">{`claude`}</CodeBlock>
         </Step>
@@ -95,8 +95,8 @@ export default function SetupPage() {
         <div className="border-t border-border pt-8 space-y-4">
           <h3 className="text-sm font-medium text-text-primary">Uninstall</h3>
           <p className="text-xs text-text-primary/70 leading-relaxed">
-            To remove Command Center monitoring, run the uninstall script. This surgically removes
-            only the Command Center hooks — your other hooks and settings are untouched.
+            To remove daemon monitoring, run the uninstall script. This surgically removes
+            only the daemon hooks — your other hooks and settings are untouched.
           </p>
           <CodeBlock title="Terminal">{`bash scripts/uninstall-hooks.sh`}</CodeBlock>
         </div>

@@ -16,7 +16,7 @@ function getDbPath(): string {
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
   }
-  return path.join(dataDir, 'command-center.db');
+  return path.join(dataDir, 'daemon.db');
 }
 
 function migrateAnalysesAddLevel(db: Database.Database): void {

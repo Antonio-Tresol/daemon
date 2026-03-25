@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const DOCS = `# Claude Command Center Agent API
+const DOCS = `# daemon Agent API
 
 ## Philosophy
 

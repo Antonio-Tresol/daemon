@@ -1,8 +1,8 @@
 #!/bin/bash
-# Remove Claude Command Center hooks from Claude Code settings.
+# Remove daemon hooks from Claude Code settings.
 # Usage: bash scripts/uninstall-hooks.sh
 #
-# Surgically removes only the Command Center HTTP hooks,
+# Surgically removes only the daemon HTTP hooks,
 # leaving all other hooks and settings untouched.
 
 set -euo pipefail
@@ -14,7 +14,7 @@ if [ ! -f "$SETTINGS_FILE" ]; then
   exit 0
 fi
 
-echo "=== Claude Command Center - Hook Removal ==="
+echo "=== daemon — Hook Removal ==="
 echo "Settings: $SETTINGS_FILE"
 
 # Backup first
@@ -69,7 +69,7 @@ if (Object.keys(hooks).length === 0) {
 }
 
 fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
-console.log('Removed ' + removed + ' Command Center hook(s).');
+console.log('Removed ' + removed + ' daemon hook(s).');
 
 // Show what's left
 const remaining = settings.hooks ? Object.keys(settings.hooks).length : 0;
@@ -77,6 +77,6 @@ console.log(remaining + ' hook event(s) remaining from other sources.');
 " "$SETTINGS_FILE"
 
 echo ""
-echo "Done! Command Center hooks removed."
+echo "Done! daemon hooks removed."
 echo "Your other hooks and settings are untouched."
 echo "Backup saved to $SETTINGS_FILE.pre-uninstall"

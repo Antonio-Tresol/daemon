@@ -11,7 +11,7 @@ interface SubmitBody {
 /**
  * POST /api/agent/analysis/:id/submit
  *
- * Lets the analysis agent submit results back to the Command Center.
+ * Lets the analysis agent submit results back to daemon.
  * The agent queries the API autonomously, builds its analysis, and POSTs the result here.
  *
  * Options:

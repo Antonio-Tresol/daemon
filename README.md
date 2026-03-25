@@ -1,8 +1,10 @@
 # daemon
 
-**A monitoring system for long-running agents.**
+**A proof-of-concept monitoring system for long-running [Claude Code](https://docs.anthropic.com/en/docs/claude-code) agents.**
 
 When codebases become optimised harness-engineered systems, agents run for hours across multiple context compaction horizons. They make thousands of tool calls, hit failures they silently recover from, and leave behind sessions that no human has time to read end-to-end. Daemon exists because someone needs to watch the watchers.
+
+> This is a proof of concept exploring what agent session monitoring could look like. It currently monitors **Claude Code** sessions exclusively, using Claude Code's HTTP hooks and OpenTelemetry telemetry as its data sources.
 
 ---
 
@@ -12,7 +14,7 @@ Harness engineering is redefining how software gets built. Teams at OpenAI, Anth
 
 But autonomy creates a visibility gap.
 
-A single agent session can span hundreds of tool calls, multiple context compactions, and several hours of wall-clock time. When something goes wrong, you get a failed PR or a broken feature. When something goes subtly wrong, you get nothing at all, just a session that looks fine on the surface but made poor architectural decisions, repeated work across compaction boundaries, or silently swallowed errors that will compound later.
+A single Claude Code session can span hundreds of tool calls, multiple context compactions, and several hours of wall-clock time. When something goes wrong, you get a failed PR or a broken feature. When something goes subtly wrong, you get nothing at all, just a session that looks fine on the surface but made poor architectural decisions, repeated work across compaction boundaries, or silently swallowed errors that will compound later.
 
 The longer agents run, the harder it is to answer basic questions:
 - What did the agent actually do during that six-hour session?
@@ -26,7 +28,7 @@ Daemon answers these questions.
 
 ## What daemon does
 
-Daemon ingests OpenTelemetry events from agent sessions and provides a structured interface for exploring what happened, at whatever level of depth you need.
+Daemon ingests events from Claude Code sessions via HTTP hooks and OpenTelemetry, then provides a structured interface for exploring what happened at whatever level of depth you need.
 
 ### Multi-resolution exploration
 
@@ -60,11 +62,24 @@ The term comes from the infrastructure that surrounds a long-running agent: the 
 
 The foundational ideas draw from two key documents:
 
-**"Harness engineering: leveraging Codex in an agent-first world"** (OpenAI, February 2026) describes a team that built a production product entirely through agent-generated code. Their core insight: the engineer's job is no longer writing code but designing environments, specifying intent, and building feedback loops. They discovered that repository knowledge must be the system of record, that context is a scarce resource requiring progressive disclosure, and that enforcing architecture mechanically through linters and structural tests is what enables speed without decay. They describe agents running single tasks for six hours, and the infrastructure needed to keep them productive across those sessions.
+**"Harness engineering: leveraging Codex in an agent-first world"** (OpenAI, February 2026) describes a team that built a production product entirely through agent-generated code. Their core insight: the engineer's job is no longer writing code but designing environments, specifying intent, and building feedback loops. They discovered that repository knowledge must be the system of record, that context is a scarce resource requiring progressive disclosure, and that enforcing architecture mechanically through linters and structural tests is what enables speed without decay.
 
-**"Effective Harnesses for Long-Running Agents"** (Anthropic, November 2025) tackles the specific problem of agents working across context compaction boundaries. Their solution, an initialiser agent that sets up the environment and a coding agent that makes incremental progress while leaving structured artifacts, addresses the two most common failure modes: agents trying to do too much at once and agents declaring victory prematurely. Their progress files, feature lists, and git-based coordination patterns are the building blocks of effective multi-session work.
+**"Effective Harnesses for Long-Running Agents"** and **"Long-running Claude for scientific computing"** (Anthropic, 2025-2026) tackle the specific problem of agents working across context compaction boundaries. Their solutions address the most common failure modes: agents trying to do too much at once, agents declaring victory prematurely, and context loss across compaction horizons. Progress files, feature lists, git-based coordination, and test oracles are the building blocks of effective multi-session work.
 
 Daemon sits at the intersection of these ideas. Where harness engineering tells you how to build the environment, daemon tells you how well the environment is working. It closes the loop between agent execution and harness improvement by making the agent's actual behaviour visible, analysable, and actionable.
+
+---
+
+## How it works
+
+Daemon monitors **Claude Code** sessions. It connects via two mechanisms:
+
+1. **HTTP hooks** — Claude Code fires hooks on every tool call, session start/end, subagent activity, and errors. Daemon receives these at `POST /api/events`.
+2. **OpenTelemetry** — Claude Code's built-in telemetry exporter sends metrics and logs to daemon's OTLP endpoint at `POST /api/otel`.
+
+When you trigger analysis, daemon spawns a Claude agent that processes the session's event stream and produces structured results (timeline, failures, improvements). These results are stored in SQLite and displayed in the web UI.
+
+See [docs/setup.md](./docs/setup.md) for installation and configuration.
 
 ---
 
@@ -84,13 +99,13 @@ src/
   app/                Next.js pages composing features
 ```
 
-Events are ingested via an OpenTelemetry-compatible endpoint. Sessions are stored in SQLite. Analysis is performed by Claude agents that process event streams and produce structured failure reports and improvement recommendations.
-
 The frontend provides four views:
 - **Timeline** for exploring session plans and tasks at multiple resolutions
 - **Harness** for running and reviewing analyses
-- **Sessions** for browsing and comparing agent sessions
-- **Setup** for configuring daemon's connection to your agent infrastructure
+- **Sessions** for browsing and comparing Claude Code sessions
+- **Setup** for configuring daemon's connection to Claude Code
+
+See [docs/architecture.md](./docs/architecture.md) for the full technical breakdown.
 
 ---
 
@@ -98,27 +113,34 @@ The frontend provides four views:
 
 Three colours. Symbols. Nothing else.
 
-Daemon's visual language uses exactly three colours derived from Anthropic's palette: void (neon black), bone (warm parchment), and ember (Claude's warm amber). Status is communicated through symbols and typography rather than colour coding, producing an interface that is cohesive, accessible, and unmistakably its own.
+Daemon's visual language uses exactly three colours derived from Anthropic's palette: void (neon black), bone (warm parchment), and ember (Claude's warm amber). Status is communicated through symbols and typography rather than colour coding.
 
 See [DESIGN.md](./DESIGN.md) for the full design system specification.
 
 ---
 
-## For humans and agents
+## Status
 
-Daemon is designed for both audiences.
+This is a **proof of concept** (v0.1). The core timeline, failure analysis, and improvement recommendation features are functional. The system has been used to monitor its own development, with Claude Code agents building daemon while daemon watches them work.
 
-Humans use daemon to understand what happened during an agent session without reading thousands of events. The multi-resolution views let you start with a narrative summary and drill down to individual tool calls only when you need to. The failure and improvement views give you actionable next steps for improving your harness.
-
-Agents use daemon's structured output to understand their own history. A future agent session can query daemon for past failures in the same codebase, see what improvement recommendations have been made, and adjust its approach accordingly. This creates a second feedback loop: not just human-improves-harness, but agent-learns-from-history.
-
-The goal is an agent-first development environment where the harness continuously improves, failures are caught early, and both humans and agents have the visibility they need to do their best work.
+Daemon currently monitors Claude Code only. Support for other agent runtimes is not implemented but the architecture (OpenTelemetry ingestion, structured analysis) could extend to other systems.
 
 ---
 
-## Status
+## Documentation
 
-Daemon is in active development (v0.1). The core timeline, failure analysis, and improvement recommendation features are functional. The system has been used to monitor its own development, with Claude agents building daemon while daemon watches them work.
+- [Setup guide](./docs/setup.md) — Installation, Claude Code connection, API reference
+- [Architecture](./docs/architecture.md) — DDD backend, FSD frontend, data flows
+- [Harness engineering](./docs/harness-engineering.md) — Founding principles and daemon's position in the stack
+- [Design system](./DESIGN.md) — Three-colour visual language
+
+---
+
+## References
+
+- [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/) — OpenAI, February 2026
+- [Effective Harnesses for Long-Running Agents](https://www.anthropic.com/research/long-running-claude) — Anthropic, November 2025
+- [Long-running Claude for scientific computing](https://www.anthropic.com/research/long-running-Claude) — Anthropic, March 2026
 
 ---
 

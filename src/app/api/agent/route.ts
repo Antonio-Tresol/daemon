@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   return NextResponse.json({
-    name: 'Claude Command Center Agent API',
+    name: 'daemon Agent API',
     version: '1.0.0',
     description:
       'Agent-first API for monitoring and analyzing Claude Code sessions. Designed for programmatic consumption by AI agents and CLI tools.',
