@@ -39,24 +39,33 @@ export function extractJson<T = unknown>(raw: string): T | null {
 }
 
 /**
+ * Unwrap a `{ rawOutput: string }` envelope if present, returning the inner parsed JSON.
+ * Works on an already-parsed value (not a raw string). Returns the original value if not wrapped.
+ */
+export function unwrapRawOutput(value: unknown): unknown {
+  if (
+    value !== null &&
+    typeof value === 'object' &&
+    'rawOutput' in (value as Record<string, unknown>) // narrowing unknown for 'in' operator check
+  ) {
+    const raw = (value as { rawOutput: string }).rawOutput; // narrowing after 'in' check confirms rawOutput exists
+    if (typeof raw === 'string') {
+      const extracted = extractJson(raw);
+      if (extracted !== null) return extracted;
+    }
+  }
+  return value;
+}
+
+/**
  * Parse an analysis result that may be wrapped in a `{ rawOutput: string }` envelope.
  * Common in results from the Claude CLI agent pipeline.
  */
 export function parseAnalysisJson<T = unknown>(resultString: string | null): T | null {
   if (!resultString) return null;
   try {
-    let parsed: unknown = JSON.parse(resultString);
-    if (
-      parsed !== null &&
-      typeof parsed === 'object' &&
-      'rawOutput' in (parsed as Record<string, unknown>) // narrowing unknown for 'in' operator check
-    ) {
-      const raw = (parsed as { rawOutput: string }).rawOutput; // narrowing after 'in' check confirms rawOutput exists
-      const extracted = extractJson<T>(raw);
-      if (extracted !== null) return extracted;
-      // If extraction failed, keep the original parsed value
-    }
-    return parsed as T; // JSON.parse returns unknown, caller provides expected type
+    const parsed = JSON.parse(resultString);
+    return unwrapRawOutput(parsed) as T; // JSON.parse returns unknown, caller provides expected type
   } catch {
     return null;
   }

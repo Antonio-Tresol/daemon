@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { parseAnalysisResult } from './parse-analysis-result';
 
 describe('parseAnalysisResult', () => {
@@ -9,9 +9,7 @@ describe('parseAnalysisResult', () => {
 
     const result = parseAnalysisResult(json);
 
-    expect(result.plans).toEqual([
-      { name: 'Plan A', phase: 'research', tasks: [] },
-    ]);
+    expect(result.plans).toEqual([{ name: 'Plan A', phase: 'research', tasks: [] }]);
     expect(result.failures).toBeUndefined();
     expect(result.improvements).toBeUndefined();
   });

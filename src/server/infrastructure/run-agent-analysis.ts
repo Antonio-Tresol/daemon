@@ -1,7 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { query } from '@anthropic-ai/claude-agent-sdk';
-import { type AnalysisType, PROMPT_FILES } from '@/entities/analysis/analysis-types';
+import type { AnalysisType } from '@/server/domain/analysis/analysis.entity';
+import { getOutputFormat } from './analysis-schemas';
+
+/** Maps analysis types to their prompt template files. Infrastructure concern. */
+const PROMPT_FILES: Record<AnalysisType, string> = {
+  timeline: 'analyze-session.md',
+  failures: 'detect-failures.md',
+  improvements: 'suggest-improvements.md',
+};
 
 const META_PROMPT_FILE = 'meta-analysis.md';
 
@@ -46,19 +54,15 @@ curl -s '${apiBase}/timeline?sessionId=${sessionId}&level=${level - 1}'
 
 ## Submitting Results
 
-When you have your analysis ready, submit it via the API:
+Your analysis ID is: \`${analysisId}\`
+
+Your output will be automatically captured as structured JSON — just produce the analysis as your final response. If needed, you can also submit via the API:
 
 \`\`\`bash
-curl -s -X POST '${apiBase}/analysis/ANALYSIS_ID/submit' \\
+curl -s -X POST '${apiBase}/analysis/${analysisId}/submit' \\
   -H 'Content-Type: application/json' \\
   -d '{"result": YOUR_JSON_RESULT}'
-\`\`\`
-
-Your analysis ID is: \`${analysisId}\` — use it in the URL above.
-
-## Output
-
-After submitting via the API, output a brief summary. The structured result should be submitted via the API, not printed to stdout.`;
+\`\`\``;
   }
 
   return `${promptTemplate}
@@ -89,30 +93,20 @@ curl -s '${apiBase}/events?sessionId=${sessionId}&toolName=Edit' | jq '.data'
 ${type === 'timeline' ? '   - Group the chronological events into logical plans (high-level goals) and tasks\n   - Identify phases: research, scaffolding, implementation, testing, debugging, refinement\n   - Each plan has a name, phase, and tasks array' : ''}${type === 'failures' ? '   - Focus on PostToolUseFailure events\n   - Classify: tool_failure, api_error, permission_denied, logic_error, timeout\n   - Identify root causes and assess impact (critical/warning/info)' : ''}${type === 'improvements' ? '   - Spot patterns where the agent struggled\n   - Suggest hooks, skills, subagents, tools, context, architecture, legibility improvements\n   - Include ready-to-use config when possible' : ''}
 4. Submit your result promptly — don't over-explore
 
-## Submitting Results
-
-When you have your analysis ready, submit it via the API:
-
-\`\`\`bash
-# Submit the complete result
-curl -s -X POST '${apiBase}/analysis/ANALYSIS_ID/submit' \\
-  -H 'Content-Type: application/json' \\
-  -d '{"result": YOUR_JSON_RESULT}'
-
-# Or submit incrementally (append: true merges with previous submissions)
-curl -s -X POST '${apiBase}/analysis/ANALYSIS_ID/submit' \\
-  -H 'Content-Type: application/json' \\
-  -d '{"result": {"plans": [...]}, "append": true}'
-\`\`\`
-
-Your analysis ID is: \`${analysisId}\` — use it in the URL above.
-
 ## Output
 
-After submitting via the API, output a brief summary of what you found. The actual structured result should be submitted via the API above, not printed to stdout.`;
+Your response will be automatically captured as structured JSON matching the analysis schema. Produce your analysis as the final output.
+
+Your analysis ID is: \`${analysisId}\``;
 }
 
-export async function runClaudeAgentSdk(prompt: string): Promise<string> {
+/** Result from runClaudeAgentSdk — either structured output or raw text fallback */
+export type AgentResult = {
+  structured: unknown;
+  raw: string;
+};
+
+export async function runClaudeAgentSdk(prompt: string, type: AnalysisType): Promise<AgentResult> {
   const abortController = new AbortController();
   const timeout = setTimeout(
     () => abortController.abort(),
@@ -124,26 +118,26 @@ export async function runClaudeAgentSdk(prompt: string): Promise<string> {
       prompt,
       options: {
         allowedTools: ['Bash', 'WebFetch'],
+        outputFormat: getOutputFormat(type),
         abortController,
       },
     });
 
     for await (const message of q) {
-      if (
-        message.type === 'result' &&
-        'subtype' in message &&
-        message.subtype === 'success' &&
-        'result' in message
-      ) {
-        return message.result as string; // SDKResultSuccess.result is typed as string
+      if (message.type === 'result' && 'subtype' in message && message.subtype === 'success') {
+        // SDK message type doesn't expose structured_output in its type; widen to check at runtime
+        const msgObj = message as Record<string, unknown>;
+        const structured = 'structured_output' in msgObj ? msgObj.structured_output : undefined;
+        const raw = typeof msgObj.result === 'string' ? msgObj.result : '';
+        return { structured: structured ?? null, raw };
       }
     }
-    return '';
+    return { structured: null, raw: '' };
   } finally {
     clearTimeout(timeout);
   }
 }
 
-export async function runClaudeAgent(prompt: string): Promise<string> {
-  return runClaudeAgentSdk(prompt);
+export async function runClaudeAgent(prompt: string, type: AnalysisType): Promise<AgentResult> {
+  return runClaudeAgentSdk(prompt, type);
 }

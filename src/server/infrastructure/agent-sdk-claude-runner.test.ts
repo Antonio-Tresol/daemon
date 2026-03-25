@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@anthropic-ai/claude-agent-sdk', () => ({
   query: vi.fn(),
@@ -8,15 +8,28 @@ vi.mock('./load-prompt', () => ({
   loadPrompt: vi.fn().mockReturnValue('test prompt template'),
 }));
 
+vi.mock('./analysis-schemas', () => ({
+  getOutputFormat: vi.fn().mockReturnValue({
+    type: 'json_schema',
+    schema: { type: 'object', properties: { plans: { type: 'array' } }, required: ['plans'] },
+  }),
+}));
+
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { AgentSdkClaudeRunner } from './agent-sdk-claude-runner';
 
 function createMockQuery(
   result: string,
-): AsyncGenerator<{ type: string; subtype: string; result: string }> {
+  structuredOutput?: unknown,
+): AsyncGenerator<{ type: string; subtype: string; result: string; structured_output?: unknown }> {
   return (async function* () {
     yield { type: 'assistant', subtype: '', result: '' };
-    yield { type: 'result', subtype: 'success', result };
+    yield {
+      type: 'result',
+      subtype: 'success',
+      result,
+      ...(structuredOutput !== undefined ? { structured_output: structuredOutput } : {}),
+    };
   })();
 }
 
@@ -64,7 +77,7 @@ describe('AgentSdkClaudeRunner', () => {
 
     it('returns error result on SDK failure', async () => {
       vi.mocked(query).mockReturnValue(
-        createErrorQuery() as ReturnType<typeof query>,
+        createErrorQuery() as ReturnType<typeof query>, // mock generator narrowed to SDK return type
       );
 
       const result = await runner.sendMessage('session-123', 'Hello');
@@ -78,30 +91,44 @@ describe('AgentSdkClaudeRunner', () => {
   });
 
   describe('runAnalysis', () => {
-    it('loads prompt template and parses result', async () => {
-      const analysisJson = JSON.stringify({
+    it('uses structured output when available', async () => {
+      const structuredData = {
         plans: [{ name: 'Test Plan', phase: 'testing', tasks: [] }],
-      });
+      };
       vi.mocked(query).mockReturnValue(
-        createMockQuery(analysisJson) as ReturnType<typeof query>,
+        createMockQuery('text fallback', structuredData) as ReturnType<typeof query>,
       );
 
       const result = await runner.runAnalysis('timeline', 'session data');
 
-      expect(result).toEqual({
-        plans: [{ name: 'Test Plan', phase: 'testing', tasks: [] }],
-      });
+      expect(result).toEqual(structuredData);
       expect(query).toHaveBeenCalledWith({
         prompt: expect.stringContaining('test prompt template'),
         options: expect.objectContaining({
           allowedTools: ['Read'],
+          outputFormat: expect.objectContaining({
+            type: 'json_schema',
+          }),
         }),
+      });
+    });
+
+    it('falls back to text parsing when structured output is absent', async () => {
+      const analysisJson = JSON.stringify({
+        plans: [{ name: 'Fallback Plan', phase: 'testing', tasks: [] }],
+      });
+      vi.mocked(query).mockReturnValue(createMockQuery(analysisJson) as ReturnType<typeof query>);
+
+      const result = await runner.runAnalysis('timeline', 'session data');
+
+      expect(result).toEqual({
+        plans: [{ name: 'Fallback Plan', phase: 'testing', tasks: [] }],
       });
     });
 
     it('passes session data in the prompt', async () => {
       vi.mocked(query).mockReturnValue(
-        createMockQuery('{}') as ReturnType<typeof query>,
+        createMockQuery('{}', { failures: [] }) as ReturnType<typeof query>,
       );
 
       await runner.runAnalysis('failures', 'my session data');
@@ -109,6 +136,24 @@ describe('AgentSdkClaudeRunner', () => {
       const calledPrompt = vi.mocked(query).mock.calls[0]?.[0]?.prompt;
       expect(calledPrompt).toContain('<session_data>');
       expect(calledPrompt).toContain('my session data');
+    });
+
+    it('passes outputFormat option to SDK query', async () => {
+      vi.mocked(query).mockReturnValue(
+        createMockQuery('{}', { improvements: [] }) as ReturnType<typeof query>,
+      );
+
+      await runner.runAnalysis('improvements', 'data');
+
+      expect(query).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: expect.objectContaining({
+            outputFormat: expect.objectContaining({
+              type: 'json_schema',
+            }),
+          }),
+        }),
+      );
     });
   });
 });
