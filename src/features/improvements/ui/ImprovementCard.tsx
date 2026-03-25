@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import clsx from 'clsx';
-import { Badge } from '@/shared/ui/Badge';
-import { severitySymbol } from '@/shared/lib/severity-symbols';
+import { useState } from 'react';
 import type { Improvement, ImprovementArea } from '@/entities/analysis/model';
+import { severitySymbol } from '@/shared/lib/severity-symbols';
 
 type ImprovementCardProps = {
   improvement: Improvement;
@@ -42,7 +41,13 @@ export function ImprovementCard({ improvement, isQuickWin, className }: Improvem
   }
 
   return (
-    <div className={clsx('border border-border bg-depth-1 rounded-lg overflow-hidden border-l-2 border-l-ember', isQuickWin && 'ring-1 ring-ember/30', className)}>
+    <div
+      className={clsx(
+        'border border-border bg-depth-1 rounded-lg overflow-hidden border-l-2 border-l-ember',
+        isQuickWin && 'ring-1 ring-ember/30',
+        className,
+      )}
+    >
       {/* Header */}
       <button
         type="button"
@@ -76,16 +81,23 @@ export function ImprovementCard({ improvement, isQuickWin, className }: Improvem
       {expanded && (
         <div className="border-t border-border px-4 pb-4 depth-reveal">
           <div className="mt-3">
-            <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted mb-1">Problem</p>
+            <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted mb-1">
+              Problem
+            </p>
             <p className="text-sm text-text-primary/80">{improvement.problem}</p>
           </div>
 
           {improvement.evidence?.length > 0 && (
             <div className="mt-3">
-              <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted mb-1">Evidence</p>
+              <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted mb-1">
+                Evidence
+              </p>
               <div className="flex flex-wrap gap-1">
                 {improvement.evidence.map((eid, i) => (
-                  <span key={`${eid}-${i}`} className="text-[10px] font-mono text-ember bg-ember/10 px-1.5 py-0.5 rounded-sm">
+                  <span
+                    key={`${eid}-${i}`}
+                    className="text-[10px] font-mono text-ember bg-ember/10 px-1.5 py-0.5 rounded-sm"
+                  >
                     {eid.slice(0, 16)}
                   </span>
                 ))}

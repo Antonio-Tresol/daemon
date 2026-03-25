@@ -39,7 +39,7 @@ export const typeDefs = /* GraphQL */ `
   type TimelinePlan {
     """Name of the plan phase."""
     name: String!
-    """Phase category: research, implementation, testing, debugging, or other."""
+    """Phase category: research, scaffolding, implementation, testing, debugging, refinement, or other."""
     phase: String!
     """Ordered list of tasks within this plan."""
     tasks: [Task!]!

@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
-  return NextResponse.json({
+export async function GET(request: NextRequest) {
+  const origin = new URL(request.url).origin;
+
+  const manifest = {
     name: 'daemon Agent API',
     version: '1.0.0',
     description:
@@ -30,7 +32,7 @@ export async function GET() {
           },
         },
         returns: 'Session[]',
-        curl: "curl http://localhost:3000/api/agent/sessions?status=completed&limit=5",
+        curl: 'curl http://localhost:3000/api/agent/sessions?status=completed&limit=5',
       },
       {
         method: 'GET',
@@ -56,8 +58,7 @@ export async function GET() {
       {
         method: 'GET',
         path: '/api/agent/failures',
-        description:
-          'Get detected failures for a session (requires prior failures analysis).',
+        description: 'Get detected failures for a session (requires prior failures analysis).',
         params: {
           sessionId: {
             type: 'string',
@@ -73,13 +74,7 @@ export async function GET() {
           type: {
             type: 'string',
             required: false,
-            enum: [
-              'tool_failure',
-              'api_error',
-              'permission_denied',
-              'logic_error',
-              'timeout',
-            ],
+            enum: ['tool_failure', 'api_error', 'permission_denied', 'logic_error', 'timeout'],
             description: 'Filter by failure type.',
           },
         },
@@ -190,7 +185,7 @@ export async function GET() {
           },
         },
         returns: 'AnalysisResult',
-        curl: "curl http://localhost:3000/api/agent/analysis/ANALYSIS_ID",
+        curl: 'curl http://localhost:3000/api/agent/analysis/ANALYSIS_ID',
       },
       {
         method: 'POST',
@@ -262,10 +257,17 @@ export async function GET() {
       {
         method: 'GET|POST',
         path: '/api/agent/graphql',
-        description:
-          'GraphQL endpoint. Supports queries and mutations for all data types.',
+        description: 'GraphQL endpoint. Supports queries and mutations for all data types.',
         curl: `curl -X POST http://localhost:3000/api/agent/graphql -H 'Content-Type: application/json' -d '{"query":"{ sessions(limit:3) { id status startTime totalEvents } }"}'`,
       },
     ],
+  };
+
+  const payloadString = JSON.stringify(manifest).replace(/http:\/\/localhost:3000/g, origin);
+
+  return new NextResponse(payloadString, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 }

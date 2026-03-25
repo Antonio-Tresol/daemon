@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import clsx from 'clsx';
-import { EmptyState } from '@/shared/ui/EmptyState';
+import { useState } from 'react';
 import type { TimelinePlan } from '@/entities/analysis/model';
-import { LatentDivergence } from '@/shared/ui/LatentDivergence';
 import { PlanCard } from '@/features/timeline/ui/PlanCard';
+import { EmptyState } from '@/shared/ui/EmptyState';
+import { LatentDivergence } from '@/shared/ui/LatentDivergence';
 
 type TrajectoryViewProps = {
   plans: TimelinePlan[];
@@ -32,7 +32,10 @@ function PlanConnector() {
     <div className="flex justify-center py-0.5">
       <svg width="6" height="24" className="overflow-visible">
         <line
-          x1="3" y1="0" x2="3" y2="24"
+          x1="3"
+          y1="0"
+          x2="3"
+          y2="24"
           stroke="var(--color-ember)"
           strokeWidth="2"
           strokeDasharray="6 4"
@@ -70,7 +73,9 @@ export function TrajectoryView({ plans, sessionId, level = 0, className }: Traje
               <span>{failedTasks} failed</span>
             </div>
           )}
-          <span>{plans.length} plans &middot; {allTasks.length} tasks</span>
+          <span>
+            {plans.length} plans &middot; {allTasks.length} tasks
+          </span>
 
           {/* Phase legend — typographic styles instead of colored dots */}
           <div className="hidden md:flex items-center gap-3 ml-2">
@@ -78,7 +83,9 @@ export function TrajectoryView({ plans, sessionId, level = 0, className }: Traje
               if (!plans.some((p) => p.phase === phase)) return null;
               return (
                 <div key={phase} className="flex items-center gap-1">
-                  <span className={clsx('text-[10px] font-mono text-text-secondary', style)}>{phase}</span>
+                  <span className={clsx('text-[10px] font-mono text-text-secondary', style)}>
+                    {phase}
+                  </span>
                 </div>
               );
             })}
@@ -130,13 +137,12 @@ export function TrajectoryView({ plans, sessionId, level = 0, className }: Traje
           )}
         >
           {plans.map((plan, i) => (
-            <div key={`plan-${i}`} className={clsx(orientation === 'horizontal' && 'flex-shrink-0 min-w-[300px]')}>
+            <div
+              key={`plan-${i}`}
+              className={clsx(orientation === 'horizontal' && 'flex-shrink-0 min-w-[300px]')}
+            >
               {i > 0 && orientation === 'vertical' && <PlanConnector />}
-              <PlanCard
-                plan={plan}
-                sessionId={sessionId}
-                level={level}
-              />
+              <PlanCard plan={plan} sessionId={sessionId} level={level} />
             </div>
           ))}
         </div>

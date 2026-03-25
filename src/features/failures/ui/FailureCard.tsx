@@ -1,8 +1,8 @@
 import clsx from 'clsx';
-import { Badge } from '@/shared/ui/Badge';
+import type { Failure } from '@/entities/analysis/model';
 import { formatTimestamp } from '@/shared/lib/format';
 import { impactSymbol } from '@/shared/lib/severity-symbols';
-import type { Failure } from '@/entities/analysis/model';
+import { Badge } from '@/shared/ui/Badge';
 
 type FailureCardProps = {
   failure: Failure;
@@ -27,7 +27,9 @@ export function FailureCard({ failure, className }: FailureCardProps) {
           <span className="text-ember">{impactSymbol(failure.impact)}</span>
           {failure.impact}
         </span>
-        <Badge variant="neutral" size="sm">{typeLabel(failure.type)}</Badge>
+        <Badge variant="neutral" size="sm">
+          {typeLabel(failure.type)}
+        </Badge>
         <span className="ml-auto text-[10px] text-text-muted font-mono">
           {formatTimestamp(failure.timestamp)}
         </span>

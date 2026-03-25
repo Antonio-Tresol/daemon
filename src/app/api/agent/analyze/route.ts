@@ -1,18 +1,18 @@
-import { type NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import {
+  ANALYSIS_TYPES,
+  type AnalysisType,
+  isValidAnalysisType,
+} from '@/server/domain/analysis/analysis.entity';
+import { SqliteAnalysisRepository } from '@/server/infrastructure/db/analysis.sqlite-repo';
+import { SqliteSessionRepository } from '@/server/infrastructure/db/session.sqlite-repo';
 import { agentError } from '../_lib/response';
-import { ANALYSIS_TYPES, isValidAnalysisType } from '@/entities/analysis/analysis-types';
 
 export async function POST(request: NextRequest) {
   try {
     const body: unknown = await request.json();
 
-    if (
-      body === null ||
-      typeof body !== 'object' ||
-      !('sessionId' in body) ||
-      !('type' in body)
-    ) {
+    if (body === null || typeof body !== 'object' || !('sessionId' in body) || !('type' in body)) {
       return agentError(
         'Request body must include sessionId and type',
         'INVALID_BODY',
@@ -21,8 +21,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // body validated as object with sessionId/type keys above
-    const { sessionId, type, level = 0 } = body as {
+    const {
+      sessionId,
+      type,
+      level = 0,
+    } = body as {
       sessionId: string;
       type: string;
       level?: number;
@@ -46,13 +49,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
-
-    // Verify session exists
-    const session = db
-      .prepare('SELECT id FROM sessions WHERE id = ?')
-      .get(sessionId) as { id: string } | undefined; // .get() returns unknown
+    const sessionRepo = new SqliteSessionRepository();
+    const session = sessionRepo.findById(sessionId);
 
     if (!session) {
       return agentError(
@@ -64,12 +62,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const analysisRepo = new SqliteAnalysisRepository();
     const analysisId = crypto.randomUUID();
     const triggeredAt = new Date().toISOString();
 
-    db.prepare(
-      `INSERT INTO analyses (id, session_id, analysis_type, triggered_at, status) VALUES (?, ?, ?, ?, 'pending')`,
-    ).run(analysisId, sessionId, type, triggeredAt);
+    analysisRepo.save({
+      id: analysisId,
+      sessionId,
+      analysisType: type as AnalysisType, // validated by isValidAnalysisType() guard above
+      level: typeof level === 'number' ? level : 0,
+      triggeredAt,
+      completedAt: null,
+      status: 'pending',
+      result: null,
+      error: null,
+    });
 
     return NextResponse.json(
       {
@@ -91,9 +98,7 @@ export async function POST(request: NextRequest) {
             poll: `/api/agent/analysis/${analysisId}`,
             session: `/api/agent/sessions?status=completed`,
           },
-          suggestions: [
-            `Poll for results: GET /api/agent/analysis/${analysisId}`,
-          ],
+          suggestions: [`Poll for results: GET /api/agent/analysis/${analysisId}`],
         },
       },
       { status: 202 },

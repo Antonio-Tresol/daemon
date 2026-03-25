@@ -15,4 +15,11 @@ export interface AnalysisRepository {
     analysisType: AnalysisType,
     level: number,
   ): AnalysisResult | null;
+  findPaginated(criteria: {
+    sessionId?: string | null;
+    analysisType?: string | null;
+    level?: number;
+    limit?: number;
+    offset?: number;
+  }): AnalysisResult[];
 }

@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import clsx from 'clsx';
-import { LoadingState } from '@/shared/ui/LoadingState';
-import { ErrorState } from '@/shared/ui/ErrorState';
-import { EmptyState } from '@/shared/ui/EmptyState';
+import { useState } from 'react';
+import { AnalysisBadge } from '@/entities/analysis/ui/AnalysisBadge';
+import { useTimeline } from '@/features/timeline/model/use-timeline';
 import { PlanGroup } from '@/features/timeline/ui/PlanGroup';
 import { TrajectoryView } from '@/features/timeline/ui/TrajectoryView';
-import { useTimeline } from '@/features/timeline/model/use-timeline';
-import { AnalysisBadge } from '@/entities/analysis/ui/AnalysisBadge';
+import { EmptyState } from '@/shared/ui/EmptyState';
+import { ErrorState } from '@/shared/ui/ErrorState';
+import { LoadingState } from '@/shared/ui/LoadingState';
 
 type ViewMode = 'list' | 'trajectory';
 
@@ -25,7 +25,10 @@ type TimelineViewProps = {
 };
 
 export function TimelineView({ sessionId, level: externalLevel, className }: TimelineViewProps) {
-  const { plans, analysis, isLoading, error, level, setLevel, refetch } = useTimeline(sessionId, externalLevel);
+  const { plans, analysis, isLoading, error, level, setLevel, refetch } = useTimeline(
+    sessionId,
+    externalLevel,
+  );
   const [viewMode, setViewMode] = useState<ViewMode>('trajectory');
   const [isBuildingLevel, setIsBuildingLevel] = useState(false);
 
@@ -51,7 +54,9 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
   }
 
   if (error) {
-    return <ErrorState message={`\u2717 Failed to load timeline: ${error}`} className={className} />;
+    return (
+      <ErrorState message={`\u2717 Failed to load timeline: ${error}`} className={className} />
+    );
   }
 
   if (plans.length === 0 && level === 0) {
@@ -71,7 +76,9 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
         <div className="flex items-center gap-3">
           {/* Matryoshka level selector */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-muted font-mono hidden sm:inline">Depth</span>
+            <span className="text-[10px] uppercase tracking-wider text-text-muted font-mono hidden sm:inline">
+              Depth
+            </span>
             <div className="flex items-center border border-border bg-depth-1 rounded-md">
               {MATRYOSHKA_LEVELS.map((lvl, i) => (
                 <button
@@ -148,10 +155,10 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
       {plans.length === 0 && level > 0 && !isBuildingLevel && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <span className="text-4xl mb-3 text-text-muted">{MATRYOSHKA_LEVELS[level].icon}</span>
-          <p className="text-sm text-text-secondary">This depth level hasn&apos;t been charted yet.</p>
-          <p className="mt-1 text-xs text-text-muted">
-            {MATRYOSHKA_LEVELS[level].description}
+          <p className="text-sm text-text-secondary">
+            This depth level hasn&apos;t been charted yet.
           </p>
+          <p className="mt-1 text-xs text-text-muted">{MATRYOSHKA_LEVELS[level].description}</p>
         </div>
       )}
 

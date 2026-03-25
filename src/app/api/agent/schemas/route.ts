@@ -19,9 +19,7 @@ export async function GET() {
     _meta: {
       total: SCHEMA_TYPES.length,
       returned: SCHEMA_TYPES.length,
-      suggestions: [
-        'Fetch a specific schema: GET /api/agent/schemas/Session',
-      ],
+      suggestions: ['Fetch a specific schema: GET /api/agent/schemas/Session'],
     },
   });
 }

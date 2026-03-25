@@ -16,7 +16,7 @@ type UseWebSocketReturn = {
 };
 
 function getWsUrl(): string {
-  if (typeof window === 'undefined') return 'ws://localhost:3000/api/ws';
+  if (typeof window === 'undefined') return ''; // SSR — no WebSocket connection possible
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.host}/api/ws`;
 }

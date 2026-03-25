@@ -18,13 +18,13 @@
     "@anthropic-ai/claude-agent-sdk": "^0.2.83",
     "better-sqlite3": "^12.8.0",
     "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.1",
     "graphql": "^16.13.1",
     "graphql-yoga": "^5.18.1",
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "uuid": "^13.0.0",
-    "ws": "^8.20.0"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.8",
@@ -37,10 +37,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^10.0.0",
-    "@types/ws": "^8.18.1",
     "@vitest/ui": "^4.1.1",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.1",
+    "drizzle-kit": "^0.31.10",
     "jsdom": "^29.0.1",
     "tailwindcss": "^4",
     "typescript": "^5",

@@ -1,10 +1,7 @@
-import { type NextRequest } from 'next/server';
-import { agentResponse, agentError } from '../_lib/response';
-import { parseAnalysisJson } from '@/shared/lib/parse-json';
-
-interface AnalysisRow {
-  result: string | null;
-}
+import type { NextRequest } from 'next/server';
+import type { AnalysisResult } from '@/server/domain/analysis/analysis.entity';
+import { SqliteAnalysisRepository } from '@/server/infrastructure/db/analysis.sqlite-repo';
+import { agentError, agentResponse } from '../_lib/response';
 
 interface Improvement {
   area: string;
@@ -16,8 +13,8 @@ interface Improvement {
   category: string;
 }
 
-function parseImprovements(row: AnalysisRow): Improvement[] {
-  const parsed = parseAnalysisJson<{ improvements?: Improvement[] }>(row.result);
+function parseImprovements(row: AnalysisResult): Improvement[] {
+  const parsed = row.result as { improvements?: Improvement[] };
   return parsed?.improvements ?? [];
 }
 
@@ -37,14 +34,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
-
-    const row = db
-      .prepare(
-        "SELECT result FROM analyses WHERE session_id = ? AND analysis_type = 'improvements' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
-      )
-      .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
+    const analysisRepo = new SqliteAnalysisRepository();
+    const rows = analysisRepo.findPaginated({ sessionId, analysisType: 'improvements', limit: 5 });
+    const row = rows.find((r) => r.status === 'completed');
 
     if (!row) {
       return agentResponse([], {

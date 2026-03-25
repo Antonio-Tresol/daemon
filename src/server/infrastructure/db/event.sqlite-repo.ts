@@ -1,86 +1,123 @@
-import type { HookEvent } from '../../domain/event/event.entity';
+import { and, count, desc, eq, gte, lte } from 'drizzle-orm';
+import { HookEvent } from '../../domain/event/event.entity';
 import type { EventRepository } from '../../domain/event/event.repository';
-import { getDatabase } from './sqlite';
-
-interface EventRow {
-  id: string;
-  session_id: string;
-  timestamp: string;
-  event_type: string;
-  tool_name: string | null;
-  success: number | null;
-  duration_ms: number | null;
-  prompt_id: string | null;
-  payload: string;
-}
-
-function rowToEntity(row: EventRow): HookEvent {
-  return {
-    id: row.id,
-    sessionId: row.session_id,
-    timestamp: row.timestamp,
-    eventType: row.event_type as HookEvent['eventType'], // DB stores string, narrowing to union type
-    toolName: row.tool_name,
-    success: row.success === null ? null : row.success === 1,
-    durationMs: row.duration_ms,
-    promptId: row.prompt_id,
-    payload: JSON.parse(row.payload) as Record<string, unknown>, // JSON.parse returns unknown
-  };
-}
+import { events } from './drizzle-schema';
+import { getDb } from './sqlite';
 
 export class SqliteEventRepository implements EventRepository {
-  save(event: HookEvent): void {
-    const db = getDatabase();
-    const stmt = db.prepare(`
-      INSERT OR REPLACE INTO events (id, session_id, timestamp, event_type, tool_name, success, duration_ms, prompt_id, payload)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(
-      event.id,
-      event.sessionId,
-      event.timestamp,
-      event.eventType,
-      event.toolName,
-      event.success === null ? null : event.success ? 1 : 0,
-      event.durationMs,
-      event.promptId,
-      JSON.stringify(event.payload),
+  private mapToDomain(row: typeof events.$inferSelect): HookEvent {
+    return new HookEvent(
+      row.id,
+      row.sessionId,
+      row.timestamp,
+      row.eventType as HookEvent['eventType'],
+      row.toolName,
+      row.success,
+      row.durationMs,
+      row.promptId,
+      row.payload as Record<string, unknown>,
     );
+  }
+
+  save(event: HookEvent): void {
+    const db = getDb();
+    db.insert(events)
+      .values({
+        id: event.id,
+        sessionId: event.sessionId,
+        timestamp: event.timestamp,
+        eventType: event.eventType,
+        toolName: event.toolName ?? null,
+        success: event.success ?? null,
+        durationMs: event.durationMs ?? null,
+        promptId: event.promptId ?? null,
+        payload: event.payload,
+      })
+      .onConflictDoUpdate({
+        target: events.id,
+        set: {
+          sessionId: event.sessionId,
+          timestamp: event.timestamp,
+          eventType: event.eventType,
+          toolName: event.toolName ?? null,
+          success: event.success ?? null,
+          durationMs: event.durationMs ?? null,
+          promptId: event.promptId ?? null,
+          payload: event.payload,
+        },
+      })
+      .run();
   }
 
   findBySessionId(sessionId: string): HookEvent[] {
-    const db = getDatabase();
-    const stmt = db.prepare(
-      'SELECT * FROM events WHERE session_id = ? ORDER BY timestamp ASC',
-    );
-    const rows = stmt.all(sessionId) as EventRow[]; // .all() returns unknown[]
-    return rows.map(rowToEntity);
+    const db = getDb();
+    const rows = db
+      .select()
+      .from(events)
+      .where(eq(events.sessionId, sessionId))
+      .orderBy(events.timestamp)
+      .all();
+    return rows.map((row) => this.mapToDomain(row));
   }
 
   findByTimeRange(start: string, end: string): HookEvent[] {
-    const db = getDatabase();
-    const stmt = db.prepare(
-      'SELECT * FROM events WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC',
-    );
-    const rows = stmt.all(start, end) as EventRow[]; // .all() returns unknown[]
-    return rows.map(rowToEntity);
+    const db = getDb();
+    const rows = db
+      .select()
+      .from(events)
+      .where(and(gte(events.timestamp, start), lte(events.timestamp, end)))
+      .orderBy(events.timestamp)
+      .all();
+    return rows.map((row) => this.mapToDomain(row));
   }
 
   findByType(eventType: string): HookEvent[] {
-    const db = getDatabase();
-    const stmt = db.prepare(
-      'SELECT * FROM events WHERE event_type = ? ORDER BY timestamp ASC',
-    );
-    const rows = stmt.all(eventType) as EventRow[]; // .all() returns unknown[]
-    return rows.map(rowToEntity);
+    const db = getDb();
+    const rows = db
+      .select()
+      .from(events)
+      .where(eq(events.eventType, eventType))
+      .orderBy(events.timestamp)
+      .all();
+    return rows.map((row) => this.mapToDomain(row));
   }
 
   countBySessionId(sessionId: string): number {
-    const db = getDatabase();
-    const stmt = db.prepare(
-      'SELECT COUNT(*) as count FROM events WHERE session_id = ?',
-    );
-    const row = stmt.get(sessionId) as { count: number }; // .get() returns unknown
-    return row.count;
+    const db = getDb();
+    const result = db
+      .select({ value: count() })
+      .from(events)
+      .where(eq(events.sessionId, sessionId))
+      .get();
+    return result?.value ?? 0;
+  }
+
+  findPaginated({
+    sessionId,
+    eventType,
+    toolName,
+    limit = 100,
+    offset = 0,
+  }: {
+    sessionId?: string | null;
+    eventType?: string | null;
+    toolName?: string | null;
+    limit?: number;
+    offset?: number;
+  }): HookEvent[] {
+    const db = getDb();
+    let query = db.select().from(events);
+    const conditions = [];
+    if (sessionId) conditions.push(eq(events.sessionId, sessionId));
+    if (eventType) conditions.push(eq(events.eventType, eventType));
+    if (toolName) conditions.push(eq(events.toolName, toolName));
+
+    if (conditions.length > 0) {
+      // Drizzle's .where() narrows the query type, but reassignment requires widening — safe because we only add valid conditions
+      query = query.where(and(...conditions)) as typeof query;
+    }
+
+    const rows = query.orderBy(desc(events.timestamp)).limit(limit).offset(offset).all();
+    return rows.map((row) => this.mapToDomain(row));
   }
 }

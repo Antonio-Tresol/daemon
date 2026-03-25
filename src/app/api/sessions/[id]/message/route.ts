@@ -1,13 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { type NextRequest, NextResponse } from 'next/server';
+import { SendMessageUseCase } from '@/server/application/send-message.use-case';
+import { createClaudeRunner } from '@/server/infrastructure/create-claude-runner';
 
-const execFileAsync = promisify(execFile);
-
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: sessionId } = await params;
     const { message } = await request.json();
@@ -16,28 +11,18 @@ export async function POST(
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const { stdout, stderr } = await execFileAsync('claude', [
-      '--resume', sessionId,
-      '-p', message,
-      '--output-format', 'json',
-      '--bare',
-    ], {
-      maxBuffer: 10 * 1024 * 1024,
-      timeout: 120_000,
-    });
+    const claudeRunner = createClaudeRunner();
+    const useCase = new SendMessageUseCase(claudeRunner);
+    const result = await useCase.execute(sessionId, message);
 
-    let response: unknown;
-    try {
-      response = JSON.parse(stdout);
-    } catch {
-      response = { rawOutput: stdout };
+    if (!result.success) {
+      return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
     }
 
     return NextResponse.json({
       ok: true,
       sessionId,
-      response,
-      stderr: stderr || null,
+      response: result.response,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

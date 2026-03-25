@@ -127,7 +127,7 @@ Without daemon (or something like it), the human must read raw session logs to u
 
 These principles guide daemon's design, drawn from the harness engineering literature:
 
-**Watch, don't block.** Daemon observes agent sessions through hooks and telemetry. It never interrupts the agent's work or adds latency to tool calls. Monitoring must be invisible to the thing being monitored.
+**Watch, don't block.** Daemon observes agent sessions through HTTP hooks. It never interrupts the agent's work or adds latency to tool calls. Monitoring must be invisible to the thing being monitored.
 
 **Evidence over opinion.** Every failure and recommendation in daemon is linked to specific events in the session. You can always trace a finding back to what actually happened.
 

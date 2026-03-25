@@ -1,14 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { RawSession, Session } from '@/entities/session/model';
+import { normalizeSession } from '@/entities/session/model';
 import { TimelineView } from '@/features/timeline/ui/TimelineView';
 import { useWebSocket } from '@/shared/hooks/use-websocket';
-import type { Session, RawSession } from '@/entities/session/model';
-import { normalizeSession } from '@/entities/session/model';
-import { GroupFilter } from '@/shared/ui/GroupFilter';
 import { EditableText } from '@/shared/ui/EditableText';
+import { GroupFilter } from '@/shared/ui/GroupFilter';
 import { StatusIndicator } from '@/shared/ui/StatusIndicator';
-
 
 export function TimelineContent() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -24,7 +23,8 @@ export function TimelineContent() {
     fetch('/api/sessions?limit=50')
       .then((res) => res.json())
       .then((data: { sessions: RawSession[] }) => {
-        const normalized = (data.sessions ?? []).map(normalizeSession)
+        const normalized = (data.sessions ?? [])
+          .map(normalizeSession)
           .sort((a, b) => (b.totalEvents ?? 0) - (a.totalEvents ?? 0));
         setSessions(normalized);
         if (normalized.length > 0) {
@@ -64,9 +64,7 @@ export function TimelineContent() {
         .then((res) => res.json())
         .then(() => {
           setSessions((prev) =>
-            prev.map((s) =>
-              s.id === selectedSessionId ? { ...s, name: newName || null } : s,
-            ),
+            prev.map((s) => (s.id === selectedSessionId ? { ...s, name: newName || null } : s)),
           );
         })
         .catch(() => {
@@ -91,7 +89,8 @@ export function TimelineContent() {
             <option value="">All sessions</option>
             {filteredSessions.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.status === 'active' ? '\u25CF ' : ''}{s.name ?? s.id.slice(0, 12)} ({s.totalEvents} events)
+                {s.status === 'active' ? '\u25CF ' : ''}
+                {s.name ?? s.id.slice(0, 12)} ({s.totalEvents} events)
               </option>
             ))}
           </select>

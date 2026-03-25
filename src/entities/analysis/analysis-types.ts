@@ -1,17 +1,17 @@
 /**
- * Central registry for analysis types. Single source of truth.
- * Add new analysis types here — all consumers derive from this array.
+ * Re-exports from domain — the canonical source of truth.
+ * Frontend code imports from here; the definitions live in the domain layer.
  */
-export const ANALYSIS_TYPES = ['timeline', 'failures', 'improvements'] as const;
+export {
+  ANALYSIS_TYPES,
+  type AnalysisType,
+  isValidAnalysisType,
+} from '@/server/domain/analysis/analysis.entity';
 
-export type AnalysisType = (typeof ANALYSIS_TYPES)[number];
+import type { AnalysisType } from '@/server/domain/analysis/analysis.entity';
 
 export const PROMPT_FILES: Record<AnalysisType, string> = {
   timeline: 'analyze-session.md',
   failures: 'detect-failures.md',
   improvements: 'suggest-improvements.md',
 } satisfies Record<AnalysisType, string>;
-
-export function isValidAnalysisType(value: string): value is AnalysisType {
-  return (ANALYSIS_TYPES as readonly string[]).includes(value); // widen const tuple to string[] for .includes() compatibility
-}

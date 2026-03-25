@@ -1,6 +1,6 @@
-import type { Session, RawSession } from '@/entities/session/model';
-import { normalizeSession } from '@/entities/session/model';
 import type { HookEvent } from '@/entities/event/model';
+import type { RawSession, Session } from '@/entities/session/model';
+import { normalizeSession } from '@/entities/session/model';
 
 type SessionsResponse = {
   sessions: RawSession[];
@@ -48,10 +48,7 @@ export async function fetchSessions(status?: string): Promise<Session[]> {
   return (data.sessions ?? []).map(normalizeSession);
 }
 
-export async function fetchSessionEvents(
-  sessionId: string,
-  limit = 50,
-): Promise<HookEvent[]> {
+export async function fetchSessionEvents(sessionId: string, limit = 50): Promise<HookEvent[]> {
   const params = new URLSearchParams({
     sessionId,
     limit: String(limit),

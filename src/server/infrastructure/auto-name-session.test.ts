@@ -1,62 +1,88 @@
+import { Session } from '../domain/session/session.entity';
+import type { SessionRepository } from '../domain/session/session.repository';
 import { autoNameSession } from './auto-name-session';
 
-function createMockDb(sessionName: string | null, shouldThrow = false) {
-  const runFn = vi.fn();
-  const db = {
-    prepare: vi.fn((sql: string) => {
+function createMockRepo(session: Session | null, shouldThrow = false) {
+  const updateNameFn = vi.fn();
+  const repo: SessionRepository = {
+    findById: () => {
       if (shouldThrow) throw new Error('DB error');
-      if (sql.startsWith('SELECT')) {
-        return {
-          get: () => (sessionName !== undefined ? { name: sessionName } : undefined),
-        };
-      }
-      return { run: runFn };
-    }),
-  } as unknown as Parameters<typeof autoNameSession>[0];
-  return { db, runFn };
+      return session;
+    },
+    updateName: updateNameFn,
+    save: vi.fn(),
+    update: vi.fn(),
+    findAll: () => [],
+    findActive: () => [],
+    updateGroup: vi.fn(),
+    findByGroup: () => [],
+    findGroups: () => [],
+  };
+  return { repo, updateNameFn };
+}
+
+function makeSession(name: string | null): Session {
+  return new Session(
+    'session-1',
+    '2026-03-25T10:00:00.000Z',
+    null,
+    'active',
+    null,
+    null,
+    1,
+    0,
+    name,
+    null,
+  );
 }
 
 describe('autoNameSession', () => {
   it('does not update if session already has a name', () => {
-    const { db, runFn } = createMockDb('Existing Name');
-    autoNameSession(db, 'session-1', { plans: [{ name: 'New Plan' }] });
-    expect(runFn).not.toHaveBeenCalled();
+    const { repo, updateNameFn } = createMockRepo(makeSession('Existing Name'));
+    autoNameSession(repo, 'session-1', { plans: [{ name: 'New Plan' }] });
+    expect(updateNameFn).not.toHaveBeenCalled();
   });
 
   it('does not update if result has no plans', () => {
-    const { db, runFn } = createMockDb(null);
-    autoNameSession(db, 'session-1', { plans: [] });
-    expect(runFn).not.toHaveBeenCalled();
+    const { repo, updateNameFn } = createMockRepo(makeSession(null));
+    autoNameSession(repo, 'session-1', { plans: [] });
+    expect(updateNameFn).not.toHaveBeenCalled();
   });
 
   it('does not update if result is null', () => {
-    const { db, runFn } = createMockDb(null);
-    autoNameSession(db, 'session-1', null);
-    expect(runFn).not.toHaveBeenCalled();
+    const { repo, updateNameFn } = createMockRepo(makeSession(null));
+    autoNameSession(repo, 'session-1', null);
+    expect(updateNameFn).not.toHaveBeenCalled();
   });
 
   it('does not update if plans is not an array', () => {
-    const { db, runFn } = createMockDb(null);
-    autoNameSession(db, 'session-1', { plans: 'not-array' });
-    expect(runFn).not.toHaveBeenCalled();
+    const { repo, updateNameFn } = createMockRepo(makeSession(null));
+    autoNameSession(repo, 'session-1', { plans: 'not-array' });
+    expect(updateNameFn).not.toHaveBeenCalled();
   });
 
   it('names session from first plan', () => {
-    const { db, runFn } = createMockDb(null);
-    autoNameSession(db, 'session-1', {
+    const { repo, updateNameFn } = createMockRepo(makeSession(null));
+    autoNameSession(repo, 'session-1', {
       plans: [{ name: 'Build auth module' }, { name: 'Second plan' }],
     });
-    expect(runFn).toHaveBeenCalledWith('Build auth module', 'session-1');
+    expect(updateNameFn).toHaveBeenCalledWith('session-1', 'Build auth module');
   });
 
   it('does not update if first plan has no name', () => {
-    const { db, runFn } = createMockDb(null);
-    autoNameSession(db, 'session-1', { plans: [{ title: 'no name field' }] });
-    expect(runFn).not.toHaveBeenCalled();
+    const { repo, updateNameFn } = createMockRepo(makeSession(null));
+    autoNameSession(repo, 'session-1', { plans: [{ title: 'no name field' }] });
+    expect(updateNameFn).not.toHaveBeenCalled();
   });
 
-  it('handles DB error silently', () => {
-    const { db } = createMockDb(null, true);
-    expect(() => autoNameSession(db, 'session-1', { plans: [{ name: 'Plan' }] })).not.toThrow();
+  it('does not update if session not found', () => {
+    const { repo, updateNameFn } = createMockRepo(null);
+    autoNameSession(repo, 'session-1', { plans: [{ name: 'Plan' }] });
+    expect(updateNameFn).not.toHaveBeenCalled();
+  });
+
+  it('handles error silently', () => {
+    const { repo } = createMockRepo(null, true);
+    expect(() => autoNameSession(repo, 'session-1', { plans: [{ name: 'Plan' }] })).not.toThrow();
   });
 });

@@ -13,11 +13,12 @@ Given a Level N timeline (array of plans with tasks), produce a Level N+1 timeli
 ### Level 1 Aggregation (plans -> phases)
 Group related plans into logical phases of work:
 - **Research**: Plans involving reading files, exploring structure, understanding patterns
-- **Scaffolding**: Plans involving creating directories, config files, project setup
+- **Scaffolding**: Plans involving creating directories, config files, project setup, boilerplate
 - **Implementation**: Plans involving writing new code, features, components
 - **Testing**: Plans involving writing or running tests, fixing test failures
 - **Debugging**: Plans involving investigating and fixing bugs, errors, regressions
 - **Refinement**: Plans involving refactoring, optimization, polish, cleanup
+- **Other**: Plans that don't fit any of the above categories
 
 ### Level 2 Aggregation (phases -> narrative)
 Produce 1-3 high-level descriptions that capture the entire session narrative:
@@ -31,7 +32,7 @@ Produce 1-3 high-level descriptions that capture the entire session narrative:
 2. Identify natural phase boundaries (shifts in activity type, file focus, or tool usage patterns)
 3. Group adjacent plans that share the same phase
 4. Name each group with a descriptive phase title (not "Phase 1" but "Explore authentication system and plan refactor")
-5. Determine the phase classification (research, scaffolding, implementation, testing, debugging, refinement)
+5. Determine the phase classification (research, scaffolding, implementation, testing, debugging, refinement, other)
 6. Roll up task statuses: a phase is "completed" if all inner tasks completed, "failed" if any critical task failed, otherwise "in_progress"
 7. Use the earliest task startTime and latest task endTime for the phase boundaries
 
@@ -44,7 +45,7 @@ Return a JSON object matching the TimelinePlan structure:
   "plans": [
     {
       "name": "Descriptive phase name summarizing the grouped work",
-      "phase": "research|scaffolding|implementation|testing|debugging|refinement",
+      "phase": "research|scaffolding|implementation|testing|debugging|refinement|other",
       "tasks": [
         {
           "name": "Original plan name (now a sub-phase)",
@@ -62,7 +63,7 @@ Return a JSON object matching the TimelinePlan structure:
 ## Guidelines
 
 - Prefer fewer, meaningful phases over many small ones. A good Level 1 timeline has 3-7 phases.
-- Phase names should tell a story: "Set up project scaffolding and configure build tools" not "Setup".
+- Phase names should tell a story: "Set up project structure and configure build tools" not "Setup".
 - If the session has a clear arc (explore -> implement -> fix -> verify), preserve that narrative.
 - Adjacent plans of the same type should almost always be merged into one phase.
 - A plan that spans multiple types (e.g., implement then test) should go in the dominant category.

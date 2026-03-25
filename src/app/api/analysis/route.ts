@@ -1,9 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { extractJson } from '@/shared/lib/parse-json';
-import { type AnalysisType, isValidAnalysisType } from '@/entities/analysis/analysis-types';
-import { buildEventSummarySync } from '@/server/infrastructure/build-event-summary';
-import { buildAgentPrompt, readPromptTemplate, runClaudeAgent } from '@/server/infrastructure/run-agent-analysis';
+import { type NextRequest, NextResponse } from 'next/server';
+import { type AnalysisType, isValidAnalysisType } from '@/server/domain/analysis/analysis.entity';
 import { autoNameSession } from '@/server/infrastructure/auto-name-session';
+import { buildEventSummary } from '@/server/infrastructure/build-event-summary';
+import { SqliteAnalysisRepository } from '@/server/infrastructure/db/analysis.sqlite-repo';
+import { SqliteEventRepository } from '@/server/infrastructure/db/event.sqlite-repo';
+import { SqliteSessionRepository } from '@/server/infrastructure/db/session.sqlite-repo';
+import {
+  buildAgentPrompt,
+  readPromptTemplate,
+  runClaudeAgent,
+} from '@/server/infrastructure/run-agent-analysis';
+import { extractJson, unwrapRawOutput } from '@/shared/lib/parse-json';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,41 +20,21 @@ export async function GET(request: NextRequest) {
     const type = typeParam && isValidAnalysisType(typeParam) ? typeParam : null;
     const limit = Math.min(Number(searchParams.get('limit') ?? 20), 100);
 
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
-
     const level = searchParams.get('level');
     const parsedLevel = level !== null ? Number(level) : undefined;
 
-    let query = 'SELECT * FROM analyses WHERE 1=1';
-    const params: (string | number)[] = [];
+    const analysisRepo = new SqliteAnalysisRepository();
+    const rows = analysisRepo.findPaginated({
+      sessionId,
+      analysisType: type,
+      level: parsedLevel !== undefined && !Number.isNaN(parsedLevel) ? parsedLevel : undefined,
+      limit,
+    });
 
-    if (sessionId) {
-      query += ' AND session_id = ?';
-      params.push(sessionId);
-    }
-    if (type) {
-      query += ' AND analysis_type = ?';
-      params.push(type);
-    }
-    if (parsedLevel !== undefined && !Number.isNaN(parsedLevel)) {
-      query += ' AND level = ?';
-      params.push(parsedLevel);
-    }
-
-    query += ' ORDER BY triggered_at DESC LIMIT ?';
-    params.push(limit);
-
-    const rows = db.prepare(query).all(...params);
-    const analyses = (rows as Array<Record<string, unknown>>).map((row) => { // .all() returns unknown[]
-      let result = typeof row.result === 'string' ? JSON.parse(row.result) : row.result;
-
-      if (result && typeof result === 'object' && 'rawOutput' in result) {
-        const raw = (result as { rawOutput: string }).rawOutput; // narrowing after 'in' check confirms rawOutput exists
-        const parsed = extractJson(raw);
-        if (parsed) result = parsed;
-      }
-
+    const analyses = rows.map((row) => {
+      const result = unwrapRawOutput(
+        typeof row.result === 'string' ? JSON.parse(row.result) : row.result,
+      );
       return { ...row, result };
     });
 
@@ -60,7 +47,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { sessionId, type, level: requestLevel } = await request.json() as { // request.json() returns unknown
+    const {
+      sessionId,
+      type,
+      level: requestLevel,
+    } = (await request.json()) as {
       sessionId: string;
       type: AnalysisType;
       level?: number;
@@ -74,100 +65,140 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
+    const sessionRepo = new SqliteSessionRepository();
+    const eventRepo = new SqliteEventRepository();
+    const analysisRepo = new SqliteAnalysisRepository();
 
-    // Verify session exists and get event count
-    const sessionRow = db.prepare('SELECT * FROM sessions WHERE id = ?').get(sessionId) as Record<string, unknown> | undefined; // .get() returns unknown
-    const eventCount = (db.prepare('SELECT COUNT(*) as count FROM events WHERE session_id = ?').get(sessionId) as { count: number })?.count ?? 0; // .get() returns unknown
+    const sessionRow = sessionRepo.findById(sessionId);
+    const eventCount = eventRepo.countBySessionId(sessionId);
 
     if (!sessionRow && eventCount === 0) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    // For level > 0, verify previous level exists
     if (level > 0) {
-      const prevRow = db.prepare(
-        "SELECT id FROM analyses WHERE session_id = ? AND analysis_type = ? AND level = ? AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
-      ).get(sessionId, type, level - 1) as Record<string, unknown> | undefined; // .get() returns unknown
-
+      const prevRow = analysisRepo.findBySessionIdAndLevel(sessionId, type, level - 1);
       if (!prevRow) {
         return NextResponse.json(
-          { error: `No completed Level ${level - 1} analysis found. Run Level ${level - 1} first.` },
+          {
+            error: `No completed Level ${level - 1} analysis found. Run Level ${level - 1} first.`,
+          },
           { status: 404 },
         );
       }
     }
 
-    // Create analysis record
     const analysisId = crypto.randomUUID();
     const triggeredAt = new Date().toISOString();
 
-    db.prepare(`
-      INSERT INTO analyses (id, session_id, analysis_type, level, triggered_at, status)
-      VALUES (?, ?, ?, ?, ?, 'running')
-    `).run(analysisId, sessionId, type, level, triggeredAt);
+    analysisRepo.save({
+      id: analysisId,
+      sessionId,
+      analysisType: type,
+      level,
+      triggeredAt,
+      completedAt: null,
+      status: 'running',
+      result: null,
+      error: null,
+    });
 
-    // Read prompt template and build agent prompt
     const promptTemplate = await readPromptTemplate(type, level);
-    const apiBase = 'http://localhost:3000/api/agent';
-    const eventSummary = level === 0 ? buildEventSummarySync(db, sessionId) : '';
-    const agentPrompt = buildAgentPrompt(promptTemplate, sessionId, type, level, eventCount, apiBase, analysisId, eventSummary);
+    const apiBase = new URL('/api/agent', request.url).toString();
+    const eventSummary = level === 0 ? buildEventSummary(eventRepo, sessionId) : '';
+    const agentPrompt = buildAgentPrompt(
+      promptTemplate,
+      sessionId,
+      type,
+      level,
+      eventCount,
+      apiBase,
+      analysisId,
+      eventSummary,
+    );
 
-    // Run analysis via Claude CLI
     try {
-      const stdout = await runClaudeAgent(agentPrompt);
+      const { structured, raw } = await runClaudeAgent(agentPrompt, type);
 
-      // Check if the agent submitted results via the API (preferred path)
-      const updatedRow = db.prepare('SELECT status, result FROM analyses WHERE id = ?')
-        .get(analysisId) as { status: string; result: string | null } | undefined; // .get() returns unknown
+      const updatedRow = analysisRepo.findById(analysisId);
 
       if (updatedRow?.status === 'completed' && updatedRow.result) {
         let result: unknown;
-        try { result = JSON.parse(updatedRow.result); } catch { result = { rawOutput: updatedRow.result }; }
-
-        if (type === 'timeline' && level === 0) {
-          autoNameSession(db, sessionId, result);
+        try {
+          result = unwrapRawOutput(
+            typeof updatedRow.result === 'string'
+              ? JSON.parse(updatedRow.result)
+              : updatedRow.result,
+          );
+        } catch {
+          result = { rawOutput: updatedRow.result };
         }
 
-        return NextResponse.json({ ok: true, analysisId, result, submittedViaApi: true });
+        if (type === 'timeline' && level === 0) {
+          autoNameSession(sessionRepo, sessionId, result);
+        }
+
+        return NextResponse.json({ ok: true, analysisId, result, source: 'api_submit' });
       }
 
-      // Fallback: try to parse stdout if agent didn't use the submit endpoint
+      if (structured && typeof structured === 'object') {
+        analysisRepo.update({
+          ...updatedRow!,
+          completedAt: new Date().toISOString(),
+          status: 'completed',
+          result: structured as Record<string, unknown>, // structured is unknown from SDK; narrowed by typeof check above
+        });
+
+        if (type === 'timeline' && level === 0) {
+          autoNameSession(sessionRepo, sessionId, structured);
+        }
+
+        return NextResponse.json({
+          ok: true,
+          analysisId,
+          result: structured,
+          source: 'structured_output',
+        });
+      }
+
       let result: unknown;
-      try {
-        const parsed = JSON.parse(stdout);
-        const resultText = typeof parsed.result === 'string' ? parsed.result : stdout;
-        const extracted = extractJson(resultText);
-        result = extracted ?? { rawOutput: resultText };
-      } catch {
-        const extracted = extractJson(stdout);
-        result = extracted ?? { rawOutput: stdout };
-      }
+      const extracted = extractJson(raw);
+      result = extracted ?? { rawOutput: raw };
 
-      db.prepare(`
-        UPDATE analyses SET completed_at = ?, status = 'completed', result = ? WHERE id = ?
-      `).run(new Date().toISOString(), JSON.stringify(result), analysisId);
+      analysisRepo.update({
+        ...updatedRow!,
+        completedAt: new Date().toISOString(),
+        status: 'completed',
+        result: result as Record<string, unknown>, // extractJson returns unknown; narrowed by null check above
+      });
 
       if (type === 'timeline' && level === 0) {
-        autoNameSession(db, sessionId, result);
+        autoNameSession(sessionRepo, sessionId, result);
       }
 
-      return NextResponse.json({ ok: true, analysisId, result, submittedViaApi: false });
+      return NextResponse.json({ ok: true, analysisId, result, source: 'text_fallback' });
     } catch (analysisError) {
-      const lastCheck = db.prepare('SELECT status, result FROM analyses WHERE id = ?')
-        .get(analysisId) as { status: string; result: string | null } | undefined; // .get() returns unknown
+      const lastCheck = analysisRepo.findById(analysisId);
 
       if (lastCheck?.status === 'completed' && lastCheck.result) {
         let result: unknown;
-        try { result = JSON.parse(lastCheck.result); } catch { result = { rawOutput: lastCheck.result }; }
-        return NextResponse.json({ ok: true, analysisId, result, submittedViaApi: true });
+        try {
+          result = unwrapRawOutput(
+            typeof lastCheck.result === 'string' ? JSON.parse(lastCheck.result) : lastCheck.result,
+          );
+        } catch {
+          result = { rawOutput: lastCheck.result };
+        }
+        return NextResponse.json({ ok: true, analysisId, result, source: 'api_submit' });
       }
 
       const errMsg = analysisError instanceof Error ? analysisError.message : 'Analysis failed';
-      db.prepare(`
-        UPDATE analyses SET completed_at = ?, status = 'failed', error = ? WHERE id = ?
-      `).run(new Date().toISOString(), errMsg, analysisId);
+      analysisRepo.update({
+        ...lastCheck!,
+        completedAt: new Date().toISOString(),
+        status: 'failed',
+        error: errMsg,
+      });
 
       return NextResponse.json({ ok: false, analysisId, error: errMsg }, { status: 500 });
     }

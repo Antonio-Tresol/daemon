@@ -27,10 +27,9 @@ export function useTimeline(sessionId?: string, initialLevel = 0): UseTimelineRe
     fetchTimeline(sessionId, level)
       .then((results) => {
         // Prefer the latest completed analysis with actual plans
-        const completed = results.find(
-          (r) => r.status === 'completed' && r.result?.plans?.length,
-        );
-        const latest = completed ?? results.find((r) => r.status === 'completed') ?? results[0] ?? null;
+        const completed = results.find((r) => r.status === 'completed' && r.result?.plans?.length);
+        const latest =
+          completed ?? results.find((r) => r.status === 'completed') ?? results[0] ?? null;
         setAnalysis(latest);
       })
       .catch((err: unknown) => {

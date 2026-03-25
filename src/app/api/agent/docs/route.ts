@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 const DOCS = `# daemon Agent API
 
@@ -218,8 +218,10 @@ curl -s 'http://localhost:3000/api/agent/improvements?sessionId=SESSION_ID&sever
 \`\`\`
 `;
 
-export async function GET() {
-  return new NextResponse(DOCS, {
+export async function GET(request: NextRequest) {
+  const origin = new URL(request.url).origin;
+  const docsText = DOCS.replace(/http:\/\/localhost:3000/g, origin);
+  return new NextResponse(docsText, {
     headers: {
       'Content-Type': 'text/markdown; charset=utf-8',
     },

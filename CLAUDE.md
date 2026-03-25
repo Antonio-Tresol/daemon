@@ -5,13 +5,13 @@
 ### Backend: DDD (Domain-Driven Design)
 - `src/server/domain/` — Pure entities and repository interfaces. NO infrastructure imports (no sqlite, no fs, no child_process)
 - `src/server/application/` — Use cases that orchestrate domain + infrastructure
-- `src/server/infrastructure/` — Implementations (SQLite repos, Claude runner, WebSocket)
+- `src/server/infrastructure/` — Implementations (SQLite repos, Agent SDK runner, GraphQL)
 
 ### Frontend: FSD (Feature-Sliced Design)
 Strict layer dependencies (lower layers cannot import higher):
 - `src/shared/` → base layer (UI primitives, utils, hooks) — cannot import from entities/features/app
 - `src/entities/` → entity models and display components — cannot import from features/app
-- `src/features/` → feature slices (timeline, failures, improvements, session) — cannot import from app
+- `src/features/` → feature slices (timeline, failures, improvements, session, harness) — cannot import from app
 - `src/app/` → Next.js pages — composes features
 
 ### Rules

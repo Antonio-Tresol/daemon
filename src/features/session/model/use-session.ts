@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import type { Session } from '@/entities/session/model';
 import type { HookEvent } from '@/entities/event/model';
-import { fetchSessions, fetchSessionEvents } from '@/features/session/api/session-queries';
+import type { Session } from '@/entities/session/model';
+import { fetchSessionEvents, fetchSessions } from '@/features/session/api/session-queries';
 
 type UseSessionsReturn = {
   sessions: Session[];

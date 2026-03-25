@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { sendSessionMessage } from '@/features/session/api/session-queries';
 
 type ConsoleMessage = {
@@ -29,7 +29,7 @@ export function SessionConsole({ sessionId, className }: SessionConsoleProps) {
 
   useLayoutEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [scrollToBottom]);
 
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
@@ -66,7 +66,7 @@ export function SessionConsole({ sessionId, className }: SessionConsoleProps) {
     } finally {
       setIsSending(false);
     }
-  }, [input, isSending, sessionId, scrollToBottom]);
+  }, [input, isSending, sessionId]);
 
   return (
     <div

@@ -10,10 +10,14 @@ type AnalysisBadgeProps = {
 
 function statusVariant(status: AnalysisStatus) {
   switch (status) {
-    case 'pending': return 'neutral' as const;
-    case 'running': return 'info' as const;
-    case 'completed': return 'success' as const;
-    case 'failed': return 'error' as const;
+    case 'pending':
+      return 'neutral' as const;
+    case 'running':
+      return 'info' as const;
+    case 'completed':
+      return 'success' as const;
+    case 'failed':
+      return 'error' as const;
   }
 }
 

@@ -1,17 +1,6 @@
-import { type NextRequest } from 'next/server';
-import { agentResponse, agentError } from '../_lib/response';
-
-interface SessionRow {
-  id: string;
-  start_time: string;
-  end_time: string | null;
-  status: string;
-  cwd: string | null;
-  name: string | null;
-  group_label: string | null;
-  total_events: number;
-  total_cost_usd: number;
-}
+import type { NextRequest } from 'next/server';
+import { SqliteSessionRepository } from '@/server/infrastructure/db/session.sqlite-repo';
+import { agentError, agentResponse } from '../_lib/response';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,54 +9,30 @@ export async function GET(request: NextRequest) {
     const group = searchParams.get('group');
     const limit = Math.min(Number(searchParams.get('limit') ?? 50), 200);
 
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
+    const sessionRepo = new SqliteSessionRepository();
 
-    let countQuery = 'SELECT COUNT(*) as count FROM sessions WHERE 1=1';
-    let query = 'SELECT * FROM sessions WHERE 1=1';
-    const params: (string | number)[] = [];
-    const countParams: (string | number)[] = [];
-
-    if (status) {
-      query += ' AND status = ?';
-      countQuery += ' AND status = ?';
-      params.push(status);
-      countParams.push(status);
-    }
-
+    let sessions = [];
     if (group) {
-      query += ' AND group_label = ?';
-      countQuery += ' AND group_label = ?';
-      params.push(group);
-      countParams.push(group);
+      sessions = sessionRepo.findByGroup(group);
+      if (status) sessions = sessions.filter((s) => s.status === status);
+    } else if (status === 'active') {
+      sessions = sessionRepo.findActive();
+    } else {
+      sessions = sessionRepo.findAll();
+      if (status) sessions = sessions.filter((s) => s.status === status);
     }
 
-    const totalRow = db.prepare(countQuery).get(...countParams) as { count: number }; // .get() returns unknown
-
-    query += ' ORDER BY start_time DESC LIMIT ?';
-    params.push(limit);
-
-    const rows = db.prepare(query).all(...params) as SessionRow[]; // .all() returns unknown[]
-
-    const sessions = rows.map((row) => ({
-      id: row.id,
-      startTime: row.start_time,
-      endTime: row.end_time,
-      status: row.status,
-      cwd: row.cwd,
-      name: row.name,
-      groupLabel: row.group_label,
-      totalEvents: row.total_events,
-      totalCostUsd: row.total_cost_usd,
-    }));
+    const total = sessions.length;
+    sessions = sessions.slice(0, limit);
 
     return agentResponse(sessions, {
-      total: totalRow.count,
+      total,
       returned: sessions.length,
       schema: '/api/agent/schemas/Session',
-      suggestions: sessions.length > 0
-        ? [`Try: GET /api/agent/timeline?sessionId=${sessions[0].id}`]
-        : ['No sessions found. Start a Claude Code session with hooks enabled.'],
+      suggestions:
+        sessions.length > 0
+          ? [`Try: GET /api/agent/timeline?sessionId=${sessions[0].id}`]
+          : ['No sessions found. Start a Claude Code session with hooks enabled.'],
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

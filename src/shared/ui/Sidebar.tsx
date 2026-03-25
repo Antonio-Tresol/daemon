@@ -1,11 +1,11 @@
 'use client';
 
+import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import clsx from 'clsx';
-import { StatusIndicator } from '@/shared/ui/StatusIndicator';
 import { LatentDivergence } from '@/shared/ui/LatentDivergence';
+import { StatusIndicator } from '@/shared/ui/StatusIndicator';
 
 type NavItem = {
   label: string;
@@ -65,10 +65,7 @@ export function Sidebar({ connectedSessions = 0, className }: SidebarProps) {
 
   return (
     <aside
-      className={clsx(
-        'flex h-full w-56 flex-col border-r border-border bg-depth-1',
-        className,
-      )}
+      className={clsx('flex h-full w-56 flex-col border-r border-border bg-depth-1', className)}
     >
       {/* Logo */}
       <div className="flex items-center gap-2.5 border-b border-border px-5 py-5">
@@ -79,8 +76,7 @@ export function Sidebar({ connectedSessions = 0, className }: SidebarProps) {
       {/* Navigation */}
       <nav className="mt-1 flex flex-1 flex-col">
         {navItems.map((item) => {
-          const isActive =
-            item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+          const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
 
           return (
             <Link
@@ -93,9 +89,7 @@ export function Sidebar({ connectedSessions = 0, className }: SidebarProps) {
                   : 'border-l-transparent text-text-secondary hover:bg-depth-2 hover:text-text-primary',
               )}
             >
-              <span className="w-4 text-center font-mono text-xs opacity-60">
-                {item.icon}
-              </span>
+              <span className="w-4 text-center font-mono text-xs opacity-60">{item.icon}</span>
               {item.label}
             </Link>
           );

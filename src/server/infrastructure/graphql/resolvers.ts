@@ -1,171 +1,63 @@
-import { getDatabase } from '../db/sqlite';
-import { parseAnalysisJson } from '../../../shared/lib/parse-json';
 import type {
   AnalysisResult,
   Failure,
   Improvement,
   TimelinePlan,
-} from '../../../entities/analysis/model';
+} from '../../domain/analysis/analysis.entity';
+import { SqliteAnalysisRepository } from '../db/analysis.sqlite-repo';
+import { SqliteEventRepository } from '../db/event.sqlite-repo';
+import { SqliteSessionRepository } from '../db/session.sqlite-repo';
 
-interface SessionRow {
-  id: string;
-  start_time: string;
-  end_time: string | null;
-  status: string;
-  cwd: string | null;
-  name: string | null;
-  group_label: string | null;
-  total_events: number;
-  total_cost_usd: number;
+function getFailuresFromAnalysis(sessionId: string): Failure[] {
+  const analysisRepo = new SqliteAnalysisRepository();
+  const row = analysisRepo.findLatestByType(sessionId, 'failures');
+  if (!row || row.status !== 'completed' || !row.result) return [];
+  return (row.result.failures ?? []) satisfies Failure[];
 }
 
-interface EventRow {
-  id: string;
-  session_id: string;
-  timestamp: string;
-  event_type: string;
-  tool_name: string | null;
-  success: number | null;
-  duration_ms: number | null;
-  prompt_id: string | null;
-  payload: string;
+function getImprovementsFromAnalysis(sessionId: string): Improvement[] {
+  const analysisRepo = new SqliteAnalysisRepository();
+  const row = analysisRepo.findLatestByType(sessionId, 'improvements');
+  if (!row || row.status !== 'completed' || !row.result) return [];
+  return (row.result.improvements ?? []) satisfies Improvement[];
 }
 
-interface AnalysisRow {
-  id: string;
-  session_id: string;
-  analysis_type: string;
-  triggered_at: string;
-  completed_at: string | null;
-  status: string;
-  result: string | null;
-  error: string | null;
-}
-
-function mapSession(row: SessionRow) {
-  return {
-    id: row.id,
-    startTime: row.start_time,
-    endTime: row.end_time,
-    status: row.status,
-    cwd: row.cwd,
-    name: row.name,
-    groupLabel: row.group_label,
-    totalEvents: row.total_events,
-    totalCostUsd: row.total_cost_usd,
-  };
-}
-
-function mapEvent(row: EventRow) {
-  return {
-    id: row.id,
-    sessionId: row.session_id,
-    timestamp: row.timestamp,
-    eventType: row.event_type,
-    toolName: row.tool_name,
-    success: row.success === null ? null : row.success === 1,
-    durationMs: row.duration_ms,
-    promptId: row.prompt_id,
-  };
-}
-
-function parseAnalysisResult(row: AnalysisRow): AnalysisResult['result'] {
-  return parseAnalysisJson<AnalysisResult['result']>(row.result);
-}
-
-function getFailuresFromAnalysis(
-  sessionId: string,
-): Failure[] {
-  const db = getDatabase();
-  const row = db
-    .prepare(
-      "SELECT * FROM analyses WHERE session_id = ? AND analysis_type = 'failures' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
-    )
-    .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
-  if (!row) return [];
-  const result = parseAnalysisResult(row);
-  return (result?.failures ?? []) as Failure[]; // parsed analysis result is loosely typed
-}
-
-function getImprovementsFromAnalysis(
-  sessionId: string,
-): Improvement[] {
-  const db = getDatabase();
-  const row = db
-    .prepare(
-      "SELECT * FROM analyses WHERE session_id = ? AND analysis_type = 'improvements' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
-    )
-    .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
-  if (!row) return [];
-  const result = parseAnalysisResult(row);
-  return (result?.improvements ?? []) as Improvement[]; // parsed analysis result is loosely typed
-}
-
-function getTimelinePlansFromAnalysis(
-  sessionId: string,
-): TimelinePlan[] {
-  const db = getDatabase();
-  const row = db
-    .prepare(
-      "SELECT * FROM analyses WHERE session_id = ? AND analysis_type = 'timeline' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
-    )
-    .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
-  if (!row) return [];
-  const result = parseAnalysisResult(row);
-  return (result?.plans ?? []) as TimelinePlan[]; // parsed analysis result is loosely typed
+function getTimelinePlansFromAnalysis(sessionId: string): TimelinePlan[] {
+  const analysisRepo = new SqliteAnalysisRepository();
+  const row = analysisRepo.findLatestByType(sessionId, 'timeline');
+  if (!row || row.status !== 'completed' || !row.result) return [];
+  return (row.result.plans ?? []) satisfies TimelinePlan[];
 }
 
 export const resolvers = {
   Query: {
-    sessions: (
-      _parent: unknown,
-      args: { status?: string; limit?: number },
-    ) => {
-      const db = getDatabase();
+    sessions: (_parent: unknown, args: { status?: string; limit?: number }) => {
+      const sessionRepo = new SqliteSessionRepository();
       const limit = Math.min(args.limit ?? 50, 200);
-      let query =
-        'SELECT * FROM sessions WHERE 1=1';
-      const params: (string | number)[] = [];
 
-      if (args.status) {
-        query += ' AND status = ?';
-        params.push(args.status);
+      let sessions = args.status === 'active' ? sessionRepo.findActive() : sessionRepo.findAll();
+
+      if (args.status && args.status !== 'active') {
+        sessions = sessions.filter((s) => s.status === args.status);
       }
-      query += ' ORDER BY start_time DESC LIMIT ?';
-      params.push(limit);
 
-      const rows = db.prepare(query).all(...params) as SessionRow[]; // .all() returns unknown[]
-      return rows.map(mapSession);
+      return sessions.slice(0, limit);
     },
 
-    session: (
-      _parent: unknown,
-      args: { id: string },
-    ) => {
-      const db = getDatabase();
-      const row = db
-        .prepare('SELECT * FROM sessions WHERE id = ?')
-        .get(args.id) as SessionRow | undefined; // .get() returns unknown
-      return row ? mapSession(row) : null;
+    session: (_parent: unknown, args: { id: string }) => {
+      const sessionRepo = new SqliteSessionRepository();
+      return sessionRepo.findById(args.id);
     },
 
-    timeline: (
-      _parent: unknown,
-      args: { sessionId: string },
-    ) => {
+    timeline: (_parent: unknown, args: { sessionId: string }) => {
       return { sessionId: args.sessionId };
     },
 
-    failures: (
-      _parent: unknown,
-      args: { sessionId: string; impact?: string; type?: string },
-    ) => {
+    failures: (_parent: unknown, args: { sessionId: string; impact?: string; type?: string }) => {
       let failures = getFailuresFromAnalysis(args.sessionId);
       if (args.impact) {
         const impactLower = args.impact.toLowerCase();
-        failures = failures.filter(
-          (f) => f.impact.toLowerCase() === impactLower,
-        );
+        failures = failures.filter((f) => f.impact.toLowerCase() === impactLower);
       }
       if (args.type) {
         failures = failures.filter((f) => f.type === args.type);
@@ -184,15 +76,11 @@ export const resolvers = {
       let improvements = getImprovementsFromAnalysis(args.sessionId);
       if (args.area) {
         const areaLower = args.area.toLowerCase();
-        improvements = improvements.filter(
-          (i) => i.area.toLowerCase() === areaLower,
-        );
+        improvements = improvements.filter((i) => i.area.toLowerCase() === areaLower);
       }
       if (args.severity) {
         const sevLower = args.severity.toLowerCase();
-        improvements = improvements.filter(
-          (i) => i.severity.toLowerCase() === sevLower,
-        );
+        improvements = improvements.filter((i) => i.severity.toLowerCase() === sevLower);
       }
       return improvements.map((i) => ({
         ...i,
@@ -200,41 +88,21 @@ export const resolvers = {
       }));
     },
 
-    events: (
-      _parent: unknown,
-      args: { sessionId: string; type?: string; toolName?: string },
-    ) => {
-      const db = getDatabase();
-      let query =
-        'SELECT * FROM events WHERE session_id = ?';
-      const params: (string | number)[] = [args.sessionId];
-
-      if (args.type) {
-        query += ' AND event_type = ?';
-        params.push(args.type);
-      }
-      if (args.toolName) {
-        query += ' AND tool_name = ?';
-        params.push(args.toolName);
-      }
-      query += ' ORDER BY timestamp ASC';
-
-      const rows = db.prepare(query).all(...params) as EventRow[]; // .all() returns unknown[]
-      return rows.map(mapEvent);
+    events: (_parent: unknown, args: { sessionId: string; type?: string; toolName?: string }) => {
+      const eventRepo = new SqliteEventRepository();
+      return eventRepo.findPaginated({
+        sessionId: args.sessionId,
+        eventType: args.type,
+        toolName: args.toolName,
+      });
     },
 
     groups: () => {
-      const db = getDatabase();
-      const rows = db.prepare(
-        'SELECT DISTINCT group_label FROM sessions WHERE group_label IS NOT NULL ORDER BY group_label ASC',
-      ).all() as Array<{ group_label: string }>; // .all() returns unknown[]
-      return rows.map((r) => r.group_label);
+      const sessionRepo = new SqliteSessionRepository();
+      return sessionRepo.findGroups();
     },
 
-    failureSummary: (
-      _parent: unknown,
-      args: { sessionId: string },
-    ) => {
+    failureSummary: (_parent: unknown, args: { sessionId: string }) => {
       const failures = getFailuresFromAnalysis(args.sessionId);
       const byTypeMap = new Map<string, number>();
       const byImpactMap = new Map<string, number>();
@@ -249,58 +117,47 @@ export const resolvers = {
           type,
           count,
         })),
-        byImpact: Array.from(byImpactMap.entries()).map(
-          ([impact, count]) => ({ impact, count }),
-        ),
+        byImpact: Array.from(byImpactMap.entries()).map(([impact, count]) => ({ impact, count })),
         total: failures.length,
       };
     },
   },
 
   Mutation: {
-    updateSession: (
-      _parent: unknown,
-      args: { id: string; name?: string; groupLabel?: string },
-    ) => {
-      const db = getDatabase();
+    updateSession: (_parent: unknown, args: { id: string; name?: string; groupLabel?: string }) => {
+      const sessionRepo = new SqliteSessionRepository();
 
-      const existing = db.prepare('SELECT id FROM sessions WHERE id = ?').get(args.id) as { id: string } | undefined; // .get() returns unknown
+      const existing = sessionRepo.findById(args.id);
       if (!existing) return null;
 
-      const sets: string[] = [];
-      const values: (string | number)[] = [];
-
       if (args.name !== undefined) {
-        sets.push('name = ?');
-        values.push(args.name);
+        sessionRepo.updateName(args.id, args.name);
       }
       if (args.groupLabel !== undefined) {
-        sets.push('group_label = ?');
-        values.push(args.groupLabel);
+        sessionRepo.updateGroup(args.id, args.groupLabel);
       }
 
-      if (sets.length > 0) {
-        values.push(args.id);
-        db.prepare(`UPDATE sessions SET ${sets.join(', ')} WHERE id = ?`).run(...values);
-      }
-
-      const updated = db.prepare('SELECT * FROM sessions WHERE id = ?').get(args.id) as SessionRow; // .get() returns unknown
-      return mapSession(updated);
+      return sessionRepo.findById(args.id);
     },
 
-    analyze: (
-      _parent: unknown,
-      args: { sessionId: string; type: string; level?: number },
-    ) => {
-      const db = getDatabase();
+    analyze: (_parent: unknown, args: { sessionId: string; type: string; level?: number }) => {
+      const analysisRepo = new SqliteAnalysisRepository();
       const analysisId = crypto.randomUUID();
       const triggeredAt = new Date().toISOString();
       const analysisType = args.type.toLowerCase();
       const level = args.level ?? 0;
 
-      db.prepare(
-        `INSERT INTO analyses (id, session_id, analysis_type, triggered_at, status) VALUES (?, ?, ?, ?, 'pending')`,
-      ).run(analysisId, args.sessionId, analysisType, triggeredAt);
+      analysisRepo.save({
+        id: analysisId,
+        sessionId: args.sessionId,
+        analysisType: analysisType as AnalysisResult['analysisType'],
+        level,
+        triggeredAt,
+        completedAt: null,
+        status: 'pending',
+        result: null,
+        error: null,
+      });
 
       return {
         id: analysisId,
@@ -316,10 +173,7 @@ export const resolvers = {
   },
 
   Timeline: {
-    plans: (
-      parent: { sessionId: string },
-      _args: { level?: number },
-    ) => {
+    plans: (parent: { sessionId: string }, _args: { level?: number }) => {
       return getTimelinePlansFromAnalysis(parent.sessionId);
     },
   },

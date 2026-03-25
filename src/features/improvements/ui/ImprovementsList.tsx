@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import clsx from 'clsx';
-import { LoadingState } from '@/shared/ui/LoadingState';
-import { ErrorState } from '@/shared/ui/ErrorState';
-import { EmptyState } from '@/shared/ui/EmptyState';
-import { severitySymbol } from '@/shared/lib/severity-symbols';
-import { ImprovementCard } from '@/features/improvements/ui/ImprovementCard';
-import { useImprovements } from '@/features/improvements/model/use-improvements';
-import { AnalysisBadge } from '@/entities/analysis/ui/AnalysisBadge';
+import { useState } from 'react';
 import type { Improvement, ImprovementArea } from '@/entities/analysis/model';
+import { AnalysisBadge } from '@/entities/analysis/ui/AnalysisBadge';
+import { useImprovements } from '@/features/improvements/model/use-improvements';
+import { ImprovementCard } from '@/features/improvements/ui/ImprovementCard';
+import { EmptyState } from '@/shared/ui/EmptyState';
+import { ErrorState } from '@/shared/ui/ErrorState';
+import { LoadingState } from '@/shared/ui/LoadingState';
 
 type ImprovementsListProps = {
   sessionId?: string;
@@ -17,7 +16,13 @@ type ImprovementsListProps = {
 };
 
 const AREA_ORDER: ImprovementArea[] = [
-  'hooks', 'context', 'subagents', 'architecture', 'tools', 'skills', 'legibility',
+  'hooks',
+  'context',
+  'subagents',
+  'architecture',
+  'tools',
+  'skills',
+  'legibility',
 ];
 
 const AREA_ICONS: Record<ImprovementArea, { label: string; icon: string; desc: string }> = {
@@ -34,8 +39,12 @@ type ViewMode = 'priority' | 'category';
 
 function priorityScore(imp: Improvement): number {
   const severityScore = imp.severity === 'high' ? 3 : imp.severity === 'medium' ? 2 : 1;
-  const effortScore = imp.effort?.includes('2m') || imp.effort?.includes('5m') ? 3
-    : imp.effort?.includes('10m') || imp.effort?.includes('15m') ? 2 : 1;
+  const effortScore =
+    imp.effort?.includes('2m') || imp.effort?.includes('5m')
+      ? 3
+      : imp.effort?.includes('10m') || imp.effort?.includes('15m')
+        ? 2
+        : 1;
   return severityScore * 2 + effortScore;
 }
 
@@ -74,11 +83,17 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
 
   // Priority sorted (quick wins first)
   const prioritySorted = [...improvements].sort((a, b) => priorityScore(b) - priorityScore(a));
-  const quickWins = prioritySorted.filter((imp) => imp.severity === 'high' && (imp.effort?.includes('2m') || imp.effort?.includes('5m')));
+  const quickWins = prioritySorted.filter(
+    (imp) => imp.severity === 'high' && (imp.effort?.includes('2m') || imp.effort?.includes('5m')),
+  );
 
   const filtered = filterArea
-    ? (viewMode === 'priority' ? prioritySorted : improvements).filter((imp) => imp.area === filterArea)
-    : viewMode === 'priority' ? prioritySorted : improvements;
+    ? (viewMode === 'priority' ? prioritySorted : improvements).filter(
+        (imp) => imp.area === filterArea,
+      )
+    : viewMode === 'priority'
+      ? prioritySorted
+      : improvements;
 
   const highCount = improvements.filter((i) => i.severity === 'high').length;
   const medCount = improvements.filter((i) => i.severity === 'medium').length;
@@ -89,7 +104,9 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
       {/* Summary row */}
       <div className="flex items-center gap-4 flex-wrap">
         {analysis && <AnalysisBadge status={analysis.status} />}
-        <span className="font-mono text-xs text-text-secondary">{improvements.length} suggestions</span>
+        <span className="font-mono text-xs text-text-secondary">
+          {improvements.length} suggestions
+        </span>
 
         <div className="flex items-center gap-1.5 font-mono text-xs text-text-secondary">
           <span className="text-ember">{'\u2717\u2717'}</span>
@@ -104,9 +121,7 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
           {lowCount} low
         </div>
 
-        {quickWins.length > 0 && (
-          <QuickWinBadge />
-        )}
+        {quickWins.length > 0 && <QuickWinBadge />}
       </div>
 
       {/* Controls */}
@@ -118,7 +133,9 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
             onClick={() => setViewMode('priority')}
             className={clsx(
               'px-3 py-1 text-xs transition-colors',
-              viewMode === 'priority' ? 'bg-ember/15 text-ember font-medium' : 'text-text-secondary hover:text-text-primary',
+              viewMode === 'priority'
+                ? 'bg-ember/15 text-ember font-medium'
+                : 'text-text-secondary hover:text-text-primary',
             )}
           >
             Priority
@@ -128,7 +145,9 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
             onClick={() => setViewMode('category')}
             className={clsx(
               'px-3 py-1 text-xs border-l border-border transition-colors',
-              viewMode === 'category' ? 'bg-ember/15 text-ember font-medium' : 'text-text-secondary hover:text-text-primary',
+              viewMode === 'category'
+                ? 'bg-ember/15 text-ember font-medium'
+                : 'text-text-secondary hover:text-text-primary',
             )}
           >
             Category
@@ -142,7 +161,9 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
             onClick={() => setFilterArea(null)}
             className={clsx(
               'px-2 py-0.5 text-[10px] rounded-sm transition-colors',
-              filterArea === null ? 'bg-ember/15 text-ember' : 'text-text-secondary hover:text-text-primary',
+              filterArea === null
+                ? 'bg-ember/15 text-ember'
+                : 'text-text-secondary hover:text-text-primary',
             )}
           >
             All
@@ -156,7 +177,9 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
                 onClick={() => setFilterArea(filterArea === area ? null : area)}
                 className={clsx(
                   'flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-sm transition-colors',
-                  filterArea === area ? 'bg-ember/15 text-ember' : 'text-text-secondary hover:text-text-primary',
+                  filterArea === area
+                    ? 'bg-ember/15 text-ember'
+                    : 'text-text-secondary hover:text-text-primary',
                 )}
               >
                 <span className="font-mono text-ember">{meta.icon}</span>

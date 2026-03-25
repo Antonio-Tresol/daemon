@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import clsx from 'clsx';
+import { useState } from 'react';
 import { SessionCard } from '@/entities/session/ui/SessionCard';
 import { useSessions } from '@/features/session/model/use-session';
-import { LoadingState } from '@/shared/ui/LoadingState';
-import { ErrorState } from '@/shared/ui/ErrorState';
 import { EmptyState } from '@/shared/ui/EmptyState';
+import { ErrorState } from '@/shared/ui/ErrorState';
+import { LoadingState } from '@/shared/ui/LoadingState';
 
 type SessionListProps = {
   className?: string;
@@ -42,9 +42,7 @@ export function SessionList({ className }: SessionListProps) {
 
       {error && <ErrorState message={`Failed to load sessions: ${error}`} />}
 
-      {!isLoading && !error && sessions.length === 0 && (
-        <EmptyState message="No sessions found." />
-      )}
+      {!isLoading && !error && sessions.length === 0 && <EmptyState message="No sessions found." />}
 
       <div className="space-y-2">
         {sessions.map((session) => (

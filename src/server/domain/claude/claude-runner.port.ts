@@ -1,4 +1,4 @@
-import type { AnalysisType, AnalysisResult } from '../analysis/analysis.entity';
+import type { AnalysisResult, AnalysisType } from '../analysis/analysis.entity';
 
 export interface SendMessageResult {
   success: boolean;
@@ -8,8 +8,5 @@ export interface SendMessageResult {
 
 export interface ClaudeRunnerPort {
   sendMessage(sessionId: string, message: string): Promise<SendMessageResult>;
-  runAnalysis(
-    type: AnalysisType,
-    sessionData: string,
-  ): Promise<AnalysisResult['result']>;
+  runAnalysis(type: AnalysisType, sessionData: string): Promise<AnalysisResult['result']>;
 }

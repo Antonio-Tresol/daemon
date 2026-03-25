@@ -1,5 +1,5 @@
-import { Header } from '@/shared/ui/Header';
 import { SessionList } from '@/features/session/ui/SessionList';
+import { Header } from '@/shared/ui/Header';
 
 export default function SessionsPage() {
   return (
@@ -7,10 +7,7 @@ export default function SessionsPage() {
       <Header
         title="Sessions"
         subtitle="All Claude Code sessions"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Sessions' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Sessions' }]}
       />
       <SessionList />
     </div>

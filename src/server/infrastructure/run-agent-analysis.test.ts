@@ -1,15 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@anthropic-ai/claude-agent-sdk', () => ({
   query: vi.fn(),
 }));
 
+vi.mock('./analysis-schemas', () => ({
+  getOutputFormat: vi.fn().mockReturnValue({
+    type: 'json_schema',
+    schema: { type: 'object', properties: { plans: { type: 'array' } }, required: ['plans'] },
+  }),
+}));
+
 import { query } from '@anthropic-ai/claude-agent-sdk';
-import {
-  buildAgentPrompt,
-  readPromptTemplate,
-  runClaudeAgent,
-} from './run-agent-analysis';
+import { buildAgentPrompt, readPromptTemplate, runClaudeAgent } from './run-agent-analysis';
 
 describe('buildAgentPrompt', () => {
   it('includes session ID and event count for level 0', () => {
@@ -58,6 +61,20 @@ describe('buildAgentPrompt', () => {
 
     expect(result).toContain('summary of events');
   });
+
+  it('mentions structured JSON capture in the prompt', () => {
+    const result = buildAgentPrompt(
+      'template',
+      'session-1',
+      'timeline',
+      0,
+      10,
+      'http://localhost:3000',
+      'analysis-4',
+    );
+
+    expect(result).toContain('structured JSON');
+  });
 });
 
 describe('readPromptTemplate', () => {
@@ -80,22 +97,68 @@ describe('runClaudeAgent', () => {
     vi.clearAllMocks();
   });
 
-  it('calls SDK query with prompt', async () => {
+  it('returns structured output from SDK', async () => {
+    const structuredData = { plans: [{ name: 'Plan A', phase: 'testing', tasks: [] }] };
     const mockQuery = (async function* () {
       yield {
         type: 'result' as const,
         subtype: 'success' as const,
-        result: 'sdk output',
+        result: 'text fallback',
+        structured_output: structuredData,
       };
     })();
     vi.mocked(query).mockReturnValue(
       mockQuery as ReturnType<typeof query>, // vi.mocked returns unknown, narrow to SDK return type
     );
 
-    const result = await runClaudeAgent('test prompt');
+    const result = await runClaudeAgent('test prompt', 'timeline');
 
-    expect(result).toBe('sdk output');
-    expect(query).toHaveBeenCalled();
+    expect(result.structured).toEqual(structuredData);
+    expect(result.raw).toBe('text fallback');
+  });
+
+  it('returns null structured when SDK does not provide it', async () => {
+    const mockQuery = (async function* () {
+      yield {
+        type: 'result' as const,
+        subtype: 'success' as const,
+        result: 'raw text output',
+      };
+    })();
+    vi.mocked(query).mockReturnValue(
+      mockQuery as ReturnType<typeof query>, // vi.mocked returns unknown, narrow to SDK return type
+    );
+
+    const result = await runClaudeAgent('test prompt', 'timeline');
+
+    expect(result.structured).toBeNull();
+    expect(result.raw).toBe('raw text output');
+  });
+
+  it('passes outputFormat to SDK query options', async () => {
+    const mockQuery = (async function* () {
+      yield {
+        type: 'result' as const,
+        subtype: 'success' as const,
+        result: '',
+        structured_output: { failures: [] },
+      };
+    })();
+    vi.mocked(query).mockReturnValue(
+      mockQuery as ReturnType<typeof query>, // vi.mocked returns unknown, narrow to SDK return type
+    );
+
+    await runClaudeAgent('test prompt', 'failures');
+
+    expect(query).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          outputFormat: expect.objectContaining({
+            type: 'json_schema',
+          }),
+        }),
+      }),
+    );
   });
 
   it('propagates SDK errors', async () => {
@@ -103,6 +166,6 @@ describe('runClaudeAgent', () => {
       throw new Error('SDK failed');
     });
 
-    await expect(runClaudeAgent('test prompt')).rejects.toThrow('SDK failed');
+    await expect(runClaudeAgent('test prompt', 'timeline')).rejects.toThrow('SDK failed');
   });
 });

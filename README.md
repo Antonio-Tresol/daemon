@@ -163,7 +163,9 @@ Daemon monitors **Claude Code** sessions through two channels:
   Claude Code ──── OpenTelemetry ─→ POST /api/otel ────→ ┘
 ```
 
-When you trigger analysis, daemon spawns a Claude agent that processes the session's event stream and produces structured timeline, failure, and improvement results.
+When you trigger analysis, daemon uses the **Claude Agent SDK** with structured outputs to process the session's event stream and produces typed timeline, failure, and improvement results.
+
+**[Get started →](./docs/setup.md)**
 
 See [docs/setup.md](./docs/setup.md) for installation and configuration.
 
@@ -182,7 +184,7 @@ Domain-Driven Design backend. Feature-Sliced Design frontend. Three colours.
     server/
       domain/           pure entities, repository interfaces, ports
       application/      use cases orchestrating domain + infrastructure
-      infrastructure/   SQLite, Claude runner, WebSocket, GraphQL
+      infrastructure/   SQLite, Claude Agent SDK runner, GraphQL
     shared/             UI primitives, utilities, hooks
     entities/           entity models and display components
     features/           timeline · failures · improvements · session · harness

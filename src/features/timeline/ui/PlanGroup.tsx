@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import clsx from 'clsx';
-import { Badge } from '@/shared/ui/Badge';
-import { TaskGroup } from '@/features/timeline/ui/TaskGroup';
+import { useState } from 'react';
 import type { TimelinePlan } from '@/entities/analysis/model';
+import { TaskGroup } from '@/features/timeline/ui/TaskGroup';
 
 type PlanGroupProps = {
   plan: TimelinePlan;
@@ -31,19 +30,26 @@ export function PlanGroup({ plan, sessionId, className }: PlanGroupProps) {
 
   return (
     <div
-      className={clsx('border border-border border-l-2 border-l-ember bg-depth-1 rounded-lg', className)}
+      className={clsx(
+        'border border-border border-l-2 border-l-ember bg-depth-1 rounded-lg',
+        className,
+      )}
     >
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex w-full items-center gap-3 p-4 text-left"
       >
-        <span className="text-xs font-mono text-text-muted">{isExpanded ? '\u25BC' : '\u25B6'}</span>
+        <span className="text-xs font-mono text-text-muted">
+          {isExpanded ? '\u25BC' : '\u25B6'}
+        </span>
         <span className="flex-1 text-sm font-medium text-text-primary">{plan.name}</span>
-        <span className={clsx(
-          'text-[10px] font-mono px-1.5 py-0.5 bg-depth-2 text-text-secondary border border-border rounded-md',
-          phaseStyle,
-        )}>
+        <span
+          className={clsx(
+            'text-[10px] font-mono px-1.5 py-0.5 bg-depth-2 text-text-secondary border border-border rounded-md',
+            phaseStyle,
+          )}
+        >
           {plan.phase}
         </span>
         <span className="text-xs font-mono text-text-secondary">

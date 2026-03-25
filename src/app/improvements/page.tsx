@@ -1,5 +1,5 @@
-import { Header } from '@/shared/ui/Header';
 import { HarnessContent } from '@/features/harness/ui/HarnessContent';
+import { Header } from '@/shared/ui/Header';
 
 export default function HarnessPage() {
   return (
@@ -7,10 +7,7 @@ export default function HarnessPage() {
       <Header
         title="Harness Engineering"
         subtitle="Failures, improvements, and optimization suggestions for your Claude Code harness"
-        breadcrumbs={[
-          { label: 'Timeline', href: '/' },
-          { label: 'Harness' },
-        ]}
+        breadcrumbs={[{ label: 'Timeline', href: '/' }, { label: 'Harness' }]}
       />
       <HarnessContent />
     </div>
