@@ -1,5 +1,5 @@
-import { Header } from '@/shared/ui/Header';
 import { SessionDetailContent } from '@/app/session/[id]/session-detail-content';
+import { Header } from '@/shared/ui/Header';
 
 type SessionDetailPageProps = {
   params: Promise<{ id: string }>;

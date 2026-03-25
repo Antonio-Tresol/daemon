@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import clsx from 'clsx';
-import { SessionOverview } from '@/features/session/ui/SessionOverview';
-import { SessionConsole } from '@/features/session/ui/SessionConsole';
-import { TimelineView } from '@/features/timeline/ui/TimelineView';
+import { useEffect, useState } from 'react';
+import type { RawSession, Session } from '@/entities/session/model';
+import { normalizeSession } from '@/entities/session/model';
 import { FailureTimeline } from '@/features/failures/ui/FailureTimeline';
 import { ImprovementsList } from '@/features/improvements/ui/ImprovementsList';
-import type { Session, RawSession } from '@/entities/session/model';
-import { normalizeSession } from '@/entities/session/model';
+import { AnalyzeButton } from '@/features/session/ui/AnalyzeButton';
+import { SessionConsole } from '@/features/session/ui/SessionConsole';
+import { SessionOverview } from '@/features/session/ui/SessionOverview';
+import { TimelineView } from '@/features/timeline/ui/TimelineView';
 
 type SessionDetailContentProps = {
   sessionId: string;
@@ -29,6 +30,7 @@ export function SessionDetailContent({ sessionId, className }: SessionDetailCont
   const [session, setSession] = useState<Session | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [isLoading, setIsLoading] = useState(true);
+  const [analysisGeneration, setAnalysisGeneration] = useState(0);
 
   useEffect(() => {
     fetch(`/api/sessions?limit=200`)
@@ -62,30 +64,42 @@ export function SessionDetailContent({ sessionId, className }: SessionDetailCont
 
   return (
     <div className={clsx('space-y-4', className)}>
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-card-border pb-px">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => setActiveTab(tab.key)}
-            className={clsx(
-              'rounded-t-lg px-4 py-2 text-sm transition-colors',
-              activeTab === tab.key
-                ? 'border-b-2 border-accent text-accent font-medium'
-                : 'text-muted hover:text-foreground',
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Tabs + Analyze button */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex gap-1 border-b border-card-border pb-px">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={clsx(
+                'rounded-t-lg px-4 py-2 text-sm transition-colors',
+                activeTab === tab.key
+                  ? 'border-b-2 border-accent text-accent font-medium'
+                  : 'text-muted hover:text-foreground',
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <AnalyzeButton
+          sessionId={sessionId}
+          onComplete={() => setAnalysisGeneration((g) => g + 1)}
+        />
       </div>
 
-      {/* Tab content */}
+      {/* Tab content — key includes analysisGeneration to force refetch on analysis complete */}
       {activeTab === 'overview' && <SessionOverview session={session} />}
-      {activeTab === 'timeline' && <TimelineView sessionId={sessionId} />}
-      {activeTab === 'failures' && <FailureTimeline sessionId={sessionId} />}
-      {activeTab === 'improvements' && <ImprovementsList sessionId={sessionId} />}
+      {activeTab === 'timeline' && (
+        <TimelineView key={`tl-${analysisGeneration}`} sessionId={sessionId} />
+      )}
+      {activeTab === 'failures' && (
+        <FailureTimeline key={`fl-${analysisGeneration}`} sessionId={sessionId} />
+      )}
+      {activeTab === 'improvements' && (
+        <ImprovementsList key={`im-${analysisGeneration}`} sessionId={sessionId} />
+      )}
       {activeTab === 'console' && <SessionConsole sessionId={sessionId} />}
     </div>
   );
