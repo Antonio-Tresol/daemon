@@ -1,9 +1,7 @@
-import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { type AnalysisType, PROMPT_FILES } from '@/entities/analysis/analysis-types';
-import { resolveClaudeAuth } from './claude-auth';
 
 const META_PROMPT_FILE = 'meta-analysis.md';
 
@@ -146,51 +144,6 @@ export async function runClaudeAgentSdk(prompt: string): Promise<string> {
   }
 }
 
-export function runClaudeAgentCli(prompt: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    const errChunks: Buffer[] = [];
-
-    const child = spawn('claude', [
-      '-p', '-',
-      '--output-format', 'json',
-      '--allowedTools', 'Bash,WebFetch',
-    ], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 600_000, // 10 min — agent needs time to explore
-      shell: false,
-    });
-
-    child.stdout.on('data', (chunk: Buffer) => chunks.push(chunk));
-    child.stderr.on('data', (chunk: Buffer) => errChunks.push(chunk));
-
-    child.on('close', (code) => {
-      const output = Buffer.concat(chunks).toString('utf-8');
-      if (code === 0 || output.length > 0) {
-        resolve(output);
-      } else {
-        reject(new Error(Buffer.concat(errChunks).toString('utf-8') || `claude exited with code ${code}`));
-      }
-    });
-
-    child.on('error', (err) => {
-      reject(err);
-    });
-
-    // Write prompt to stdin and close
-    child.stdin.write(prompt);
-    child.stdin.end();
-  });
-}
-
 export async function runClaudeAgent(prompt: string): Promise<string> {
-  const auth = resolveClaudeAuth();
-  if (auth) {
-    try {
-      return await runClaudeAgentSdk(prompt);
-    } catch {
-      // SDK failed — fall back to CLI
-    }
-  }
-  return runClaudeAgentCli(prompt);
+  return runClaudeAgentSdk(prompt);
 }

@@ -4,15 +4,6 @@ vi.mock('@anthropic-ai/claude-agent-sdk', () => ({
   query: vi.fn(),
 }));
 
-vi.mock('./claude-auth', () => ({
-  resolveClaudeAuth: vi.fn(),
-}));
-
-vi.mock('node:child_process', () => ({
-  spawn: vi.fn(),
-}));
-
-import { resolveClaudeAuth } from './claude-auth';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import {
   buildAgentPrompt,
@@ -73,7 +64,6 @@ describe('readPromptTemplate', () => {
   it('returns fallback string when prompt file does not exist', async () => {
     const result = await readPromptTemplate('timeline', 0);
 
-    // Either reads the file or returns fallback — both are valid
     expect(typeof result).toBe('string');
     expect(result.length).toBeGreaterThan(0);
   });
@@ -90,12 +80,7 @@ describe('runClaudeAgent', () => {
     vi.clearAllMocks();
   });
 
-  it('uses SDK when auth is available', async () => {
-    vi.mocked(resolveClaudeAuth).mockReturnValue({
-      type: 'api_key',
-      key: 'test-key',
-    });
-
+  it('calls SDK query with prompt', async () => {
     const mockQuery = (async function* () {
       yield {
         type: 'result' as const,
@@ -104,7 +89,7 @@ describe('runClaudeAgent', () => {
       };
     })();
     vi.mocked(query).mockReturnValue(
-      mockQuery as ReturnType<typeof query>,
+      mockQuery as ReturnType<typeof query>, // vi.mocked returns unknown, narrow to SDK return type
     );
 
     const result = await runClaudeAgent('test prompt');
@@ -113,27 +98,11 @@ describe('runClaudeAgent', () => {
     expect(query).toHaveBeenCalled();
   });
 
-  it('falls back to CLI when auth is not available', async () => {
-    vi.mocked(resolveClaudeAuth).mockReturnValue(null);
-
-    // The CLI path will fail in test env (no `claude` binary),
-    // but we verify it doesn't call the SDK
-    await expect(runClaudeAgent('test prompt')).rejects.toThrow();
-    expect(query).not.toHaveBeenCalled();
-  });
-
-  it('falls back to CLI when SDK throws', async () => {
-    vi.mocked(resolveClaudeAuth).mockReturnValue({
-      type: 'api_key',
-      key: 'test-key',
-    });
-
+  it('propagates SDK errors', async () => {
     vi.mocked(query).mockImplementation(() => {
-      throw new Error('SDK init failed');
+      throw new Error('SDK failed');
     });
 
-    // CLI will also fail in test env, but SDK fallback path is exercised
-    await expect(runClaudeAgent('test prompt')).rejects.toThrow();
-    expect(query).toHaveBeenCalled();
+    await expect(runClaudeAgent('test prompt')).rejects.toThrow('SDK failed');
   });
 });
