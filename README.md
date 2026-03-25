@@ -9,7 +9,8 @@
 <h3 align="center"><em>watches the watchers</em></h3>
 
 <p align="center">
-  A proof-of-concept monitoring system for long-running <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a> agents.
+  A monitoring system for long-running <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a> agents.<br>
+  <sub>built by agents, watched by daemon, improved by humans.</sub>
 </p>
 
 <p align="center">
@@ -27,6 +28,14 @@
 > *When codebases become optimised harness-engineered systems, agents run for hours across multiple context compaction horizons. They make thousands of tool calls, hit failures they silently recover from, and leave behind sessions that no human has time to read end-to-end.*
 >
 > *Someone needs to watch the watchers.*
+
+<br>
+
+<p align="center">
+  <img src="public/screenshots/timeline.png" alt="daemon timeline — matryoshka exploration of agent sessions" width="100%">
+  <br>
+  <sub><em>the timeline — plans within plans, tasks within tasks, events within events</em></sub>
+</p>
 
 <br>
 
@@ -68,6 +77,12 @@ Three levels of depth. Pick the one that matches your question.
   └─────────────────────────────────────────────────┘
 ```
 
+<p align="center">
+  <img src="public/screenshots/drilldown.png" alt="daemon drilldown — expanding a plan to see raw events" width="100%">
+  <br>
+  <sub><em>drill down — expand any plan to see the raw events underneath</em></sub>
+</p>
+
 <br>
 
 ### ✗ Failure analysis with evidence
@@ -93,6 +108,16 @@ Every failure pattern comes paired with a recommendation targeting the harness i
 ```
 
 The agent works → daemon watches → the human improves the harness → the agent works better.
+
+<br>
+
+### ● Live session monitoring
+
+<p align="center">
+  <img src="public/screenshots/session-detail.png" alt="daemon session — live event stream with tool calls and failures" width="100%">
+  <br>
+  <sub><em>a live session — 1597 events, tool calls streaming in, failures highlighted in ember</em></sub>
+</p>
 
 <br>
 
@@ -156,8 +181,9 @@ Domain-Driven Design backend. Feature-Sliced Design frontend. Three colours.
       infrastructure/   SQLite, Claude runner, WebSocket, GraphQL
     shared/             UI primitives, utilities, hooks
     entities/           entity models and display components
-    features/           timeline · failures · improvements · session
-    app/                Next.js pages composing features
+    features/           timeline · failures · improvements · session · harness
+    app/                Next.js pages and API routes
+    prompts/            LLM prompt templates for analysis
 ```
 
 See [docs/architecture.md](./docs/architecture.md) for the full technical breakdown.
@@ -193,7 +219,7 @@ Daemon currently monitors Claude Code only. The core timeline, failure analysis,
 ## Documentation
 
 ```
-  docs/setup.md                 installation, Claude Code connection, API
+  docs/setup.md                 installation, hook connection, agent API
   docs/architecture.md          DDD backend, FSD frontend, data flows
   docs/harness-engineering.md   founding principles, daemon's position
   DESIGN.md                     three-colour visual language

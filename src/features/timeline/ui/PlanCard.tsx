@@ -100,8 +100,13 @@ export function PlanCard({ plan, sessionId, level, isNested }: PlanCardProps) {
         </span>
       </button>
 
-      {/* Task nodes row — always visible */}
-      <div className="px-4 pb-3 flex flex-wrap gap-2 items-center">
+      {/* Task nodes row — click to expand */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsExpanded(!isExpanded); }}
+        className="px-4 pb-3 flex flex-wrap gap-2 items-center cursor-pointer">
         {plan.tasks.map((task, i) => (
           <div key={`task-${i}`} className="flex items-center gap-1.5 group/task">
             <div className="relative flex flex-col items-center gap-1">

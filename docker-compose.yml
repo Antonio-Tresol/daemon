@@ -1,13 +1,13 @@
 services:
-  command-center:
+  daemon:
     build: .
     ports:
       - "3000:3000"
     volumes:
-      - ccc-data:/app/data
+      - daemon-data:/app/data
     environment:
       - NODE_ENV=production
     restart: unless-stopped
 
 volumes:
-  ccc-data:
+  daemon-data:

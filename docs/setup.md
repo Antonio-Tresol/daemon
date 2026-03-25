@@ -15,7 +15,7 @@ This guide covers getting daemon running and connecting it to your Claude Code a
 ## Quick start
 
 ```bash
-git clone <repo-url> && cd daemon
+git clone https://github.com/Antonio-Tresol/daemon.git && cd daemon
 npm install
 npm run dev
 ```
@@ -163,14 +163,19 @@ Key endpoints:
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
 | `/api/agent/sessions` | GET | List sessions with filters |
+| `/api/agent/sessions/:id` | GET | Get a single session by ID |
 | `/api/agent/events?sessionId=X` | GET | Get events for a session |
 | `/api/agent/timeline?sessionId=X` | GET | Get timeline analysis results |
 | `/api/agent/failures?sessionId=X` | GET | Get failure analysis results |
 | `/api/agent/improvements?sessionId=X` | GET | Get improvement recommendations |
+| `/api/agent/groups` | GET | List all session group labels |
 | `/api/agent/analyze` | POST | Trigger a new analysis |
 | `/api/agent/analysis/:id` | GET | Poll analysis status and results |
-| `/api/agent/graphql` | POST | GraphQL endpoint for complex queries |
-| `/api/agent/schemas/:type` | GET | JSON schemas for all data types |
+| `/api/agent/analysis/:id/submit` | POST | Submit analysis results |
+| `/api/agent/graphql` | GET/POST | GraphQL endpoint for complex queries |
+| `/api/agent/schemas` | GET | List available schema type names |
+| `/api/agent/schemas/:type` | GET | JSON schema for a specific data type |
+| `/api/agent/docs` | GET | Full markdown API documentation |
 
 ### GraphQL
 

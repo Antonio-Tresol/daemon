@@ -68,15 +68,15 @@ The domain layer is pure TypeScript types and interfaces. It contains no infrast
 
 A `HookEvent` represents a single action the agent took: a tool call, a session lifecycle event, a subagent operation, or an API interaction. Events are identified by type (PostToolUse, SessionStart, api_error, etc.), linked to a session, and carry an arbitrary payload.
 
-A `Session` represents a single Claude Code session from start to finish. It tracks status (active, completed, error), working directory, event count, and optional human-assigned name and group label.
+A `Session` represents a single Claude Code session from start to finish. It tracks status (active, completed, error), start/end times, working directory, project hash, event count, cumulative cost in USD, and optional human-assigned name and group label.
 
-An `AnalysisResult` represents the output of running a Claude agent over a session's events. It contains the analysis type (timeline, failures, improvements), the structured result, and metadata about when it was created and completed.
+An `AnalysisResult` represents the output of running a Claude agent over a session's events. It contains the analysis type (timeline, failures, improvements), a depth level, status (pending, running, completed, failed), the structured result, timestamps for when it was triggered and completed, and an optional error message.
 
 **Repository interfaces** define the contract for data access without specifying how data is stored:
 
 - `EventRepository` — save, find by session/time/type, count
 - `SessionRepository` — save, update, find by id/group/status, manage names and groups
-- `AnalysisRepository` — save, update, find by id/session/type/level
+- `AnalysisRepository` — save, update, find by id/session/type/level, find by session+type+level combination
 
 **Ports** define contracts for external capabilities:
 
@@ -226,13 +226,20 @@ Each feature follows the same structure: API queries, model hooks, and UI compon
 src/app/
   page.tsx                   Dashboard (redirects to timeline)
   layout.tsx                 Root layout with sidebar
-  timeline/                  Timeline page
+  dashboard-content.tsx      Client-side dashboard component
+  timeline/
+    page.tsx                 Timeline page
+    timeline-content.tsx     Client-side timeline component
   failures/                  Failures page
   improvements/              Improvements page
   sessions/                  Sessions list page
-  session/[id]/              Session detail page
+  session/[id]/
+    page.tsx                 Session detail page
+    session-detail-content.tsx  Client-side session detail component
   setup/                     Setup instructions page
-  api/                       API routes (see below)
+  api/
+    agent/_lib/response.ts   Shared agent API response helpers
+    ...                      API routes (see below)
 ```
 
 ---
@@ -272,12 +279,15 @@ All endpoints under `/api/agent/` are designed for programmatic access by agents
 
 Endpoints under `/api/` (without `/agent/`) serve the frontend directly:
 
-| Endpoint | Purpose |
-|----------|---------|
-| `/api/sessions` | Session list and detail |
-| `/api/events` | Event list with pagination |
-| `/api/groups` | Session groups |
-| `/api/analysis` | Trigger and poll analyses (frontend flow) |
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/sessions` | GET | Session list |
+| `/api/sessions/:id` | GET/PATCH | Get or update a session |
+| `/api/sessions/:id/message` | POST | Send message to active session |
+| `/api/events` | GET | Event list with pagination |
+| `/api/groups` | GET | Session groups |
+| `/api/analysis` | POST | Trigger analysis (frontend flow) |
+| `/api/analysis/:id` | GET | Poll analysis status and results |
 
 ---
 
@@ -356,8 +366,8 @@ The entire UI uses three colours (void, bone, ember) and communicates status thr
 
 ```
 Backend:     22 files (domain: 7, application: 3, infrastructure: 12)
-Frontend:    73 files (shared: 14, entities: 8, features: 23, app: 28)
-Total:       95 TypeScript files
+Frontend:    83 files (shared: 15, entities: 8, features: 25, app: 35)
+Total:       105 TypeScript files
 ```
 
 All TypeScript with strict mode enabled. No `any` types (enforced by Biome). No barrel exports. Every type assertion justified with a comment.

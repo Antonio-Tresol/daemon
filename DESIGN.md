@@ -34,6 +34,9 @@ Accent:
   ember            — links, active states, the ONE color
   ember at 15%     — active backgrounds
   ember at 30%     — hover states
+
+Scrollbar / secondary UI:
+  sediment: bone at 35% — scrollbar thumb, secondary UI chrome
 ```
 
 ### Light theme (warm parchment)
@@ -100,7 +103,11 @@ architecture   |||
 legibility     ...
 ```
 
-These are already in the codebase and stay as-is. Mono font, ember-colored.
+These are used in `ImprovementsList` and `ImprovementCard`. Mono font, ember-colored.
+
+### Task icons (Timeline)
+
+Timeline tasks use monochrome SVG icons (`TaskIcon.tsx`) that match `currentColor` and are keyword-matched against the task name (e.g., "read" → search icon, "edit" → pencil, "test" → checkmark).
 
 ## Typography
 
@@ -132,42 +139,44 @@ Three fonts, three purposes:
 
 ## Animation
 - All transitions: 200ms ease
-- Pulse (active): opacity 0.4→1→0.4, 2s, on the ● symbol only
-- Reveal: opacity 0→1, translateY 4px→0, 200ms
-- Flow: stroke-dashoffset on SVG connectors, ember at 30%
+- `pulse-signal`: opacity 0.4→1→0.4, 2s ease infinite — used on ● active symbols
+- `pressure-pulse`: opacity 0.4→1→0.4 with ember box-shadow glow (8px→20px), 2s — legacy active pulse
+- `depth-reveal`: opacity 0→1, translateY 4px→0, 200ms ease — expanded content
+- `current-flow`: stroke-dashoffset animation on SVG connectors
+- `sonar-sweep`: vertical sweep, opacity 0.3→0.6→0, 600ms — data refresh indicator
 
 ## Component Patterns
 
 ### Cards
 `bg-depth-1 border border rounded-lg`
-- Left border 2px ember for categorized items
+- Left border 3px ember for categorized items
 - No shadows
 - Expand reveals `bg-depth-2` content
 
 ### Badges
-`rounded-md font-mono text-[10px] uppercase tracking-wider`
-- Default: `bg-depth-2 text-text-secondary`
-- Active/accent: `bg-ember/15 text-ember`
-- That's it. Two variants only.
+`rounded-md font-mono font-medium text-[10px] uppercase tracking-wider`
+- Default (neutral/success/info): `bg-depth-2 text-text-secondary`
+- Accent (accent/error/warning): `bg-ember/15 text-ember`
+- Six named variants, but only two visual styles.
 
 ### Status Indicators
 Symbol-based, not color-based:
-- Active: `● text-ember` with pulse
+- Active: `● text-ember` with `pulse-signal` animation
 - Completed: `✓ text-text-secondary`
 - Error: `✗ text-text-primary`
 - Pending: `◌ text-text-muted`
 
 ### Navigation
-- Active: `border-l-2 border-ember text-ember`
-- Inactive: `text-text-secondary hover:text-text-primary`
-- Logo: serif italic "daemon" in ember
+- Active: `border-l-2 border-l-ember text-ember font-medium`
+- Inactive: `border-l-2 border-l-transparent text-text-secondary hover:bg-depth-2 hover:text-text-primary`
+- Logo: serif italic "daemon" in ember, with version badge in text-muted
 
 ### Timeline connectors
 - Dashed SVG line, ember at 20%
 - Animated stroke-dashoffset
 
 ## Anti-Patterns (DO NOT)
-- Do NOT use signal-green, signal-red, signal-amber, signal-blue — they are REMOVED
+- Do NOT use signal-green, signal-red, signal-amber, signal-blue — they exist only as backward-compat aliases mapped to ember/bone and should not be used in new code
 - Do NOT color-code phases — use typography
 - Do NOT use more than 3 colors anywhere
 - Do NOT add colored dots for severity — use symbols
