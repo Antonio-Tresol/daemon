@@ -1,12 +1,32 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-domain-purity.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-fsd-layers.mjs\""
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'export PATH=\"/c/Program Files/nodejs:$HOME/AppData/Roaming/npm:$PATH\"; FILE=$(cat | jq -r \".tool_input.file_path // .tool_input.filePath // empty\" 2>/dev/null); if [[ \"$FILE\" == *.ts || \"$FILE\" == *.tsx ]]; then npx @biomejs/biome check --write \"$FILE\" 2>&1 | tail -5 || true; fi'"
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/biome-format.mjs\""
           }
         ]
       }
@@ -17,47 +37,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Review the recent changes. Check: 1) Are there new functions/components without corresponding .test.ts files? 2) Are imports following FSD layer rules (shared cannot import entities/features/app; entities cannot import features/app)? 3) Is backend domain/ free of infrastructure imports? 4) Any unused variables or dead code? Reply {\"ok\": true} if clean, or {\"ok\": false, \"reason\": \"list specific issues found\"} with specific actionable issues."
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // .tool_input.filePath // empty\" 2>/dev/null); CONTENT=$(echo \"$INPUT\" | jq -r \".tool_input.new_string // .tool_input.content // empty\" 2>/dev/null); if [[ \"$FILE\" == *server/domain/* ]] && echo \"$CONTENT\" | grep -qE \"from.*(infrastructure|sqlite|better-sqlite|node:fs|node:child_process)\"; then echo \"BLOCKED: Domain layer must not import infrastructure\" >&2; exit 2; fi'"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // .tool_input.filePath // empty\" 2>/dev/null); CONTENT=$(echo \"$INPUT\" | jq -r \".tool_input.new_string // .tool_input.content // empty\" 2>/dev/null); if [[ \"$FILE\" == *shared/* ]] && echo \"$CONTENT\" | grep -qE \"from.*(features|entities)/\"; then echo \"BLOCKED: Shared layer cannot import from features/entities (FSD violation)\" >&2; exit 2; fi'"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // .tool_input.filePath // empty\" 2>/dev/null); CONTENT=$(echo \"$INPUT\" | jq -r \".tool_input.new_string // .tool_input.content // empty\" 2>/dev/null); if [[ \"$FILE\" == *entities/* ]] && echo \"$CONTENT\" | grep -qE \"from.*(features|app)/\"; then echo \"BLOCKED: Entities layer cannot import from features/app (FSD violation)\" >&2; exit 2; fi'"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'echo \"REMINDER: Before finishing, verify: 1) npm test passes 2) npx tsc --noEmit has no errors 3) npx @biomejs/biome check . is clean 4) Test API endpoints 5) Check UI renders\" >&2'"
+            "prompt": "Review the recent changes. Check: 1) New functions/components have corresponding .test.ts files? 2) Imports follow FSD layer rules (shared cannot import entities/features/app; entities cannot import features/app)? 3) Domain free of infrastructure imports? 4) No unused variables or dead code? Reply {\"ok\": true} if clean, or {\"ok\": false, \"reason\": \"list specific issues\"}"
           }
         ]
       }
