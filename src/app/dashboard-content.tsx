@@ -45,7 +45,7 @@ export function DashboardContent() {
         ]);
 
         if (sessionsRes.ok) {
-          const rawData = (await sessionsRes.json()) as { sessions: RawSession[] };
+          const rawData = (await sessionsRes.json()) as { sessions: RawSession[] }; // fetch .json() returns unknown
           const normalized = (rawData.sessions ?? []).map(normalizeSession);
           setSessions(normalized);
           const active = normalized.filter((s) => s.status === 'active');
@@ -58,7 +58,8 @@ export function DashboardContent() {
         }
 
         if (eventsRes.ok) {
-          const data = (await eventsRes.json()) as { events: Array<Record<string, unknown>>; count: number };
+          const data = (await eventsRes.json()) as { events: Array<Record<string, unknown>>; count: number }; // fetch .json() returns unknown
+          // Record<string, unknown> values narrowed to expected field types
           const normalizedEvents: HookEvent[] = (data.events ?? []).map((e) => ({
             id: e.id as string,
             sessionId: (e.session_id ?? e.sessionId) as string,
@@ -88,7 +89,7 @@ export function DashboardContent() {
     if (!lastMessage) return;
 
     if (lastMessage.channel === 'events') {
-      const event = lastMessage.data as HookEvent;
+      const event = lastMessage.data as HookEvent; // WebSocket message data is unknown
       setRecentEvents((prev) => [event, ...prev].slice(0, 20));
       setStats((prev) => ({ ...prev, totalEvents: prev.totalEvents + 1 }));
     }
@@ -97,7 +98,7 @@ export function DashboardContent() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <span className="text-sm text-muted">Loading dashboard...</span>
+        <span className="text-sm text-text-muted">Loading dashboard...</span>
       </div>
     );
   }
@@ -147,27 +148,27 @@ export function DashboardContent() {
         {/* Recent events */}
         <Card title="Recent Events" subtitle="Last 20 events across all sessions">
           {recentEvents.length === 0 ? (
-            <p className="py-8 text-center text-xs text-muted">No events yet</p>
+            <p className="py-8 text-center text-xs text-text-muted">No events yet</p>
           ) : (
             <div className="space-y-1 max-h-96 overflow-y-auto">
               {recentEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-border/30 transition-colors"
+                  className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-depth-2/50 transition-colors"
                 >
                   <EventBadge eventType={event.eventType} />
                   {event.toolName && (
-                    <span className="font-mono text-foreground/70 truncate max-w-[100px]">
+                    <span className="font-mono text-text-primary/70 truncate max-w-[100px]">
                       {event.toolName}
                     </span>
                   )}
                   {event.durationMs !== null && (
-                    <span className="text-muted">{formatDuration(event.durationMs)}</span>
+                    <span className="text-text-muted">{formatDuration(event.durationMs)}</span>
                   )}
                   {event.success === false && (
                     <Badge variant="error" size="sm">fail</Badge>
                   )}
-                  <span className="ml-auto text-[10px] text-muted whitespace-nowrap">
+                  <span className="ml-auto text-[10px] text-text-muted whitespace-nowrap">
                     {formatTimestamp(event.timestamp)}
                   </span>
                 </div>
@@ -179,19 +180,19 @@ export function DashboardContent() {
         {/* Sessions */}
         <Card title="Sessions" subtitle="Recent Claude Code sessions">
           {sessions.length === 0 ? (
-            <p className="py-8 text-center text-xs text-muted">No sessions yet</p>
+            <p className="py-8 text-center text-xs text-text-muted">No sessions yet</p>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {sessions.map((session) => (
                 <Link
                   key={session.id}
                   href={`/session/${session.id}`}
-                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-border/30 transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-depth-2/50 transition-colors"
                 >
                   <StatusIndicator
                     status={session.status === 'active' ? 'active' : session.status === 'error' ? 'error' : 'completed'}
                   />
-                  <span className="font-mono font-medium text-foreground">
+                  <span className="font-mono font-medium text-text-primary">
                     {session.id.slice(0, 8)}
                   </span>
                   <Badge
@@ -200,8 +201,8 @@ export function DashboardContent() {
                   >
                     {session.status}
                   </Badge>
-                  <span className="text-muted">{session.totalEvents} events</span>
-                  <span className="ml-auto text-muted">
+                  <span className="text-text-muted">{session.totalEvents} events</span>
+                  <span className="ml-auto text-text-muted">
                     {formatTimestamp(session.startTime)}
                   </span>
                 </Link>
@@ -219,7 +220,7 @@ export function DashboardContent() {
           { label: 'Sessions', href: '/sessions', desc: 'All sessions' },
         ].map((link) => (
           <Link key={link.href} href={link.href}>
-            <Card className="hover:border-signal-green/30 transition-colors">
+            <Card className="hover:border-ember/30 transition-colors">
               <p className="text-sm font-medium text-text-primary">{link.label}</p>
               <p className="mt-0.5 text-xs font-mono text-text-secondary">{link.desc}</p>
             </Card>

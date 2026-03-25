@@ -73,9 +73,10 @@ export async function POST(request: NextRequest) {
     if (body.resourceLogs) {
       for (const resourceLog of body.resourceLogs) {
         for (const scopeLog of resourceLog.scopeLogs ?? []) {
-          for (const logRecord of (scopeLog.logRecords ?? []) as OtelLogRecord[]) {
+          for (const logRecord of (scopeLog.logRecords ?? []) as OtelLogRecord[]) { // OTel payload is loosely typed
             const attrs = extractAttributes(logRecord.attributes);
             const timestamp = nanoToIso(logRecord.timeUnixNano);
+            // OTel attributes are Record<string, unknown>; narrowing known keys to string
             const eventName = attrs['event.name'] as string ?? 'unknown';
 
             const event = {
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
     if (body.resourceMetrics) {
       for (const resourceMetric of body.resourceMetrics) {
         for (const scopeMetric of resourceMetric.scopeMetrics ?? []) {
-          for (const metric of (scopeMetric.metrics ?? []) as OtelMetric[]) {
+          for (const metric of (scopeMetric.metrics ?? []) as OtelMetric[]) { // OTel payload is loosely typed
             const dataPoints = metric.sum?.dataPoints
               ?? metric.gauge?.dataPoints
               ?? metric.histogram?.dataPoints
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
             for (const dp of dataPoints) {
               const value = dp.asDouble ?? (dp.asInt ? Number(dp.asInt) : 0);
               const timestamp = nanoToIso(dp.timeUnixNano);
-              const attrs = extractAttributes(dp.attributes as OtelLogRecord['attributes']);
+              const attrs = extractAttributes(dp.attributes as OtelLogRecord['attributes']); // data point attributes share OTel shape
 
               db.prepare(`
                 INSERT INTO otel_metrics (id, timestamp, metric_name, value, attributes)

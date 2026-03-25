@@ -9,7 +9,7 @@ export async function GET(
     const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
     const db = getDatabase();
 
-    const analysis = db.prepare('SELECT * FROM analyses WHERE id = ?').get(id) as Record<string, unknown> | undefined;
+    const analysis = db.prepare('SELECT * FROM analyses WHERE id = ?').get(id) as Record<string, unknown> | undefined; // .get() returns unknown
 
     if (!analysis) {
       return NextResponse.json({ error: 'Analysis not found' }, { status: 404 });

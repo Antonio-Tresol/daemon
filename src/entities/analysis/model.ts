@@ -1,4 +1,5 @@
-export type AnalysisType = 'timeline' | 'failures' | 'improvements';
+export type { AnalysisType } from '@/entities/analysis/analysis-types';
+import type { AnalysisType } from '@/entities/analysis/analysis-types';
 
 export type TimelinePlan = {
   name: string;
@@ -24,6 +25,7 @@ export type Failure = {
   rootCause: string;
   impact: 'critical' | 'warning' | 'info';
   eventId: string | null;
+  evidence: string[];
 };
 
 export type ImprovementArea =
@@ -52,6 +54,7 @@ export type Improvement = {
   severity: 'high' | 'medium' | 'low';
   category: ImprovementCategory | string;
   effort: string;
+  evidence: string[];
 };
 
 export type AnalysisResult = {

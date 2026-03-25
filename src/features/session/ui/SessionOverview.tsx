@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 import { Card } from '@/shared/ui/Card';
 import { StatusIndicator } from '@/shared/ui/StatusIndicator';
 import { Badge } from '@/shared/ui/Badge';
@@ -23,12 +23,12 @@ export function SessionOverview({ session, className }: SessionOverviewProps) {
       : Date.now() - new Date(session.startTime).getTime();
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={clsx('space-y-4', className)}>
       {/* Metadata panel */}
       <Card>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted">Status</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Status</p>
             <div className="mt-1 flex items-center gap-2">
               <StatusIndicator
                 status={session.status === 'active' ? 'active' : session.status === 'error' ? 'error' : 'completed'}
@@ -42,19 +42,19 @@ export function SessionOverview({ session, className }: SessionOverviewProps) {
             </div>
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted">Duration</p>
-            <p className="mt-1 text-sm font-medium text-foreground">{formatDuration(duration)}</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Duration</p>
+            <p className="mt-1 text-sm font-medium text-text-primary">{formatDuration(duration)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted">Events</p>
-            <p className="mt-1 text-sm font-medium text-foreground">{session.totalEvents}</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Events</p>
+            <p className="mt-1 text-sm font-medium text-text-primary">{session.totalEvents}</p>
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted">Cost</p>
-            <p className="mt-1 text-sm font-medium text-foreground">{formatCost(session.totalCostUsd)}</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Cost</p>
+            <p className="mt-1 text-sm font-medium text-text-primary">{formatCost(session.totalCostUsd)}</p>
           </div>
         </div>
-        <div className="mt-3 flex items-center gap-4 text-xs text-muted">
+        <div className="mt-3 flex items-center gap-4 text-xs text-text-muted">
           <span>Started: {formatTimestamp(session.startTime)}</span>
           {session.endTime && <span>Ended: {formatTimestamp(session.endTime)}</span>}
         </div>
@@ -63,27 +63,27 @@ export function SessionOverview({ session, className }: SessionOverviewProps) {
       {/* Mini timeline */}
       <Card title="Recent Events">
         {isLoading ? (
-          <p className="text-xs text-muted py-4 text-center">Loading events...</p>
+          <p className="text-xs text-text-muted py-4 text-center">Loading events...</p>
         ) : events.length === 0 ? (
-          <p className="text-xs text-muted py-4 text-center">No events recorded</p>
+          <p className="text-xs text-text-muted py-4 text-center">No events recorded</p>
         ) : (
           <div className="space-y-1.5 max-h-80 overflow-y-auto">
             {events.map((event) => (
               <div
                 key={event.id}
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-card-border/30 transition-colors"
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-border/30 transition-colors"
               >
                 <EventBadge eventType={event.eventType} />
                 {event.toolName && (
-                  <span className="font-mono text-foreground/70">{event.toolName}</span>
+                  <span className="font-mono text-text-primary/70">{event.toolName}</span>
                 )}
                 {event.durationMs !== null && (
-                  <span className="text-muted">{formatDuration(event.durationMs)}</span>
+                  <span className="text-text-muted">{formatDuration(event.durationMs)}</span>
                 )}
                 {event.success === false && (
-                  <span className="text-status-red text-[10px]">failed</span>
+                  <span className="text-ember text-[10px] font-mono">{'\u2717'} failed</span>
                 )}
-                <span className="ml-auto text-[10px] text-muted">
+                <span className="ml-auto text-[10px] text-text-muted">
                   {formatTimestamp(event.timestamp)}
                 </span>
               </div>

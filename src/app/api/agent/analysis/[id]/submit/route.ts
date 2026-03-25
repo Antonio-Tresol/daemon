@@ -26,6 +26,7 @@ export async function POST(
 ) {
   try {
     const { id: analysisId } = await params;
+    // request.json() returns unknown; validated by the SubmitBody shape check below
     const body = (await request.json()) as SubmitBody;
 
     if (!body.result && body.status !== 'failed') {
@@ -43,6 +44,7 @@ export async function POST(
     // Find the analysis record
     const row = db
       .prepare('SELECT * FROM analyses WHERE id = ?')
+      // SQLite row is an untyped record; fields accessed defensively below
       .get(analysisId) as Record<string, unknown> | undefined;
 
     if (!row) {
@@ -62,14 +64,16 @@ export async function POST(
       // Merge with existing result
       let existing: Record<string, unknown> = {};
       try {
+        // row.result is typed as unknown from the SQLite row; narrowed by typeof check above
         existing =
           typeof row.result === 'string'
-            ? (JSON.parse(row.result as string) as Record<string, unknown>)
+            ? (JSON.parse(row.result) as Record<string, unknown>)
             : (row.result as Record<string, unknown>);
       } catch {
         existing = {};
       }
 
+      // body.result is typed as unknown in SubmitBody; treated as key-value for merge
       const incoming = body.result as Record<string, unknown>;
 
       // Merge arrays (plans, failures, improvements) by concatenating
@@ -77,7 +81,7 @@ export async function POST(
       for (const [key, value] of Object.entries(incoming)) {
         if (Array.isArray(value) && Array.isArray(existing[key])) {
           merged[key] = [
-            ...(existing[key] as unknown[]),
+            ...(existing[key] as unknown[]), // Array.isArray guard ensures this is an array
             ...value,
           ];
         } else {

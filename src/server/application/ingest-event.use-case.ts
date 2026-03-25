@@ -35,7 +35,7 @@ const VALID_EVENT_TYPES = new Set<string>([
 
 function normalizeEventType(raw: string): EventType {
   if (VALID_EVENT_TYPES.has(raw)) {
-    return raw as EventType;
+    return raw as EventType; // validated by VALID_EVENT_TYPES.has() check above
   }
   // Map common OTel event names
   if (raw.includes('error')) return 'api_error';

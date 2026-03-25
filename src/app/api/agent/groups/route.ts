@@ -7,7 +7,7 @@ export async function GET() {
 
     const rows = db.prepare(
       'SELECT DISTINCT group_label FROM sessions WHERE group_label IS NOT NULL ORDER BY group_label ASC',
-    ).all() as Array<{ group_label: string }>;
+    ).all() as Array<{ group_label: string }>; // .all() returns unknown[]
 
     const groups = rows.map((r) => r.group_label);
 

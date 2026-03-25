@@ -25,7 +25,7 @@ export async function GET(
 
     const row = db
       .prepare('SELECT * FROM analyses WHERE id = ?')
-      .get(id) as AnalysisRow | undefined;
+      .get(id) as AnalysisRow | undefined; // .get() returns unknown
 
     if (!row) {
       return agentError(
@@ -45,9 +45,9 @@ export async function GET(
         if (
           parsedResult !== null &&
           typeof parsedResult === 'object' &&
-          'rawOutput' in (parsedResult as Record<string, unknown>)
+          'rawOutput' in (parsedResult as Record<string, unknown>) // narrowing unknown for 'in' operator check
         ) {
-          const raw = (parsedResult as { rawOutput: string }).rawOutput;
+          const raw = (parsedResult as { rawOutput: string }).rawOutput; // narrowing after 'in' check confirms rawOutput exists
           const fenceMatch = raw.match(
             /^[\s\n]*```(?:json)?\s*\n([\s\S]*)\n```[\s\n]*$/,
           );

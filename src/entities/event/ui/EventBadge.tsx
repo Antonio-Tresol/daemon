@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 import { Badge } from '@/shared/ui/Badge';
 import type { EventType } from '@/entities/event/model';
 
@@ -59,7 +59,7 @@ function getLabel(eventType: EventType): string {
 
 export function EventBadge({ eventType, className }: EventBadgeProps) {
   return (
-    <Badge variant={getVariant(eventType)} size="sm" className={cn(className)}>
+    <Badge variant={getVariant(eventType)} size="sm" className={clsx(className)}>
       {getLabel(eventType)}
     </Badge>
   );

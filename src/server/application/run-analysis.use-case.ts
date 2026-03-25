@@ -2,12 +2,13 @@ import { v4 as uuidv4 } from 'uuid';
 import type { AnalysisType, AnalysisResult } from '../domain/analysis/analysis.entity';
 import type { AnalysisRepository } from '../domain/analysis/analysis.repository';
 import type { EventRepository } from '../domain/event/event.repository';
-import { runAnalysis as runClaudeAnalysis } from '../infrastructure/claude-runner';
+import type { ClaudeRunnerPort } from '../domain/claude/claude-runner.port';
 
 export class RunAnalysisUseCase {
   constructor(
     private readonly analysisRepo: AnalysisRepository,
     private readonly eventRepo: EventRepository,
+    private readonly claudeRunner: ClaudeRunnerPort,
   ) {}
 
   async execute(
@@ -38,7 +39,7 @@ export class RunAnalysisUseCase {
       const events = this.eventRepo.findBySessionId(sessionId);
       const sessionData = JSON.stringify(events, null, 2);
 
-      const result = await runClaudeAnalysis(analysisType, sessionData);
+      const result = await this.claudeRunner.runAnalysis(analysisType, sessionData);
 
       analysis.status = 'completed';
       analysis.completedAt = new Date().toISOString();

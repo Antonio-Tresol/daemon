@@ -1,5 +1,6 @@
 import { type NextRequest } from 'next/server';
 import { agentResponse, agentError } from '../_lib/response';
+import { parseAnalysisJson } from '@/shared/lib/parse-json';
 
 interface AnalysisRow {
   result: string | null;
@@ -16,28 +17,8 @@ interface Improvement {
 }
 
 function parseImprovements(row: AnalysisRow): Improvement[] {
-  if (!row.result) return [];
-  try {
-    let parsed: unknown = JSON.parse(row.result);
-    if (
-      parsed !== null &&
-      typeof parsed === 'object' &&
-      'rawOutput' in (parsed as Record<string, unknown>)
-    ) {
-      const raw = (parsed as { rawOutput: string }).rawOutput;
-      const fenceMatch = raw.match(/^[\s\n]*```(?:json)?\s*\n([\s\S]*)\n```[\s\n]*$/);
-      const content = fenceMatch ? fenceMatch[1] : raw.trim();
-      try {
-        parsed = JSON.parse(content);
-      } catch {
-        /* keep as-is */
-      }
-    }
-    const obj = parsed as { improvements?: Improvement[] };
-    return obj.improvements ?? [];
-  } catch {
-    return [];
-  }
+  const parsed = parseAnalysisJson<{ improvements?: Improvement[] }>(row.result);
+  return parsed?.improvements ?? [];
 }
 
 export async function GET(request: NextRequest) {
@@ -63,7 +44,7 @@ export async function GET(request: NextRequest) {
       .prepare(
         "SELECT result FROM analyses WHERE session_id = ? AND analysis_type = 'improvements' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
       )
-      .get(sessionId) as AnalysisRow | undefined;
+      .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
 
     if (!row) {
       return agentResponse([], {

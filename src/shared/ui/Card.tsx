@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
+
+type BorderAccent = 'ember' | 'none';
 
 type CardProps = {
   title?: string;
@@ -8,6 +10,7 @@ type CardProps = {
   className?: string;
   onClick?: () => void;
   depthLevel?: 0 | 1 | 2 | 3 | 4;
+  borderAccent?: BorderAccent;
 };
 
 const depthColors: Record<number, string> = {
@@ -18,16 +21,22 @@ const depthColors: Record<number, string> = {
   4: 'depth-indicator-4',
 };
 
-export function Card({ title, subtitle, children, className, onClick, depthLevel }: CardProps) {
+const accentStyles: Record<BorderAccent, string> = {
+  ember: 'border-l-[3px] border-l-ember',
+  none: '',
+};
+
+export function Card({ title, subtitle, children, className, onClick, depthLevel, borderAccent = 'none' }: CardProps) {
   const isClickable = typeof onClick === 'function';
 
   return (
     <div
-      className={cn(
-        'border-t border-border bg-transparent p-5',
+      className={clsx(
+        'rounded-lg border border-border bg-depth-1 p-5',
         'transition-colors duration-200',
-        isClickable && 'cursor-pointer hover:bg-depth-1',
+        isClickable && 'cursor-pointer hover:bg-depth-2',
         depthLevel !== undefined && `depth-indicator ${depthColors[depthLevel]}`,
+        accentStyles[borderAccent],
         className,
       )}
       onClick={onClick}

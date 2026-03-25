@@ -1,5 +1,6 @@
 import { type NextRequest } from 'next/server';
 import { agentResponse, agentError } from '../_lib/response';
+import { parseAnalysisJson } from '@/shared/lib/parse-json';
 
 interface AnalysisRow {
   id: string;
@@ -25,27 +26,7 @@ interface TimelinePlan {
 }
 
 function parseResult(row: AnalysisRow): { plans?: TimelinePlan[] } | null {
-  if (!row.result) return null;
-  try {
-    let parsed: unknown = JSON.parse(row.result);
-    if (
-      parsed !== null &&
-      typeof parsed === 'object' &&
-      'rawOutput' in (parsed as Record<string, unknown>)
-    ) {
-      const raw = (parsed as { rawOutput: string }).rawOutput;
-      const fenceMatch = raw.match(/^[\s\n]*```(?:json)?\s*\n([\s\S]*)\n```[\s\n]*$/);
-      const content = fenceMatch ? fenceMatch[1] : raw.trim();
-      try {
-        parsed = JSON.parse(content);
-      } catch {
-        /* keep as-is */
-      }
-    }
-    return parsed as { plans?: TimelinePlan[] };
-  } catch {
-    return null;
-  }
+  return parseAnalysisJson<{ plans?: TimelinePlan[] }>(row.result);
 }
 
 export async function GET(request: NextRequest) {
@@ -69,7 +50,7 @@ export async function GET(request: NextRequest) {
       .prepare(
         "SELECT * FROM analyses WHERE session_id = ? AND analysis_type = 'timeline' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
       )
-      .get(sessionId) as AnalysisRow | undefined;
+      .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
 
     if (!row) {
       return agentResponse([], {

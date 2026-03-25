@@ -21,13 +21,13 @@ function rowToEntity(row: AnalysisRow): AnalysisResult {
   return {
     id: row.id,
     sessionId: row.session_id,
-    analysisType: row.analysis_type as AnalysisType,
+    analysisType: row.analysis_type as AnalysisType, // DB stores string, narrowing to union type
     level: row.level,
     triggeredAt: row.triggered_at,
     completedAt: row.completed_at,
-    status: row.status as AnalysisResult['status'],
+    status: row.status as AnalysisResult['status'], // DB stores string, narrowing to union type
     result: row.result
-      ? (JSON.parse(row.result) as AnalysisResult['result'])
+      ? (JSON.parse(row.result) as AnalysisResult['result']) // JSON.parse returns unknown
       : null,
     error: row.error,
   };
@@ -72,7 +72,7 @@ export class SqliteAnalysisRepository implements AnalysisRepository {
   findById(id: string): AnalysisResult | null {
     const db = getDatabase();
     const stmt = db.prepare('SELECT * FROM analyses WHERE id = ?');
-    const row = stmt.get(id) as AnalysisRow | undefined;
+    const row = stmt.get(id) as AnalysisRow | undefined; // .get() returns unknown
     return row ? rowToEntity(row) : null;
   }
 
@@ -82,13 +82,13 @@ export class SqliteAnalysisRepository implements AnalysisRepository {
       const stmt = db.prepare(
         'SELECT * FROM analyses WHERE session_id = ? AND level = ? ORDER BY triggered_at DESC',
       );
-      const rows = stmt.all(sessionId, level) as AnalysisRow[];
+      const rows = stmt.all(sessionId, level) as AnalysisRow[]; // .all() returns unknown[]
       return rows.map(rowToEntity);
     }
     const stmt = db.prepare(
       'SELECT * FROM analyses WHERE session_id = ? ORDER BY triggered_at DESC',
     );
-    const rows = stmt.all(sessionId) as AnalysisRow[];
+    const rows = stmt.all(sessionId) as AnalysisRow[]; // .all() returns unknown[]
     return rows.map(rowToEntity);
   }
 
@@ -102,13 +102,13 @@ export class SqliteAnalysisRepository implements AnalysisRepository {
       const stmt = db.prepare(
         'SELECT * FROM analyses WHERE session_id = ? AND analysis_type = ? AND level = ? ORDER BY triggered_at DESC LIMIT 1',
       );
-      const row = stmt.get(sessionId, analysisType, level) as AnalysisRow | undefined;
+      const row = stmt.get(sessionId, analysisType, level) as AnalysisRow | undefined; // .get() returns unknown
       return row ? rowToEntity(row) : null;
     }
     const stmt = db.prepare(
       'SELECT * FROM analyses WHERE session_id = ? AND analysis_type = ? ORDER BY triggered_at DESC LIMIT 1',
     );
-    const row = stmt.get(sessionId, analysisType) as AnalysisRow | undefined;
+    const row = stmt.get(sessionId, analysisType) as AnalysisRow | undefined; // .get() returns unknown
     return row ? rowToEntity(row) : null;
   }
 
@@ -121,7 +121,7 @@ export class SqliteAnalysisRepository implements AnalysisRepository {
     const stmt = db.prepare(
       'SELECT * FROM analyses WHERE session_id = ? AND analysis_type = ? AND level = ? AND status = \'completed\' ORDER BY triggered_at DESC LIMIT 1',
     );
-    const row = stmt.get(sessionId, analysisType, level) as AnalysisRow | undefined;
+    const row = stmt.get(sessionId, analysisType, level) as AnalysisRow | undefined; // .get() returns unknown
     return row ? rowToEntity(row) : null;
   }
 }

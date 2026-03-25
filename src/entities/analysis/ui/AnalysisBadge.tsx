@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 import { Badge } from '@/shared/ui/Badge';
 
 type AnalysisStatus = 'pending' | 'running' | 'completed' | 'failed';
@@ -19,7 +19,7 @@ function statusVariant(status: AnalysisStatus) {
 
 export function AnalysisBadge({ status, className }: AnalysisBadgeProps) {
   return (
-    <Badge variant={statusVariant(status)} size="sm" className={cn(className)}>
+    <Badge variant={statusVariant(status)} size="sm" className={clsx(className)}>
       {status}
     </Badge>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 import { Card } from '@/shared/ui/Card';
 import { StatusIndicator } from '@/shared/ui/StatusIndicator';
 import { Badge } from '@/shared/ui/Badge';
@@ -34,25 +34,25 @@ export function SessionCard({ session, className }: SessionCardProps) {
 
   return (
     <Card
-      className={cn('group', className)}
+      className={clsx('group', className)}
       onClick={() => router.push(`/session/${session.id}`)}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <StatusIndicator status={statusToIndicator(session.status)} />
-          <span className="text-sm font-medium text-foreground font-mono">
+          <span className="text-sm font-medium text-text-primary font-mono">
             {session.id.slice(0, 8)}
           </span>
           <Badge variant={statusVariant(session.status)} size="sm">
             {session.status}
           </Badge>
         </div>
-        <span className="text-xs text-muted">
+        <span className="text-xs text-text-muted">
           {formatTimestamp(session.startTime)}
         </span>
       </div>
 
-      <div className="mt-3 flex items-center gap-4 text-xs text-muted">
+      <div className="mt-3 flex items-center gap-4 text-xs text-text-muted">
         <span>{session.totalEvents} events</span>
         <span>{formatCost(session.totalCostUsd)}</span>
         {session.cwd && (

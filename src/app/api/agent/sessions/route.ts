@@ -42,12 +42,12 @@ export async function GET(request: NextRequest) {
       countParams.push(group);
     }
 
-    const totalRow = db.prepare(countQuery).get(...countParams) as { count: number };
+    const totalRow = db.prepare(countQuery).get(...countParams) as { count: number }; // .get() returns unknown
 
     query += ' ORDER BY start_time DESC LIMIT ?';
     params.push(limit);
 
-    const rows = db.prepare(query).all(...params) as SessionRow[];
+    const rows = db.prepare(query).all(...params) as SessionRow[]; // .all() returns unknown[]
 
     const sessions = rows.map((row) => ({
       id: row.id,

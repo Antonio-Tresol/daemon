@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 
 type Breadcrumb = {
   label: string;
@@ -16,7 +16,7 @@ type HeaderProps = {
 
 export function Header({ title, subtitle, breadcrumbs, actions, className }: HeaderProps) {
   return (
-    <header className={cn('flex items-start justify-between pb-6', className)}>
+    <header className={clsx('flex items-start justify-between border-b border-border py-6', className)}>
       <div>
         {breadcrumbs && breadcrumbs.length > 0 && (
           <nav className="mb-2 flex items-center gap-1.5 font-mono text-[11px] text-text-muted">
@@ -37,7 +37,7 @@ export function Header({ title, subtitle, breadcrumbs, actions, className }: Hea
             ))}
           </nav>
         )}
-        <h1 className="text-xl font-bold text-text-primary">{title}</h1>
+        <h1 className="text-2xl font-serif italic text-text-primary">{title}</h1>
         {subtitle && (
           <p className="mt-1 font-mono text-[11px] uppercase tracking-widest text-text-secondary">
             {subtitle}

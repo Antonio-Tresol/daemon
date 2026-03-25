@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 
 type GroupFilterProps = {
   value: string | null;
@@ -20,7 +20,7 @@ export function GroupFilter({ value, onChange, className }: GroupFilterProps) {
         setGroups(data.groups ?? []);
       })
       .catch(() => {
-        // silently fail
+        // Non-critical UI filter — groups list is optional, safe to degrade without it
       })
       .finally(() => setLoading(false));
   }, []);
@@ -33,9 +33,9 @@ export function GroupFilter({ value, onChange, className }: GroupFilterProps) {
     <select
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value || null)}
-      className={cn(
-        'border border-border bg-depth-1 px-3 py-2 text-sm text-text-primary outline-none',
-        'focus:border-signal-green transition-colors',
+      className={clsx(
+        'rounded-md border border-border bg-depth-1 px-3 py-2 font-mono text-sm text-text-primary outline-none',
+        'focus:border-ember/50 transition-colors',
         className,
       )}
     >

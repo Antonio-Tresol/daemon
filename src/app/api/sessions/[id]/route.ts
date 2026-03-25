@@ -18,13 +18,13 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json() as { name?: string; groupLabel?: string };
+    const body = await request.json() as { name?: string; groupLabel?: string }; // request.json() returns unknown
 
     const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
     const db = getDatabase();
 
     // Verify session exists
-    const existing = db.prepare('SELECT id FROM sessions WHERE id = ?').get(id) as { id: string } | undefined;
+    const existing = db.prepare('SELECT id FROM sessions WHERE id = ?').get(id) as { id: string } | undefined; // .get() returns unknown
     if (!existing) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
@@ -50,7 +50,7 @@ export async function PATCH(
     db.prepare(`UPDATE sessions SET ${sets.join(', ')} WHERE id = ?`).run(...values);
 
     // Return updated session
-    const updated = db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) as SessionRow;
+    const updated = db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) as SessionRow; // .get() returns unknown
 
     return NextResponse.json({ session: updated });
   } catch (error) {
@@ -87,7 +87,7 @@ export async function GET(
       'SELECT * FROM events WHERE session_id = ? ORDER BY timestamp ASC',
     ).all(id);
 
-    const parsedEvents = (events as Array<Record<string, unknown>>).map((row) => ({
+    const parsedEvents = (events as Array<Record<string, unknown>>).map((row) => ({ // .all() returns unknown[]
       ...row,
       success: row.success === null ? null : row.success === 1,
       payload: typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload,

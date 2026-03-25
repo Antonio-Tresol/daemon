@@ -15,7 +15,13 @@ type UseWebSocketReturn = {
   subscribe: (channel: Channel) => void;
 };
 
-const WS_URL = 'ws://localhost:3000/api/ws';
+function getWsUrl(): string {
+  if (typeof window === 'undefined') return 'ws://localhost:3000/api/ws';
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/api/ws`;
+}
+
+const WS_URL = getWsUrl();
 const MAX_RECONNECT_DELAY = 30000;
 const BASE_RECONNECT_DELAY = 1000;
 
@@ -45,7 +51,7 @@ export function useWebSocket(): UseWebSocketReturn {
 
       ws.onmessage = (event) => {
         try {
-          const parsed = JSON.parse(event.data as string) as WebSocketMessage;
+          const parsed = JSON.parse(event.data as string) as WebSocketMessage; // WS event.data is MessageEvent['data'], JSON.parse returns unknown
           setLastMessage(parsed);
         } catch {
           // ignore malformed messages

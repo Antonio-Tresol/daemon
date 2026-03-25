@@ -121,11 +121,19 @@ Return a JSON object with a single key `improvements` containing an array:
       },
       "severity": "high",
       "category": "parallelization",
-      "effort": "2min"
+      "effort": "2min",
+      "evidence": ["event-id-1", "event-id-2", "event-id-3"]
     }
   ]
 }
 ```
+
+## Evidence
+
+CRITICAL: Every improvement MUST include an `evidence` array containing event IDs or plan names that motivated the suggestion. This makes recommendations traceable and verifiable. Include:
+- Event IDs where the problem manifested
+- Plan/task names from the timeline that were affected
+- Any events showing the pattern you identified
 
 ## Field Definitions
 

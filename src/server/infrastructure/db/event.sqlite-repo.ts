@@ -19,12 +19,12 @@ function rowToEntity(row: EventRow): HookEvent {
     id: row.id,
     sessionId: row.session_id,
     timestamp: row.timestamp,
-    eventType: row.event_type as HookEvent['eventType'],
+    eventType: row.event_type as HookEvent['eventType'], // DB stores string, narrowing to union type
     toolName: row.tool_name,
     success: row.success === null ? null : row.success === 1,
     durationMs: row.duration_ms,
     promptId: row.prompt_id,
-    payload: JSON.parse(row.payload) as Record<string, unknown>,
+    payload: JSON.parse(row.payload) as Record<string, unknown>, // JSON.parse returns unknown
   };
 }
 
@@ -53,7 +53,7 @@ export class SqliteEventRepository implements EventRepository {
     const stmt = db.prepare(
       'SELECT * FROM events WHERE session_id = ? ORDER BY timestamp ASC',
     );
-    const rows = stmt.all(sessionId) as EventRow[];
+    const rows = stmt.all(sessionId) as EventRow[]; // .all() returns unknown[]
     return rows.map(rowToEntity);
   }
 
@@ -62,7 +62,7 @@ export class SqliteEventRepository implements EventRepository {
     const stmt = db.prepare(
       'SELECT * FROM events WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC',
     );
-    const rows = stmt.all(start, end) as EventRow[];
+    const rows = stmt.all(start, end) as EventRow[]; // .all() returns unknown[]
     return rows.map(rowToEntity);
   }
 
@@ -71,7 +71,7 @@ export class SqliteEventRepository implements EventRepository {
     const stmt = db.prepare(
       'SELECT * FROM events WHERE event_type = ? ORDER BY timestamp ASC',
     );
-    const rows = stmt.all(eventType) as EventRow[];
+    const rows = stmt.all(eventType) as EventRow[]; // .all() returns unknown[]
     return rows.map(rowToEntity);
   }
 
@@ -80,7 +80,7 @@ export class SqliteEventRepository implements EventRepository {
     const stmt = db.prepare(
       'SELECT COUNT(*) as count FROM events WHERE session_id = ?',
     );
-    const row = stmt.get(sessionId) as { count: number };
+    const row = stmt.get(sessionId) as { count: number }; // .get() returns unknown
     return row.count;
   }
 }

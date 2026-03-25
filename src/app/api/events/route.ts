@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     const rows = db.prepare(query).all(...params);
 
-    const events = (rows as Array<Record<string, unknown>>).map((row) => ({
+    const events = (rows as Array<Record<string, unknown>>).map((row) => ({ // .all() returns unknown[]
       ...row,
       success: row.success === null ? null : row.success === 1,
       payload: typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload,

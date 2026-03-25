@@ -51,23 +51,32 @@ export async function GET(request: NextRequest) {
       countParams.push(toolName);
     }
 
+    // SQLite COUNT(*) always returns { count: number } for this query shape
     const totalRow = db.prepare(countQuery).get(...countParams) as { count: number };
 
     query += ' ORDER BY timestamp ASC LIMIT ?';
     params.push(limit);
 
+    // Rows match the EventRow interface defined above for the events table
     const rows = db.prepare(query).all(...params) as EventRow[];
 
-    const events = rows.map((row) => ({
-      id: row.id,
-      sessionId: row.session_id,
-      timestamp: row.timestamp,
-      eventType: row.event_type,
-      toolName: row.tool_name,
-      success: row.success === null ? null : row.success === 1,
-      durationMs: row.duration_ms,
-      promptId: row.prompt_id,
-    }));
+    const events = rows.map((row) => {
+      let payload: Record<string, unknown> | null = null;
+      if (row.payload) {
+        try { payload = JSON.parse(row.payload); } catch { /* keep null */ }
+      }
+      return {
+        id: row.id,
+        sessionId: row.session_id,
+        timestamp: row.timestamp,
+        eventType: row.event_type,
+        toolName: row.tool_name,
+        success: row.success === null ? null : row.success === 1,
+        durationMs: row.duration_ms,
+        promptId: row.prompt_id,
+        payload,
+      };
+    });
 
     return agentResponse(events, {
       total: totalRow.count,

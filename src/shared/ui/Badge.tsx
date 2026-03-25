@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 
-type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
+type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'accent';
 type BadgeSize = 'sm' | 'md';
 
 type BadgeProps = {
@@ -11,24 +11,26 @@ type BadgeProps = {
   className?: string;
 };
 
+/** Map all variants to just two visual styles: neutral and accent */
 const variantStyles: Record<BadgeVariant, string> = {
-  success: 'bg-signal-green/10 text-signal-green',
-  warning: 'bg-signal-amber/10 text-signal-amber',
-  error: 'bg-signal-red/10 text-signal-red',
-  info: 'bg-signal-blue/10 text-signal-blue',
-  neutral: 'bg-sediment/15 text-silt',
+  neutral: 'bg-depth-2 text-text-secondary',
+  success: 'bg-depth-2 text-text-secondary',
+  info: 'bg-depth-2 text-text-secondary',
+  accent: 'bg-ember/15 text-ember',
+  error: 'bg-ember/15 text-ember',
+  warning: 'bg-ember/15 text-ember',
 };
 
 const sizeStyles: Record<BadgeSize, string> = {
   sm: 'px-1.5 py-0.5 text-[10px]',
-  md: 'px-2 py-0.5 text-xs',
+  md: 'px-2 py-0.5 text-[10px]',
 };
 
 export function Badge({ variant = 'neutral', size = 'md', children, className }: BadgeProps) {
   return (
     <span
-      className={cn(
-        'inline-flex items-center rounded-sm font-mono font-medium',
+      className={clsx(
+        'inline-flex items-center rounded-md font-mono font-medium uppercase tracking-wider',
         variantStyles[variant],
         sizeStyles[size],
         className,

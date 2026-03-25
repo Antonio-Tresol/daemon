@@ -20,7 +20,7 @@ function getDbPath(): string {
 }
 
 function migrateAnalysesAddLevel(db: Database.Database): void {
-  const columns = db.prepare("PRAGMA table_info('analyses')").all() as Array<{ name: string }>;
+  const columns = db.prepare("PRAGMA table_info('analyses')").all() as Array<{ name: string }>; // PRAGMA returns unknown[]
   const hasLevel = columns.some((col) => col.name === 'level');
   if (!hasLevel) {
     db.exec('ALTER TABLE analyses ADD COLUMN level INTEGER NOT NULL DEFAULT 0');
@@ -28,7 +28,7 @@ function migrateAnalysesAddLevel(db: Database.Database): void {
 }
 
 function migrateSessionsAddNameAndGroup(db: Database.Database): void {
-  const columns = db.prepare("PRAGMA table_info('sessions')").all() as Array<{ name: string }>;
+  const columns = db.prepare("PRAGMA table_info('sessions')").all() as Array<{ name: string }>; // PRAGMA returns unknown[]
   if (!columns.some((col) => col.name === 'name')) {
     db.exec('ALTER TABLE sessions ADD COLUMN name TEXT');
   }

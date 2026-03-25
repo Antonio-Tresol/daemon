@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 import { EventBadge } from '@/entities/event/ui/EventBadge';
 import { formatTimestamp, formatDuration } from '@/shared/lib/format';
 import type { HookEvent } from '@/entities/event/model';
@@ -11,17 +11,8 @@ type TimelineEventProps = {
   className?: string;
 };
 
-const EVENT_BORDER_COLORS: Record<string, string> = {
-  api_error: 'border-l-signal-red',
-  PostToolUseFailure: 'border-l-signal-red',
-  api_request: 'border-l-signal-blue',
-  user_prompt: 'border-l-signal-green',
-  SessionStart: 'border-l-signal-green',
-  SessionEnd: 'border-l-sediment',
-};
-
 function ToolIcon({ name, className }: { name: string; className?: string }) {
-  const iconClass = cn('h-3.5 w-3.5 shrink-0', className);
+  const iconClass = clsx('h-3.5 w-3.5 shrink-0', className);
 
   switch (name) {
     case 'Read':
@@ -102,7 +93,7 @@ function ToolIcon({ name, className }: { name: string; className?: string }) {
 function EventIcon({ event }: { event: HookEvent }) {
   if (event.eventType === 'api_error' || event.eventType === 'PostToolUseFailure') {
     return (
-      <svg className="h-3.5 w-3.5 text-signal-red" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-text-primary" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>Error</title>
         <path d="M8 1L1 14h14L8 1z" />
         <path d="M8 6v4M8 12v.5" />
@@ -111,7 +102,7 @@ function EventIcon({ event }: { event: HookEvent }) {
   }
   if (event.eventType === 'api_request') {
     return (
-      <svg className="h-3.5 w-3.5 text-signal-blue" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-text-secondary" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>API</title>
         <path d="M2 4l6-2 6 2v8l-6 2-6-2z" />
         <path d="M2 4l6 2 6-2M8 6v8" />
@@ -120,7 +111,7 @@ function EventIcon({ event }: { event: HookEvent }) {
   }
   if (event.eventType === 'user_prompt') {
     return (
-      <svg className="h-3.5 w-3.5 text-signal-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-ember" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>Prompt</title>
         <path d="M4 6l4 2-4 2" />
         <rect x="1" y="2" width="14" height="12" rx="2" />
@@ -129,7 +120,7 @@ function EventIcon({ event }: { event: HookEvent }) {
   }
   if (event.eventType === 'SessionStart') {
     return (
-      <svg className="h-3.5 w-3.5 text-signal-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-ember" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>Start</title>
         <polygon points="5,3 13,8 5,13" />
       </svg>
@@ -137,7 +128,7 @@ function EventIcon({ event }: { event: HookEvent }) {
   }
   if (event.eventType === 'SessionEnd') {
     return (
-      <svg className="h-3.5 w-3.5 text-sediment" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="h-3.5 w-3.5 text-text-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <title>Stop</title>
         <rect x="4" y="4" width="8" height="8" />
       </svg>
@@ -147,26 +138,99 @@ function EventIcon({ event }: { event: HookEvent }) {
     return <ToolIcon name={event.toolName} className="text-text-secondary" />;
   }
   return (
-    <svg className="h-3.5 w-3.5 text-sediment" viewBox="0 0 16 16" fill="currentColor">
+    <svg className="h-3.5 w-3.5 text-text-muted" viewBox="0 0 16 16" fill="currentColor">
       <title>Event</title>
       <circle cx="8" cy="8" r="3" />
     </svg>
   );
 }
 
-export function TimelineEvent({ event, className }: TimelineEventProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const borderColor = EVENT_BORDER_COLORS[event.eventType] ?? (event.toolName ? 'border-l-sediment' : 'border-l-border');
+function PayloadField({ label, value }: { label: string; value: unknown }) {
+  if (value === null || value === undefined) return null;
+  const str = typeof value === 'string' ? value : JSON.stringify(value);
+  if (!str || str === '""' || str === '{}' || str === '[]') return null;
+
+  const isLong = str.length > 120;
+  const isCode = label === 'command' || label === 'old_string' || label === 'new_string' || label === 'content' || label === 'expression';
 
   return (
-    <div className={cn('group relative', className)}>
+    <div className="flex gap-2">
+      <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted shrink-0 w-20 text-right pt-0.5">{label}</span>
+      {isCode || isLong ? (
+        <pre className="flex-1 text-[11px] font-mono text-text-primary whitespace-pre-wrap break-all leading-relaxed max-h-[150px] overflow-y-auto bg-depth-0/50 rounded-sm px-2 py-1">
+          {typeof value === 'string' ? value.slice(0, 1500) : JSON.stringify(value, null, 2).slice(0, 1500)}
+        </pre>
+      ) : (
+        <span className="flex-1 text-[11px] font-mono text-text-primary break-all">{str}</span>
+      )}
+    </div>
+  );
+}
+
+function EventPayload({ payload }: { payload: Record<string, unknown> | null }) {
+  if (!payload) {
+    return (
+      <div className="mt-1 ml-4 bg-depth-2 border border-border rounded-md p-3 depth-reveal">
+        <span className="text-[10px] font-mono text-text-muted">No payload data</span>
+      </div>
+    );
+  }
+
+  const toolInput = payload.tool_input as Record<string, unknown> | undefined; // payload values are unknown
+  const toolResult = payload.tool_result as string | undefined; // payload values are unknown
+  const hookEvent = payload.hook_event_name as string | undefined; // payload values are unknown
+
+  // Key fields to show from tool_input
+  const inputFields = toolInput ? Object.entries(toolInput).filter(
+    ([k]) => !['type'].includes(k)
+  ) : [];
+
+  return (
+    <div className="mt-1 ml-4 bg-depth-2 border border-border rounded-md p-3 depth-reveal space-y-2">
+      {/* Tool input params rendered as key-value pairs */}
+      {inputFields.length > 0 && (
+        <div className="space-y-1.5">
+          <span className="text-[9px] font-mono uppercase tracking-wider text-ember">Parameters</span>
+          <div className="space-y-1">
+            {inputFields.map(([key, val]) => (
+              <PayloadField key={key} label={key} value={val} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tool result summary */}
+      {toolResult && (
+        <div className="space-y-1">
+          <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted">Result</span>
+          <pre className="text-[10px] font-mono text-text-secondary whitespace-pre-wrap break-all leading-relaxed max-h-[120px] overflow-y-auto bg-depth-0/50 rounded-sm px-2 py-1">
+            {typeof toolResult === 'string' ? toolResult.slice(0, 1000) : JSON.stringify(toolResult, null, 2).slice(0, 1000)}
+          </pre>
+        </div>
+      )}
+
+      {/* Collapsed full payload */}
+      <details className="text-[10px]">
+        <summary className="font-mono text-text-muted cursor-pointer hover:text-text-secondary">
+          {hookEvent ?? 'raw payload'}
+        </summary>
+        <pre className="mt-1 text-[10px] text-text-muted whitespace-pre-wrap break-all font-mono leading-relaxed max-h-[200px] overflow-y-auto">
+          {JSON.stringify(payload, null, 2)}
+        </pre>
+      </details>
+    </div>
+  );
+}
+
+export function TimelineEvent({ event, className }: TimelineEventProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className={clsx('group relative', className)}>
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className={cn(
-          'w-full text-left border-l-2 p-2.5 transition-colors duration-300 hover:bg-depth-0/50',
-          borderColor,
-        )}
+        className="w-full text-left border-l-2 border-l-ember p-2.5 transition-colors duration-300 hover:bg-depth-0/50"
       >
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] font-mono text-text-muted shrink-0">
@@ -181,18 +245,12 @@ export function TimelineEvent({ event, className }: TimelineEventProps) {
             <span className="text-[10px] font-mono text-text-muted">{formatDuration(event.durationMs)}</span>
           )}
           {event.success === false && (
-            <span className="text-[10px] font-mono text-signal-red font-medium ml-auto">failed</span>
+            <span className="text-[10px] font-mono text-text-primary font-medium ml-auto">{'\u2717'} failed</span>
           )}
         </div>
       </button>
 
-      {isExpanded && (
-        <div className="mt-1 ml-4 bg-depth-2 border border-border p-3 text-xs depth-reveal">
-          <pre className="overflow-x-auto text-[11px] text-text-secondary whitespace-pre-wrap break-words font-mono leading-relaxed">
-            {JSON.stringify(event.payload, null, 2)}
-          </pre>
-        </div>
-      )}
+      {isExpanded && <EventPayload payload={event.payload} />}
     </div>
   );
 }

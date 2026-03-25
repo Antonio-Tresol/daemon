@@ -1,9 +1,7 @@
 import { type NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { agentError } from '../_lib/response';
-
-const VALID_TYPES = ['timeline', 'failures', 'improvements'] as const;
-type AnalysisType = (typeof VALID_TYPES)[number];
+import { ANALYSIS_TYPES, isValidAnalysisType } from '@/entities/analysis/analysis-types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // body validated as object with sessionId/type keys above
     const { sessionId, type, level = 0 } = body as {
       sessionId: string;
       type: string;
@@ -38,9 +37,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!VALID_TYPES.includes(type as AnalysisType)) {
+    if (!isValidAnalysisType(type)) {
       return agentError(
-        `type must be one of: ${VALID_TYPES.join(', ')}`,
+        `type must be one of: ${ANALYSIS_TYPES.join(', ')}`,
         'INVALID_PARAM',
         'Valid types: timeline, failures, improvements',
         'analyze',
@@ -53,7 +52,7 @@ export async function POST(request: NextRequest) {
     // Verify session exists
     const session = db
       .prepare('SELECT id FROM sessions WHERE id = ?')
-      .get(sessionId) as { id: string } | undefined;
+      .get(sessionId) as { id: string } | undefined; // .get() returns unknown
 
     if (!session) {
       return agentError(

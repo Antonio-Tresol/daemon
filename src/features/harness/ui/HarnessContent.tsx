@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 import { FailureTimeline } from '@/features/failures/ui/FailureTimeline';
 import { ImprovementsList } from '@/features/improvements/ui/ImprovementsList';
 import { GroupFilter } from '@/shared/ui/GroupFilter';
@@ -104,7 +104,7 @@ export function HarnessContent({ className }: HarnessContentProps) {
   ];
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={clsx('space-y-6', className)}>
       {/* Session selector */}
       <div className="flex flex-wrap items-center gap-4">
         <label
@@ -117,15 +117,15 @@ export function HarnessContent({ className }: HarnessContentProps) {
         <GroupFilter value={groupFilter} onChange={setGroupFilter} />
 
         {sessionsLoading ? (
-          <span className="text-xs text-muted">Loading sessions...</span>
+          <span className="text-xs text-text-muted">Loading sessions...</span>
         ) : filteredSessions.length === 0 ? (
-          <span className="text-xs text-muted">No sessions found</span>
+          <span className="text-xs text-text-muted">No sessions found</span>
         ) : (
           <select
             id="harness-session-select"
             value={selectedSessionId ?? ''}
             onChange={(e) => setSelectedSessionId(e.target.value)}
-            className="border border-border bg-depth-1 px-3 py-1.5 text-sm font-mono text-text-primary outline-none focus:border-signal-green/50 transition-colors max-w-md"
+            className="border border-border bg-depth-1 rounded-md px-3 py-1.5 text-sm font-mono text-text-primary outline-none focus:border-ember/50 transition-colors max-w-md"
           >
             {filteredSessions.map((s) => (
               <option key={s.id} value={s.id}>
@@ -154,10 +154,10 @@ export function HarnessContent({ className }: HarnessContentProps) {
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className={cn(
+            className={clsx(
               'flex items-center gap-2 px-4 py-2 text-sm transition-colors',
               activeTab === tab.key
-                ? 'border-b-2 border-signal-green text-signal-green font-medium'
+                ? 'border-b-2 border-ember text-ember font-medium'
                 : 'text-text-secondary hover:text-text-primary',
             )}
           >

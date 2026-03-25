@@ -89,7 +89,7 @@ export function parseOtlpLogs(payload: OtlpLogsPayload): HookEvent[] {
         const bodyText = record.body?.stringValue ?? '';
         let bodyPayload: Record<string, unknown> = {};
         try {
-          bodyPayload = JSON.parse(bodyText) as Record<string, unknown>;
+          bodyPayload = JSON.parse(bodyText) as Record<string, unknown>; // JSON.parse returns unknown
         } catch {
           bodyPayload = { raw: bodyText };
         }
@@ -98,7 +98,7 @@ export function parseOtlpLogs(payload: OtlpLogsPayload): HookEvent[] {
           id: uuidv4(),
           sessionId,
           timestamp,
-          eventType: rawEventType as EventType,
+          eventType: rawEventType as EventType, // OTel attribute is string, narrowing to union type
           toolName,
           success: record.severityText !== 'ERROR' ? true : false,
           durationMs: null,

@@ -1,50 +1,91 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import 'tailwindcss';
 
 @theme {
-  /* Depth backgrounds — each level darker */
-  --color-depth-0: #0a1628;
-  --color-depth-1: #091320;
-  --color-depth-2: #080f1a;
-  --color-depth-3: #060c15;
-  --color-depth-4: #050810;
+  /* Depth backgrounds — void with bone layered at increasing opacity */
+  --color-depth-0: #0a0a0a;
+  --color-depth-1: #141210;
+  --color-depth-2: #1e1a16;
+  --color-depth-3: #28241e;
 
-  /* Bioluminescent accents */
-  --color-signal-green: #00e5a0;
-  --color-signal-amber: #e5a040;
-  --color-signal-red: #e54060;
-  --color-signal-blue: #4080e5;
+  /* Borders — bone at low opacity */
+  --color-border: rgba(240, 236, 229, 0.10);
+  --color-border-bright: rgba(240, 236, 229, 0.18);
 
-  /* Sediment/inactive */
-  --color-sediment: #4a6080;
-  --color-silt: #6b7f99;
+  /* Text — bone at varying opacity */
+  --color-text-primary: rgba(240, 236, 229, 0.90);
+  --color-text-secondary: rgba(240, 236, 229, 0.50);
+  --color-text-muted: rgba(240, 236, 229, 0.25);
 
-  /* Text */
-  --color-text-primary: #c8d6e5;
-  --color-text-secondary: #6b7f99;
-  --color-text-muted: #4a6080;
+  /* Ember — the ONE accent */
+  --color-ember: #d4a574;
 
-  /* Surfaces */
-  --color-surface: #0d1926;
-  --color-surface-raised: #111f33;
-  --color-border: rgba(200, 214, 229, 0.06);
-  --color-border-accent: rgba(0, 229, 160, 0.15);
+  /* Sediment — bone at 35% for scrollbar, secondary UI */
+  --color-sediment: rgba(240, 236, 229, 0.35);
 
-  /* Legacy aliases for existing components */
-  --color-background: #0a1628;
-  --color-foreground: #c8d6e5;
-  --color-card: #0d1926;
-  --color-card-border: rgba(200, 214, 229, 0.06);
-  --color-muted: #6b7f99;
-  --color-accent: #00e5a0;
-  --color-accent-hover: #00cc8e;
-  --color-status-green: #00e5a0;
-  --color-status-amber: #e5a040;
-  --color-status-red: #e54060;
+  /* Signal backward-compat aliases — all mapped to ember/bone */
+  --color-signal-green: #d4a574;
+  --color-signal-amber: #d4a574;
+  --color-signal-red: #d4a574;
+  --color-signal-blue: rgba(240, 236, 229, 0.50);
+
+  /* Legacy aliases — mapped to new values */
+  --color-background: #0a0a0a;
+  --color-foreground: rgba(240, 236, 229, 0.90);
+  --color-card: #141210;
+  --color-card-border: rgba(240, 236, 229, 0.10);
+  --color-muted: rgba(240, 236, 229, 0.50);
+  --color-accent: #d4a574;
+  --color-accent-hover: #c4955a;
+  --color-surface: #141210;
+  --color-surface-raised: #1e1a16;
+  --color-border-accent: rgba(212, 165, 116, 0.15);
+  --color-silt: rgba(240, 236, 229, 0.35);
+  --color-status-green: #d4a574;
+  --color-status-amber: #d4a574;
+  --color-status-red: #d4a574;
 
   /* Fonts */
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  --font-serif: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
+}
+
+/* Light theme — warm parchment */
+[data-theme="light"] {
+  --color-depth-0: #f0ece5;
+  --color-depth-1: #e8e2da;
+  --color-depth-2: #ddd5ca;
+  --color-depth-3: #d0c8be;
+
+  --color-border: rgba(10, 10, 10, 0.08);
+  --color-border-bright: rgba(10, 10, 10, 0.15);
+
+  --color-text-primary: rgba(10, 10, 10, 0.90);
+  --color-text-secondary: rgba(10, 10, 10, 0.50);
+  --color-text-muted: rgba(10, 10, 10, 0.25);
+
+  --color-ember: #d4a574;
+
+  --color-sediment: rgba(10, 10, 10, 0.25);
+
+  --color-signal-green: #d4a574;
+  --color-signal-amber: #d4a574;
+  --color-signal-red: #d4a574;
+  --color-signal-blue: rgba(10, 10, 10, 0.50);
+
+  --color-background: #f0ece5;
+  --color-foreground: rgba(10, 10, 10, 0.90);
+  --color-card: #e8e2da;
+  --color-card-border: rgba(10, 10, 10, 0.08);
+  --color-muted: rgba(10, 10, 10, 0.50);
+  --color-accent: #d4a574;
+  --color-accent-hover: #c4955a;
+  --color-surface: #e8e2da;
+  --color-surface-raised: #ddd5ca;
+  --color-silt: rgba(10, 10, 10, 0.25);
+  --color-status-green: #d4a574;
+  --color-status-amber: #d4a574;
+  --color-status-red: #d4a574;
 }
 
 /* Base styles */
@@ -56,42 +97,42 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* No light mode — the ocean floor has no sun */
+/* --- Animations --- */
 
-/* Pressure Pulse animation — heartbeat for active sessions */
+/* Current flow on SVG connections */
+@keyframes current-flow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -8; }
+}
+
+/* Depth reveal — expanded content fade-in */
+@keyframes depth-reveal {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Pulse signal — active indicator */
+@keyframes pulse-signal {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Pressure pulse — legacy, kept for backward compat */
 @keyframes pressure-pulse {
   0%, 100% { opacity: 0.4; box-shadow: 0 0 8px currentColor; }
   50% { opacity: 1.0; box-shadow: 0 0 20px currentColor; }
 }
 
-/* Fast pulse for errors */
 @keyframes pressure-pulse-fast {
   0%, 100% { opacity: 0.5; box-shadow: 0 0 6px currentColor; }
   50% { opacity: 1.0; box-shadow: 0 0 16px currentColor; }
 }
 
-/* Sonar sweep — data refresh animation */
+/* Sonar sweep — data refresh */
 @keyframes sonar-sweep {
   0% { transform: translateY(-100%); opacity: 0.3; }
   50% { opacity: 0.6; }
   100% { transform: translateY(100vh); opacity: 0; }
-}
-
-/* Current flow on connections */
-@keyframes current-flow {
-  0% { stroke-dashoffset: 20; }
-  100% { stroke-dashoffset: 0; }
-}
-
-/* Bathymetric descent — drill-down transition */
-@keyframes depth-reveal {
-  0% { transform: translateY(40px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
-}
-
-/* Flatline — error state */
-@keyframes flatline {
-  0%, 100% { opacity: 1; }
 }
 
 /* Loading sequence */
@@ -100,24 +141,24 @@ body {
   100% { background: var(--color-depth-0); }
 }
 
-/* Utility classes */
+/* --- Utility classes --- */
+
+.depth-reveal {
+  animation: depth-reveal 200ms ease;
+}
+
 .pulse-active {
   animation: pressure-pulse 2s ease-in-out infinite;
-  color: var(--color-signal-green);
+  color: var(--color-ember);
 }
 
 .pulse-warning {
-  animation: pressure-pulse-fast 1.2s ease-in-out infinite;
-  color: var(--color-signal-amber);
+  animation: pulse-signal 2s ease infinite;
+  color: var(--color-ember);
 }
 
 .pulse-error {
-  color: var(--color-signal-red);
-  /* No animation — flatline */
-}
-
-.depth-reveal {
-  animation: depth-reveal 400ms ease-out;
+  color: var(--color-text-primary);
 }
 
 .sonar-line {
@@ -125,42 +166,42 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background: rgba(0, 229, 160, 0.3);
+  background: rgba(212, 165, 116, 0.3);
   animation: sonar-sweep 600ms ease-out forwards;
   pointer-events: none;
 }
 
-/* Band layout — full-bleed horizontal bands instead of cards */
+/* Fracture texture — subtle grain for failure backgrounds */
+.fracture-bg {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(240, 236, 229, 0.04) 10px,
+    rgba(240, 236, 229, 0.04) 11px
+  );
+}
+
+/* Band layout — full-bleed horizontal bands */
 .band {
   width: 100%;
   border-top: 1px solid var(--color-border);
   padding: 16px 0;
 }
 
-/* Depth indicator — left-edge color bar */
+/* Depth indicator — left-edge color bar, all ember */
 .depth-indicator {
   border-left: 2px solid;
   padding-left: 16px;
 }
 
-.depth-indicator-0 { border-left-color: var(--color-signal-green); }
-.depth-indicator-1 { border-left-color: #00c5c0; }
-.depth-indicator-2 { border-left-color: #00a0d5; }
-.depth-indicator-3 { border-left-color: #0080e5; }
-.depth-indicator-4 { border-left-color: #4060e5; }
+.depth-indicator-0 { border-left-color: var(--color-ember); }
+.depth-indicator-1 { border-left-color: var(--color-ember); }
+.depth-indicator-2 { border-left-color: var(--color-ember); }
+.depth-indicator-3 { border-left-color: var(--color-ember); }
+.depth-indicator-4 { border-left-color: var(--color-ember); }
 
-/* Fracture texture for failures */
-.fracture-bg {
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(229, 64, 96, 0.04) 10px,
-    rgba(229, 64, 96, 0.04) 11px
-  );
-}
-
-/* Scrollbar styling */
+/* --- Scrollbar styling --- */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -173,12 +214,12 @@ body {
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-silt);
+  background: var(--color-text-secondary);
 }
 
 /* Selection */
 ::selection {
-  background: rgba(0, 229, 160, 0.2);
+  background: rgba(212, 165, 116, 0.2);
   color: var(--color-text-primary);
 }
 

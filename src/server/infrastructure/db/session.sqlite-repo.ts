@@ -20,7 +20,7 @@ function rowToEntity(row: SessionRow): Session {
     id: row.id,
     startTime: row.start_time,
     endTime: row.end_time,
-    status: row.status as Session['status'],
+    status: row.status as Session['status'], // DB stores string, narrowing to union type
     cwd: row.cwd,
     projectHash: row.project_hash,
     totalEvents: row.total_events,
@@ -75,7 +75,7 @@ export class SqliteSessionRepository implements SessionRepository {
   findById(id: string): Session | null {
     const db = getDatabase();
     const stmt = db.prepare('SELECT * FROM sessions WHERE id = ?');
-    const row = stmt.get(id) as SessionRow | undefined;
+    const row = stmt.get(id) as SessionRow | undefined; // .get() returns unknown
     return row ? rowToEntity(row) : null;
   }
 
@@ -84,7 +84,7 @@ export class SqliteSessionRepository implements SessionRepository {
     const stmt = db.prepare(
       'SELECT * FROM sessions ORDER BY start_time DESC',
     );
-    const rows = stmt.all() as SessionRow[];
+    const rows = stmt.all() as SessionRow[]; // .all() returns unknown[]
     return rows.map(rowToEntity);
   }
 
@@ -93,7 +93,7 @@ export class SqliteSessionRepository implements SessionRepository {
     const stmt = db.prepare(
       "SELECT * FROM sessions WHERE status = 'active' ORDER BY start_time DESC",
     );
-    const rows = stmt.all() as SessionRow[];
+    const rows = stmt.all() as SessionRow[]; // .all() returns unknown[]
     return rows.map(rowToEntity);
   }
 
@@ -111,7 +111,7 @@ export class SqliteSessionRepository implements SessionRepository {
     const db = getDatabase();
     const rows = db.prepare(
       'SELECT * FROM sessions WHERE group_label = ? ORDER BY start_time DESC',
-    ).all(groupLabel) as SessionRow[];
+    ).all(groupLabel) as SessionRow[]; // .all() returns unknown[]
     return rows.map(rowToEntity);
   }
 
@@ -119,7 +119,7 @@ export class SqliteSessionRepository implements SessionRepository {
     const db = getDatabase();
     const rows = db.prepare(
       'SELECT DISTINCT group_label FROM sessions WHERE group_label IS NOT NULL ORDER BY group_label',
-    ).all() as Array<{ group_label: string }>;
+    ).all() as Array<{ group_label: string }>; // .all() returns unknown[]
     return rows.map((r) => r.group_label);
   }
 }

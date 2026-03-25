@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 import { SessionOverview } from '@/features/session/ui/SessionOverview';
 import { SessionConsole } from '@/features/session/ui/SessionConsole';
 import { TimelineView } from '@/features/timeline/ui/TimelineView';
@@ -61,7 +61,7 @@ export function SessionDetailContent({ sessionId, className }: SessionDetailCont
   }
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={clsx('space-y-4', className)}>
       {/* Tabs */}
       <div className="flex gap-1 border-b border-card-border pb-px">
         {TABS.map((tab) => (
@@ -69,7 +69,7 @@ export function SessionDetailContent({ sessionId, className }: SessionDetailCont
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className={cn(
+            className={clsx(
               'rounded-t-lg px-4 py-2 text-sm transition-colors',
               activeTab === tab.key
                 ? 'border-b-2 border-accent text-accent font-medium'

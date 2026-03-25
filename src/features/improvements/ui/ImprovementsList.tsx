@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
+import { LoadingState } from '@/shared/ui/LoadingState';
+import { ErrorState } from '@/shared/ui/ErrorState';
+import { EmptyState } from '@/shared/ui/EmptyState';
+import { severitySymbol } from '@/shared/lib/severity-symbols';
 import { ImprovementCard } from '@/features/improvements/ui/ImprovementCard';
 import { useImprovements } from '@/features/improvements/model/use-improvements';
 import { AnalysisBadge } from '@/entities/analysis/ui/AnalysisBadge';
@@ -16,16 +20,14 @@ const AREA_ORDER: ImprovementArea[] = [
   'hooks', 'context', 'subagents', 'architecture', 'tools', 'skills', 'legibility',
 ];
 
-type AreaMeta = { label: string; color: string; desc: string };
-
-const areaMeta: Record<ImprovementArea, AreaMeta> = {
-  hooks: { label: 'Hooks', color: '#00e5a0', desc: 'Pre/post tool hooks and automation' },
-  skills: { label: 'Skills', color: '#4080e5', desc: 'Reusable agent capabilities' },
-  subagents: { label: 'Agent Teams', color: '#00c5c0', desc: 'Parallel work strategies' },
-  tools: { label: 'MCP Tools', color: '#0080e5', desc: 'External tool integration' },
-  context: { label: 'CLAUDE.md', color: '#e5a040', desc: 'Context and documentation' },
-  architecture: { label: 'Architecture', color: '#e54060', desc: 'Structure enforcement' },
-  legibility: { label: 'Legibility', color: '#6b7f99', desc: 'Agent readability' },
+const AREA_ICONS: Record<ImprovementArea, { label: string; icon: string; desc: string }> = {
+  hooks: { label: 'Hooks', icon: '{ }', desc: 'Pre/post tool hooks and automation' },
+  skills: { label: 'Skills', icon: '/ /', desc: 'Reusable agent capabilities' },
+  subagents: { label: 'Agent Teams', icon: '>>>', desc: 'Parallel work strategies' },
+  tools: { label: 'MCP Tools', icon: '::', desc: 'External tool integration' },
+  context: { label: 'CLAUDE.md', icon: '#', desc: 'Context and documentation' },
+  architecture: { label: 'Architecture', icon: '|||', desc: 'Structure enforcement' },
+  legibility: { label: 'Legibility', icon: '...', desc: 'Agent readability' },
 };
 
 type ViewMode = 'priority' | 'category';
@@ -39,7 +41,7 @@ function priorityScore(imp: Improvement): number {
 
 function QuickWinBadge() {
   return (
-    <span className="inline-flex items-center gap-0.5 text-[9px] font-mono font-medium uppercase tracking-wider text-signal-green bg-signal-green/15 px-1.5 py-0.5">
+    <span className="inline-flex items-center gap-0.5 text-[9px] font-mono font-medium uppercase tracking-wider text-ember bg-ember/15 rounded-md px-1.5 py-0.5">
       quick win
     </span>
   );
@@ -51,28 +53,15 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
   const [filterArea, setFilterArea] = useState<ImprovementArea | null>(null);
 
   if (isLoading) {
-    return (
-      <div className={cn('flex items-center justify-center py-12', className)}>
-        <span className="text-sm text-muted">Loading improvements...</span>
-      </div>
-    );
+    return <LoadingState message="Loading improvements..." className={className} />;
   }
 
   if (error) {
-    return (
-      <div className={cn('border border-signal-red/30 bg-signal-red/5 p-4', className)}>
-        <p className="text-sm text-signal-red">Failed to load: {error}</p>
-      </div>
-    );
+    return <ErrorState message={`Failed to load: ${error}`} className={className} />;
   }
 
   if (improvements.length === 0) {
-    return (
-      <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
-        <svg className="h-8 w-8 text-accent mb-2" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><title>Clean</title><path d="M8 2l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1z" /></svg>
-        <p className="text-sm text-muted">No suggestions yet</p>
-      </div>
-    );
+    return <EmptyState message="No suggestions yet" icon={'\u2713'} className={className} />;
   }
 
   // Group by area
@@ -96,22 +85,22 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
   const lowCount = improvements.filter((i) => i.severity === 'low').length;
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={clsx('space-y-4', className)}>
       {/* Summary row */}
       <div className="flex items-center gap-4 flex-wrap">
         {analysis && <AnalysisBadge status={analysis.status} />}
         <span className="font-mono text-xs text-text-secondary">{improvements.length} suggestions</span>
 
         <div className="flex items-center gap-1.5 font-mono text-xs text-text-secondary">
-          <span className="inline-block h-2 w-2 bg-signal-red" />
+          <span className="text-ember">{'\u2717\u2717'}</span>
           {highCount} high
         </div>
         <div className="flex items-center gap-1.5 font-mono text-xs text-text-secondary">
-          <span className="inline-block h-2 w-2 bg-signal-amber" />
+          <span className="text-ember">{'\u25C6'}</span>
           {medCount} med
         </div>
         <div className="flex items-center gap-1.5 font-mono text-xs text-text-secondary">
-          <span className="inline-block h-2 w-2 bg-signal-green" />
+          <span className="text-ember">{'\u25CB'}</span>
           {lowCount} low
         </div>
 
@@ -123,13 +112,13 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
       {/* Controls */}
       <div className="flex items-center gap-2 flex-wrap">
         {/* View mode toggle */}
-        <div className="flex items-center border border-border bg-depth-1">
+        <div className="flex items-center border border-border bg-depth-1 rounded-md overflow-hidden">
           <button
             type="button"
             onClick={() => setViewMode('priority')}
-            className={cn(
+            className={clsx(
               'px-3 py-1 text-xs transition-colors',
-              viewMode === 'priority' ? 'bg-signal-green/15 text-signal-green font-medium' : 'text-text-secondary hover:text-text-primary',
+              viewMode === 'priority' ? 'bg-ember/15 text-ember font-medium' : 'text-text-secondary hover:text-text-primary',
             )}
           >
             Priority
@@ -137,9 +126,9 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
           <button
             type="button"
             onClick={() => setViewMode('category')}
-            className={cn(
+            className={clsx(
               'px-3 py-1 text-xs border-l border-border transition-colors',
-              viewMode === 'category' ? 'bg-signal-green/15 text-signal-green font-medium' : 'text-text-secondary hover:text-text-primary',
+              viewMode === 'category' ? 'bg-ember/15 text-ember font-medium' : 'text-text-secondary hover:text-text-primary',
             )}
           >
             Category
@@ -151,27 +140,26 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
           <button
             type="button"
             onClick={() => setFilterArea(null)}
-            className={cn(
+            className={clsx(
               'px-2 py-0.5 text-[10px] rounded-sm transition-colors',
-              filterArea === null ? 'bg-border/60 text-text-primary' : 'text-text-secondary hover:text-text-primary',
+              filterArea === null ? 'bg-ember/15 text-ember' : 'text-text-secondary hover:text-text-primary',
             )}
           >
             All
           </button>
           {AREA_ORDER.filter((area) => grouped.has(area)).map((area) => {
-            const meta = areaMeta[area];
+            const meta = AREA_ICONS[area];
             return (
               <button
                 key={area}
                 type="button"
                 onClick={() => setFilterArea(filterArea === area ? null : area)}
-                className={cn(
+                className={clsx(
                   'flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-sm transition-colors',
-                  filterArea === area ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary',
+                  filterArea === area ? 'bg-ember/15 text-ember' : 'text-text-secondary hover:text-text-primary',
                 )}
-                style={filterArea === area ? { background: `${meta.color}20` } : undefined}
               >
-                <span className="inline-block h-1.5 w-1.5 rounded-sm" style={{ background: meta.color }} />
+                <span className="font-mono text-ember">{meta.icon}</span>
                 {meta.label}
                 <span className="text-text-muted">({grouped.get(area)?.length})</span>
               </button>
@@ -199,15 +187,15 @@ export function ImprovementsList({ sessionId, className }: ImprovementsListProps
           }).map((area) => {
             const items = grouped.get(area);
             if (!items) return null;
-            const meta = areaMeta[area];
+            const meta = AREA_ICONS[area];
 
             return (
               <div key={area}>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="inline-block h-2.5 w-2.5 rounded" style={{ background: meta.color }} />
-                  <h3 className="text-xs font-medium text-foreground">{meta.label}</h3>
-                  <span className="text-[10px] text-muted">{meta.desc}</span>
-                  <span className="text-[10px] text-muted ml-auto">({items.length})</span>
+                  <span className="font-mono text-ember text-xs">{meta.icon}</span>
+                  <h3 className="text-xs font-medium text-text-primary">{meta.label}</h3>
+                  <span className="text-[10px] text-text-muted">{meta.desc}</span>
+                  <span className="text-[10px] text-text-muted ml-auto">({items.length})</span>
                 </div>
                 <div className="space-y-2 ml-4.5">
                   {items.map((imp, i) => (

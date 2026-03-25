@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
 
 type EditableTextProps = {
   value: string;
@@ -67,9 +67,9 @@ export function EditableText({
         onBlur={save}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className={cn(
-          'border border-border bg-depth-1 px-2 py-0.5 text-sm text-text-primary outline-none',
-          'focus:border-signal-green focus:ring-1 focus:ring-signal-green/30',
+        className={clsx(
+          'rounded-md border border-border bg-depth-1 px-2 py-0.5 font-mono text-sm text-text-primary outline-none',
+          'focus:border-ember/50',
           'placeholder:text-text-muted',
           className,
         )}
@@ -82,9 +82,9 @@ export function EditableText({
       type="button"
       onClick={() => setIsEditing(true)}
       title="Click to rename"
-      className={cn(
-        'group inline-flex items-center gap-1.5 px-2 py-0.5 text-sm text-text-primary',
-        'hover:bg-depth-1 transition-colors cursor-text',
+      className={clsx(
+        'group inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 font-mono text-sm text-text-primary',
+        'hover:bg-depth-2 transition-colors cursor-text',
         className,
       )}
     >
@@ -95,7 +95,7 @@ export function EditableText({
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 16 16"
         fill="currentColor"
-        className="h-3 w-3 text-sediment opacity-0 group-hover:opacity-60 transition-opacity"
+        className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-60 transition-opacity"
       >
         <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L3.22 10.306a1 1 0 0 0-.26.445l-.813 3.04a.5.5 0 0 0 .608.608l3.04-.813a1 1 0 0 0 .445-.26l7.793-7.793a1.75 1.75 0 0 0 0-2.475l-.544-.544ZM11.72 3.22a.25.25 0 0 1 .354 0l.544.544a.25.25 0 0 1 0 .354L5.664 11.072l-1.596.427.427-1.596L11.72 3.22Z" />
       </svg>

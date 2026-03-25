@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@/shared/lib/cn';
+import clsx from 'clsx';
+import { LoadingState } from '@/shared/ui/LoadingState';
+import { ErrorState } from '@/shared/ui/ErrorState';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { PlanGroup } from '@/features/timeline/ui/PlanGroup';
 import { TrajectoryView } from '@/features/timeline/ui/TrajectoryView';
 import { useTimeline } from '@/features/timeline/model/use-timeline';
@@ -44,50 +47,45 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
   };
 
   if (isLoading) {
-    return (
-      <div className={cn('flex items-center justify-center py-12', className)}>
-        <span className="text-sm font-mono text-text-muted">Loading timeline...</span>
-      </div>
-    );
+    return <LoadingState message="Loading timeline..." className={className} />;
   }
 
   if (error) {
-    return (
-      <div className={cn('border-l-2 border-signal-red bg-signal-red/5 p-4', className)}>
-        <p className="text-sm text-signal-red">Failed to load timeline: {error}</p>
-      </div>
-    );
+    return <ErrorState message={`\u2717 Failed to load timeline: ${error}`} className={className} />;
   }
 
   if (plans.length === 0 && level === 0) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
-        <p className="text-sm text-text-secondary">No timeline data available yet.</p>
-        <p className="mt-1 text-xs text-text-muted">Analysis runs automatically when events are captured.</p>
-      </div>
+      <EmptyState
+        message="No timeline data available yet."
+        detail="Analysis runs automatically when events are captured."
+        className={className}
+      />
     );
   }
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={clsx('space-y-4', className)}>
       {/* Controls bar */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           {/* Matryoshka level selector */}
           <div className="flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider text-text-muted font-mono hidden sm:inline">Depth</span>
-            <div className="flex items-center border border-border bg-depth-1">
+            <div className="flex items-center border border-border bg-depth-1 rounded-md">
               {MATRYOSHKA_LEVELS.map((lvl, i) => (
                 <button
                   key={lvl.label}
                   type="button"
                   onClick={() => setLevel(i)}
                   title={lvl.description}
-                  className={cn(
+                  className={clsx(
                     'px-3 py-1.5 text-xs font-mono transition-colors duration-300 flex items-center gap-1.5',
                     i > 0 && 'border-l border-border',
+                    i === 0 && 'rounded-l-md',
+                    i === MATRYOSHKA_LEVELS.length - 1 && 'rounded-r-md',
                     level === i
-                      ? 'bg-signal-green/10 text-signal-green font-medium'
+                      ? 'bg-ember/10 text-ember font-medium'
                       : 'text-text-secondary hover:text-text-primary',
                   )}
                 >
@@ -104,7 +102,7 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
               type="button"
               onClick={() => handleBuildLevel(level)}
               disabled={isBuildingLevel}
-              className="border border-signal-green/40 bg-transparent px-3 py-1.5 text-xs font-mono font-medium text-signal-green hover:bg-signal-green/10 transition-colors duration-300 disabled:opacity-50"
+              className="border border-ember/40 bg-transparent px-3 py-1.5 text-xs font-mono font-medium text-ember hover:bg-ember/10 transition-colors duration-300 disabled:opacity-50 rounded-md"
             >
               {isBuildingLevel ? 'Nesting...' : `Open ${MATRYOSHKA_LEVELS[level].label}`}
             </button>
@@ -118,14 +116,14 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
         </div>
 
         {/* View mode switcher */}
-        <div className="flex items-center border border-border bg-depth-1">
+        <div className="flex items-center border border-border bg-depth-1 rounded-md">
           <button
             type="button"
             onClick={() => setViewMode('list')}
-            className={cn(
-              'px-3 py-1.5 text-xs font-mono transition-colors duration-300',
+            className={clsx(
+              'px-3 py-1.5 text-xs font-mono transition-colors duration-300 rounded-l-md',
               viewMode === 'list'
-                ? 'bg-signal-green/10 text-signal-green font-medium'
+                ? 'bg-ember/10 text-ember font-medium'
                 : 'text-text-secondary hover:text-text-primary',
             )}
           >
@@ -134,10 +132,10 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
           <button
             type="button"
             onClick={() => setViewMode('trajectory')}
-            className={cn(
-              'px-3 py-1.5 text-xs font-mono transition-colors duration-300 border-l border-border',
+            className={clsx(
+              'px-3 py-1.5 text-xs font-mono transition-colors duration-300 border-l border-border rounded-r-md',
               viewMode === 'trajectory'
-                ? 'bg-signal-green/10 text-signal-green font-medium'
+                ? 'bg-ember/10 text-ember font-medium'
                 : 'text-text-secondary hover:text-text-primary',
             )}
           >
@@ -160,10 +158,10 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
       {/* View content */}
       {plans.length > 0 && viewMode === 'list' && (
         <div className="relative space-y-3">
-          <div className="absolute left-5 top-0 bottom-0 w-px bg-signal-green/20" />
+          <div className="absolute left-5 top-0 bottom-0 w-px bg-ember/20" />
           {plans.map((plan, i) => (
             <div key={`${plan.name}-${i}`} className="relative pl-12">
-              <div className="absolute left-4 top-5 h-3 w-3 border-2 border-signal-green bg-depth-0" />
+              <div className="absolute left-4 top-5 h-3 w-3 rounded-sm border-2 border-ember bg-depth-0" />
               <PlanGroup plan={plan} sessionId={sessionId} />
             </div>
           ))}

@@ -1,4 +1,5 @@
 import { getDatabase } from '../db/sqlite';
+import { parseAnalysisJson } from '../../../shared/lib/parse-json';
 import type {
   AnalysisResult,
   Failure,
@@ -69,30 +70,7 @@ function mapEvent(row: EventRow) {
 }
 
 function parseAnalysisResult(row: AnalysisRow): AnalysisResult['result'] {
-  if (!row.result) return null;
-  try {
-    let parsed: unknown = JSON.parse(row.result);
-    // Handle rawOutput wrapping from Claude CLI
-    if (
-      parsed !== null &&
-      typeof parsed === 'object' &&
-      'rawOutput' in (parsed as Record<string, unknown>)
-    ) {
-      const raw = (parsed as { rawOutput: string }).rawOutput;
-      const fenceMatch = raw.match(
-        /^[\s\n]*```(?:json)?\s*\n([\s\S]*)\n```[\s\n]*$/,
-      );
-      const content = fenceMatch ? fenceMatch[1] : raw.trim();
-      try {
-        parsed = JSON.parse(content);
-      } catch {
-        // keep as-is
-      }
-    }
-    return parsed as AnalysisResult['result'];
-  } catch {
-    return null;
-  }
+  return parseAnalysisJson<AnalysisResult['result']>(row.result);
 }
 
 function getFailuresFromAnalysis(
@@ -103,10 +81,10 @@ function getFailuresFromAnalysis(
     .prepare(
       "SELECT * FROM analyses WHERE session_id = ? AND analysis_type = 'failures' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
     )
-    .get(sessionId) as AnalysisRow | undefined;
+    .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
   if (!row) return [];
   const result = parseAnalysisResult(row);
-  return (result?.failures ?? []) as Failure[];
+  return (result?.failures ?? []) as Failure[]; // parsed analysis result is loosely typed
 }
 
 function getImprovementsFromAnalysis(
@@ -117,10 +95,10 @@ function getImprovementsFromAnalysis(
     .prepare(
       "SELECT * FROM analyses WHERE session_id = ? AND analysis_type = 'improvements' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
     )
-    .get(sessionId) as AnalysisRow | undefined;
+    .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
   if (!row) return [];
   const result = parseAnalysisResult(row);
-  return (result?.improvements ?? []) as Improvement[];
+  return (result?.improvements ?? []) as Improvement[]; // parsed analysis result is loosely typed
 }
 
 function getTimelinePlansFromAnalysis(
@@ -131,10 +109,10 @@ function getTimelinePlansFromAnalysis(
     .prepare(
       "SELECT * FROM analyses WHERE session_id = ? AND analysis_type = 'timeline' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
     )
-    .get(sessionId) as AnalysisRow | undefined;
+    .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
   if (!row) return [];
   const result = parseAnalysisResult(row);
-  return (result?.plans ?? []) as TimelinePlan[];
+  return (result?.plans ?? []) as TimelinePlan[]; // parsed analysis result is loosely typed
 }
 
 export const resolvers = {
@@ -156,7 +134,7 @@ export const resolvers = {
       query += ' ORDER BY start_time DESC LIMIT ?';
       params.push(limit);
 
-      const rows = db.prepare(query).all(...params) as SessionRow[];
+      const rows = db.prepare(query).all(...params) as SessionRow[]; // .all() returns unknown[]
       return rows.map(mapSession);
     },
 
@@ -167,7 +145,7 @@ export const resolvers = {
       const db = getDatabase();
       const row = db
         .prepare('SELECT * FROM sessions WHERE id = ?')
-        .get(args.id) as SessionRow | undefined;
+        .get(args.id) as SessionRow | undefined; // .get() returns unknown
       return row ? mapSession(row) : null;
     },
 
@@ -241,7 +219,7 @@ export const resolvers = {
       }
       query += ' ORDER BY timestamp ASC';
 
-      const rows = db.prepare(query).all(...params) as EventRow[];
+      const rows = db.prepare(query).all(...params) as EventRow[]; // .all() returns unknown[]
       return rows.map(mapEvent);
     },
 
@@ -249,7 +227,7 @@ export const resolvers = {
       const db = getDatabase();
       const rows = db.prepare(
         'SELECT DISTINCT group_label FROM sessions WHERE group_label IS NOT NULL ORDER BY group_label ASC',
-      ).all() as Array<{ group_label: string }>;
+      ).all() as Array<{ group_label: string }>; // .all() returns unknown[]
       return rows.map((r) => r.group_label);
     },
 
@@ -286,7 +264,7 @@ export const resolvers = {
     ) => {
       const db = getDatabase();
 
-      const existing = db.prepare('SELECT id FROM sessions WHERE id = ?').get(args.id) as { id: string } | undefined;
+      const existing = db.prepare('SELECT id FROM sessions WHERE id = ?').get(args.id) as { id: string } | undefined; // .get() returns unknown
       if (!existing) return null;
 
       const sets: string[] = [];
@@ -306,7 +284,7 @@ export const resolvers = {
         db.prepare(`UPDATE sessions SET ${sets.join(', ')} WHERE id = ?`).run(...values);
       }
 
-      const updated = db.prepare('SELECT * FROM sessions WHERE id = ?').get(args.id) as SessionRow;
+      const updated = db.prepare('SELECT * FROM sessions WHERE id = ?').get(args.id) as SessionRow; // .get() returns unknown
       return mapSession(updated);
     },
 

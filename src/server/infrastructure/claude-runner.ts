@@ -5,9 +5,14 @@ import type {
   AnalysisType,
   AnalysisResult,
 } from '../domain/analysis/analysis.entity';
+import type {
+  ClaudeRunnerPort,
+  SendMessageResult,
+} from '../domain/claude/claude-runner.port';
 
 const PROMPT_DIR = path.resolve(process.cwd(), 'src', 'prompts');
-const TIMEOUT_MS = 120_000;
+const SEND_MESSAGE_TIMEOUT_MS = 60_000;
+const ANALYSIS_TIMEOUT_MS = 120_000;
 
 function getPromptPath(type: AnalysisType): string {
   const fileMap: Record<AnalysisType, string> = {
@@ -26,7 +31,73 @@ function loadPrompt(type: AnalysisType): string {
   return fs.readFileSync(promptPath, 'utf-8');
 }
 
-export async function runAnalysis(
+export class ClaudeRunner implements ClaudeRunnerPort {
+  async sendMessage(
+    sessionId: string,
+    message: string,
+  ): Promise<SendMessageResult> {
+    return new Promise((resolve) => {
+      const args = [
+        '--resume',
+        sessionId,
+        '-p',
+        message,
+        '--output-format',
+        'json',
+      ];
+
+      const proc = spawn('claude', args, {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: SEND_MESSAGE_TIMEOUT_MS,
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      proc.stdout.on('data', (chunk: Buffer) => {
+        stdout += chunk.toString();
+      });
+
+      proc.stderr.on('data', (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+
+      proc.on('error', (err) => {
+        resolve({
+          success: false,
+          response: '',
+          error: `Failed to spawn claude process: ${err.message}`,
+        });
+      });
+
+      proc.on('close', (code) => {
+        if (code !== 0) {
+          resolve({
+            success: false,
+            response: stdout,
+            error: `Claude exited with code ${String(code)}: ${stderr}`,
+          });
+          return;
+        }
+
+        resolve({
+          success: true,
+          response: stdout,
+          error: null,
+        });
+      });
+    });
+  }
+
+  async runAnalysis(
+    type: AnalysisType,
+    sessionData: string,
+  ): Promise<AnalysisResult['result']> {
+    return runAnalysisImpl(type, sessionData);
+  }
+}
+
+async function runAnalysisImpl(
   type: AnalysisType,
   sessionData: string,
 ): Promise<AnalysisResult['result']> {
@@ -46,7 +117,7 @@ export async function runAnalysis(
 
     const proc = spawn('claude', args, {
       stdio: ['ignore', 'pipe', 'pipe'],
-      timeout: TIMEOUT_MS,
+      timeout: ANALYSIS_TIMEOUT_MS,
     });
 
     let stdout = '';
@@ -75,7 +146,7 @@ export async function runAnalysis(
       }
 
       try {
-        const parsed = JSON.parse(stdout) as Record<string, unknown>;
+        const parsed = JSON.parse(stdout) as Record<string, unknown>; // JSON.parse returns unknown
 
         const result: AnalysisResult['result'] = {};
 
@@ -83,6 +154,7 @@ export async function runAnalysis(
           'plans' in parsed &&
           Array.isArray(parsed.plans)
         ) {
+          // parsed.plans is unknown from JSON.parse; narrowing after Array.isArray check above
           result.plans = parsed.plans as AnalysisResult['result'] extends null
             ? never
             : NonNullable<AnalysisResult['result']>['plans'];
@@ -92,6 +164,7 @@ export async function runAnalysis(
           'failures' in parsed &&
           Array.isArray(parsed.failures)
         ) {
+          // parsed.failures is unknown from JSON.parse; narrowing after Array.isArray check above
           result.failures =
             parsed.failures as NonNullable<AnalysisResult['result']>['failures'];
         }
@@ -100,6 +173,7 @@ export async function runAnalysis(
           'improvements' in parsed &&
           Array.isArray(parsed.improvements)
         ) {
+          // parsed.improvements is unknown from JSON.parse; narrowing after Array.isArray check above
           result.improvements =
             parsed.improvements as NonNullable<AnalysisResult['result']>['improvements'];
         }

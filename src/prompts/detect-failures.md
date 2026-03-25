@@ -53,11 +53,19 @@ Return a JSON object with a single key `failures` containing an array:
       "description": "What happened in plain language",
       "rootCause": "Why it happened",
       "impact": "warning",
-      "eventId": "the-event-id-or-null"
+      "eventId": "the-event-id-or-null",
+      "evidence": ["event-id-1", "event-id-2"]
     }
   ]
 }
 ```
+
+## Evidence
+
+CRITICAL: Every failure MUST include an `evidence` array of event IDs that prove this failure occurred. This makes failures traceable and verifiable. Include:
+- The event ID of the failure itself
+- Any related events (the retry, the workaround, the surrounding context)
+- If a pattern of failures, include all instances
 
 ## Important
 

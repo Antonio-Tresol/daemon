@@ -28,7 +28,7 @@ function normalizeEvent(raw: RawEvent): HookEvent {
     id: raw.id,
     sessionId: raw.session_id,
     timestamp: raw.timestamp,
-    eventType: raw.event_type as HookEvent['eventType'],
+    eventType: raw.event_type as HookEvent['eventType'], // API returns string, narrowing to union type
     toolName: raw.tool_name,
     success: raw.success,
     durationMs: raw.duration_ms,
@@ -44,7 +44,7 @@ export async function fetchSessions(status?: string): Promise<Session[]> {
   const res = await fetch(`/api/sessions?${params.toString()}`);
   if (!res.ok) throw new Error(`Failed to fetch sessions: ${res.status}`);
 
-  const data = (await res.json()) as SessionsResponse;
+  const data = (await res.json()) as SessionsResponse; // fetch .json() returns unknown
   return (data.sessions ?? []).map(normalizeSession);
 }
 
@@ -60,7 +60,7 @@ export async function fetchSessionEvents(
   const res = await fetch(`/api/events?${params.toString()}`);
   if (!res.ok) throw new Error(`Failed to fetch events: ${res.status}`);
 
-  const data = (await res.json()) as EventsResponse;
+  const data = (await res.json()) as EventsResponse; // fetch .json() returns unknown
   return (data.events ?? []).map(normalizeEvent);
 }
 
@@ -82,5 +82,5 @@ export async function sendSessionMessage(
 
   if (!res.ok) throw new Error(`Failed to send message: ${res.status}`);
 
-  return (await res.json()) as SendMessageResponse;
+  return (await res.json()) as SendMessageResponse; // fetch .json() returns unknown
 }
