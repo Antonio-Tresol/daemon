@@ -7,7 +7,7 @@ This guide covers getting daemon running and connecting it to your Claude Code a
 ## Prerequisites
 
 - Node.js 22+
-- Claude Code CLI installed and in PATH
+- SDK auth: `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` environment variable set
 - Port 3000 available (default)
 
 ---
@@ -68,6 +68,9 @@ Add these to your `~/.claude/settings.json`:
       { "matcher": "", "hooks": [{ "type": "http", "url": "http://localhost:3000/api/events" }] }
     ],
     "SubagentStop": [
+      { "matcher": "", "hooks": [{ "type": "http", "url": "http://localhost:3000/api/events" }] }
+    ],
+    "Notification": [
       { "matcher": "", "hooks": [{ "type": "http", "url": "http://localhost:3000/api/events" }] }
     ]
   }
@@ -216,7 +219,7 @@ Removes only the daemon HTTP hooks from `~/.claude/settings.json`, preserving ev
 
 **No events appearing:** Check that daemon is running (`curl localhost:3000/api/agent`), hooks are installed (`grep api/events ~/.claude/settings.json`), and Claude Code was restarted after setup.
 
-**Analysis stays pending:** Verify the `claude` CLI is in your PATH (`which claude`). Daemon spawns Claude agents to process events, so the CLI must be accessible.
+**Analysis stays pending:** Verify your `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` environment variable is set. Daemon uses the Anthropic API to process events and requires authentication.
 
 **Database locked:** Stop all daemon instances, delete `data/daemon.db`, and restart. The schema recreates automatically.
 

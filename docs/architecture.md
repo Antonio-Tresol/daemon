@@ -9,35 +9,35 @@ Daemon is a Next.js application with a Domain-Driven Design backend and Feature-
 ```
 Claude Code Agent
        │
-       ├── HTTP hooks ──→ POST /api/events ──→ IngestEventUseCase ──→ SQLite
-       │
-       └── OTel/HTTP ───→ POST /api/otel ───→ OtelReceiver ─────────→ SQLite
-                                                                         │
-                                                          ┌──────────────┤
-                                                          │              │
-                                                          ▼              ▼
-                                                      Sessions       Events
-                                                          │              │
-                                                          └──────┬───────┘
-                                                                 │
-                                                                 ▼
-                                                    POST /api/agent/analyze
-                                                                 │
-                                                                 ▼
-                                                    RunAnalysisUseCase
-                                                                 │
-                                                                 ▼
-                                                    ClaudeRunner (spawns claude CLI)
-                                                                 │
-                                                                 ▼
-                                                    Analysis results ──→ SQLite
-                                                                            │
-                                                                            ▼
-                                                              Frontend (Next.js)
-                                                    Timeline │ Failures │ Improvements
+       ├── HTTP hooks ──────→ POST /api/events ──→ IngestEventUseCase ──→ SQLite
+       │                                                                      │
+       └── OpenTelemetry ───→ POST /api/otel ────→ OtelReceiver ────────→ SQLite
+                                                                              │
+                                                               ┌──────────────┤
+                                                               │              │
+                                                               ▼              ▼
+                                                           Sessions       Events
+                                                               │              │
+                                                               └──────┬───────┘
+                                                                      │
+                                                                      ▼
+                                                         POST /api/agent/analyze
+                                                                      │
+                                                                      ▼
+                                                         RunAnalysisUseCase
+                                                                      │
+                                                                      ▼
+                                                         ClaudeRunner (Agent SDK)
+                                                                      │
+                                                                      ▼
+                                                         Analysis results ──→ SQLite
+                                                                                 │
+                                                                                 ▼
+                                                                   Frontend (Next.js)
+                                                         Timeline │ Failures │ Improvements
 ```
 
-Events flow in through two ingestion endpoints. They're stored in SQLite alongside session metadata. When a user or agent triggers analysis, daemon spawns a Claude agent that processes the event stream and produces structured results. The frontend queries these results through API routes and renders them at multiple levels of detail.
+Events flow in through two channels: **HTTP hooks** (the primary path via `POST /api/events`) and **OpenTelemetry** (OTLP/HTTP JSON via `POST /api/otel`). Both paths store events in SQLite alongside session metadata. When a user or agent triggers analysis, daemon uses the Anthropic Agent SDK to process the event stream and produce structured results. The frontend queries these results through API routes and renders them at multiple levels of detail.
 
 ---
 
@@ -93,7 +93,7 @@ src/server/application/
 
 Use cases orchestrate domain logic. They accept repository and port interfaces via constructor injection and coordinate operations across multiple domain entities.
 
-`IngestEventUseCase` is the most frequently called use case. It receives raw event input from either the HTTP hook endpoint or the OTel receiver, normalises it into a `HookEvent`, saves it to the event repository, and ensures a corresponding session exists (creating one if this is the first event for that session ID). It also updates session status based on event type: `SessionEnd` and `Stop` events mark the session as completed, `api_error` events mark it as errored.
+`IngestEventUseCase` is the most frequently called use case. It receives raw event input from the HTTP hook endpoint, normalises it into a `HookEvent`, saves it to the event repository, and ensures a corresponding session exists (creating one if this is the first event for that session ID). It also updates session status based on event type: `SessionEnd` and `Stop` events mark the session as completed, `api_error` events mark it as errored.
 
 `RunAnalysisUseCase` coordinates analysis jobs. It creates an analysis record, loads events for the session, delegates to the `ClaudeRunnerPort` for processing, and saves the result. If analysis fails, it captures the error.
 
@@ -106,16 +106,23 @@ src/server/infrastructure/
   db/
     sqlite.ts                  Database singleton, auto-initialisation, migrations
     schema.ts                  SQL table definitions
+    drizzle-schema.ts          Drizzle ORM schema definitions
     event.sqlite-repo.ts       EventRepository implementation
     session.sqlite-repo.ts     SessionRepository implementation
     analysis.sqlite-repo.ts    AnalysisRepository implementation
-  claude-runner.ts             ClaudeRunnerPort implementation (spawns claude CLI)
+  agent-sdk-claude-runner.ts   ClaudeRunnerPort implementation (uses @anthropic-ai/claude-agent-sdk)
+  claude-auth.ts               SDK authentication (API key / OAuth token)
+  create-claude-runner.ts      Factory for creating Claude runner instances
+  analysis-schemas.ts          JSON schemas for structured analysis outputs
+  entity-schemas.ts            JSON schemas for domain entity types
+  load-prompt.ts               Loads prompt templates from src/prompts/
+  parse-analysis-result.ts     Parses and validates analysis JSON responses
+  otel-receiver.ts             OTLP/HTTP log receiver, converts OpenTelemetry logs to HookEvents
   graphql/
     schema.ts                  GraphQL type definitions
     resolvers.ts               GraphQL query resolvers
-  otel-receiver.ts             OTel/HTTP protocol parser
   build-event-summary.ts       Builds event summaries for analysis prompts
-  run-agent-analysis.ts        Orchestrates Claude CLI for analysis
+  run-agent-analysis.ts        Orchestrates Agent SDK for analysis
   auto-name-session.ts         Auto-names sessions after timeline analysis
 ```
 
@@ -123,11 +130,11 @@ Infrastructure implements domain interfaces using concrete technology:
 
 **SQLite** (via better-sqlite3) is the storage engine. The database auto-initialises on first access, creating tables and running migrations. It uses a singleton pattern — one connection shared across the application. All queries use parameterised statements (no string concatenation).
 
-**ClaudeRunner** implements `ClaudeRunnerPort` by spawning the `claude` CLI as a child process. For analysis, it loads a prompt template from `src/prompts/`, injects session event data, and passes it to Claude with `--output-format json`. The response is parsed and returned as structured data.
+**ClaudeRunner** implements `ClaudeRunnerPort` using the `@anthropic-ai/claude-agent-sdk`. For analysis, it loads a prompt template from `src/prompts/`, injects session event data, and passes it to Claude. The response is parsed and returned as structured data.
+
+**OtelReceiver** (`otel-receiver.ts`) parses OTLP/HTTP JSON payloads, converting OpenTelemetry log records into `HookEvent` objects and extracting metrics into a dedicated format. This provides an alternative ingestion path alongside HTTP hooks.
 
 **GraphQL** provides an alternative query interface for complex data access patterns. The schema mirrors the domain entities, and resolvers query the SQLite repositories directly.
-
-**OtelReceiver** parses OTLP/HTTP/JSON payloads from Claude Code's telemetry exporter, extracting events and metrics into the normalised format that `IngestEventUseCase` expects.
 
 ---
 
@@ -213,7 +220,8 @@ src/features/
   session/                   Session management
     api/                       Query functions
     model/                     useSession hook
-    ui/                        SessionList, SessionConsole, SessionOverview
+    ui/                        SessionList, SessionConsole, SessionOverview,
+                               AnalyzeButton
   harness/                   Analysis harness
     ui/                        HarnessContent (analysis trigger UI)
 ```
@@ -251,7 +259,7 @@ src/app/
 | Endpoint | Purpose |
 |----------|---------|
 | `POST /api/events` | Receives HTTP hook events from Claude Code |
-| `POST /api/otel` | Receives OTLP/HTTP/JSON telemetry |
+| `POST /api/otel` | Receives OTLP/HTTP JSON logs and metrics from OpenTelemetry |
 
 ### Agent API
 
@@ -295,6 +303,9 @@ Endpoints under `/api/` (without `/agent/`) serve the frontend directly:
 
 ### Event ingestion
 
+Two ingestion paths feed events into the same storage:
+
+**HTTP hooks (primary):**
 ```
 Claude Code hook fires
   → POST /api/events (JSON body with session_id, event_type, tool_name, etc.)
@@ -304,7 +315,16 @@ Claude Code hook fires
       → SessionRepository.findById(sessionId)
         → If no session: create new session with status 'active'
         → If session exists: update event count, check for lifecycle events
-      → WebSocket broadcast to connected frontends
+```
+
+**OpenTelemetry:**
+```
+OTLP/HTTP JSON export
+  → POST /api/otel (OTLP logs or metrics payload)
+    → Parse resourceLogs: extract session.id, event.name, tool_name from attributes
+      → Convert to HookEvent format → insert into events table
+    → Parse resourceMetrics: extract metric name, value, timestamps
+      → Insert into otel_metrics table
 ```
 
 ### Analysis
@@ -315,7 +335,7 @@ User clicks "Analyse" (or POST /api/agent/analyze)
   → Load all events for session from EventRepository
   → Build event summary (buildEventSummarySync)
   → Build analysis prompt (readPromptTemplate + inject event data)
-  → Spawn claude CLI (runClaudeAgent)
+  → Trigger Anthropic API via SDK (runClaudeAgent)
     → Claude processes events, returns structured JSON
   → Parse result (extractJson)
   → Save result to AnalysisRepository (status: 'completed')
@@ -344,9 +364,9 @@ User navigates to Timeline page
 
 Daemon uses SQLite because it eliminates deployment complexity. There's no database server to configure, no connection strings, no migrations to run manually. The database file auto-creates on first request. This matters because daemon should be as easy to set up as `npm install && npm run dev`. For the expected workload (hundreds to thousands of events per session, tens of sessions), SQLite is more than sufficient.
 
-### Claude CLI over API
+### Anthropic SDK over Claude CLI
 
-Analysis is performed by spawning the `claude` CLI as a child process rather than calling the Anthropic API directly. This means daemon uses whatever Claude configuration the user already has (model, permissions, API key) without requiring separate credentials. It also means daemon's analysis agents have access to the same tools and context as the user's regular Claude Code sessions.
+Analysis is performed using the official `@anthropic-ai/claude-agent-sdk` instead of spawning the `claude` CLI child process. This provides cleaner structured data extraction and avoids child process management overhead, though it requires an ANTHROPIC_API_KEY.
 
 ### Central type registry
 
@@ -365,9 +385,9 @@ The entire UI uses three colours (void, bone, ember) and communicates status thr
 ## File statistics
 
 ```
-Backend:     22 files (domain: 7, application: 3, infrastructure: 12)
-Frontend:    83 files (shared: 15, entities: 8, features: 25, app: 35)
-Total:       105 TypeScript files
+Backend:     29 files (domain: 7, application: 3, infrastructure: 19)
+Frontend:    84 files (shared: 15, entities: 8, features: 26, app: 35)
+Total:       113 TypeScript files
 ```
 
 All TypeScript with strict mode enabled. No `any` types (enforced by Biome). No barrel exports. Every type assertion justified with a comment.
