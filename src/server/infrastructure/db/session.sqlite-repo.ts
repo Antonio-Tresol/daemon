@@ -1,125 +1,127 @@
-import type { Session } from '../../domain/session/session.entity';
+import { desc, eq, isNotNull } from 'drizzle-orm';
+import { Session } from '../../domain/session/session.entity';
 import type { SessionRepository } from '../../domain/session/session.repository';
-import { getDatabase } from './sqlite';
-
-interface SessionRow {
-  id: string;
-  start_time: string;
-  end_time: string | null;
-  status: string;
-  cwd: string | null;
-  project_hash: string | null;
-  total_events: number;
-  total_cost_usd: number;
-  name: string | null;
-  group_label: string | null;
-}
-
-function rowToEntity(row: SessionRow): Session {
-  return {
-    id: row.id,
-    startTime: row.start_time,
-    endTime: row.end_time,
-    status: row.status as Session['status'], // DB stores string, narrowing to union type
-    cwd: row.cwd,
-    projectHash: row.project_hash,
-    totalEvents: row.total_events,
-    totalCostUsd: row.total_cost_usd,
-    name: row.name ?? null,
-    groupLabel: row.group_label ?? null,
-  };
-}
+import { sessions } from './drizzle-schema';
+import { getDb } from './sqlite';
 
 export class SqliteSessionRepository implements SessionRepository {
-  save(session: Session): void {
-    const db = getDatabase();
-    const stmt = db.prepare(`
-      INSERT OR REPLACE INTO sessions (id, start_time, end_time, status, cwd, project_hash, total_events, total_cost_usd, name, group_label)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(
-      session.id,
-      session.startTime,
-      session.endTime,
-      session.status,
-      session.cwd,
-      session.projectHash,
-      session.totalEvents,
-      session.totalCostUsd,
-      session.name,
-      session.groupLabel,
+  private mapToDomain(row: typeof sessions.$inferSelect): Session {
+    return new Session(
+      row.id,
+      row.startTime,
+      row.endTime,
+      row.status as Session['status'],
+      row.cwd,
+      row.projectHash,
+      row.totalEvents,
+      row.totalCostUsd,
+      row.name,
+      row.groupLabel,
     );
+  }
+
+  save(session: Session): void {
+    const db = getDb();
+    db.insert(sessions)
+      .values({
+        id: session.id,
+        startTime: session.startTime,
+        endTime: session.endTime ?? null,
+        status: session.status,
+        cwd: session.cwd ?? null,
+        projectHash: session.projectHash ?? null,
+        totalEvents: session.totalEvents,
+        totalCostUsd: session.totalCostUsd,
+        name: session.name ?? null,
+        groupLabel: session.groupLabel ?? null,
+      })
+      .onConflictDoUpdate({
+        target: sessions.id,
+        set: {
+          startTime: session.startTime,
+          endTime: session.endTime ?? null,
+          status: session.status,
+          cwd: session.cwd ?? null,
+          projectHash: session.projectHash ?? null,
+          totalEvents: session.totalEvents,
+          totalCostUsd: session.totalCostUsd,
+          name: session.name ?? null,
+          groupLabel: session.groupLabel ?? null,
+        },
+      })
+      .run();
   }
 
   update(session: Session): void {
-    const db = getDatabase();
-    const stmt = db.prepare(`
-      UPDATE sessions
-      SET start_time = ?, end_time = ?, status = ?, cwd = ?, project_hash = ?, total_events = ?, total_cost_usd = ?, name = ?, group_label = ?
-      WHERE id = ?
-    `);
-    stmt.run(
-      session.startTime,
-      session.endTime,
-      session.status,
-      session.cwd,
-      session.projectHash,
-      session.totalEvents,
-      session.totalCostUsd,
-      session.name,
-      session.groupLabel,
-      session.id,
-    );
+    const db = getDb();
+    db.update(sessions)
+      .set({
+        startTime: session.startTime,
+        endTime: session.endTime ?? null,
+        status: session.status,
+        cwd: session.cwd ?? null,
+        projectHash: session.projectHash ?? null,
+        totalEvents: session.totalEvents,
+        totalCostUsd: session.totalCostUsd,
+        name: session.name ?? null,
+        groupLabel: session.groupLabel ?? null,
+      })
+      .where(eq(sessions.id, session.id))
+      .run();
   }
 
   findById(id: string): Session | null {
-    const db = getDatabase();
-    const stmt = db.prepare('SELECT * FROM sessions WHERE id = ?');
-    const row = stmt.get(id) as SessionRow | undefined; // .get() returns unknown
-    return row ? rowToEntity(row) : null;
+    const db = getDb();
+    const row = db.select().from(sessions).where(eq(sessions.id, id)).get();
+    if (!row) return null;
+    return this.mapToDomain(row);
   }
 
   findAll(): Session[] {
-    const db = getDatabase();
-    const stmt = db.prepare(
-      'SELECT * FROM sessions ORDER BY start_time DESC',
-    );
-    const rows = stmt.all() as SessionRow[]; // .all() returns unknown[]
-    return rows.map(rowToEntity);
+    const db = getDb();
+    const rows = db.select().from(sessions).orderBy(desc(sessions.startTime)).all();
+    return rows.map((row) => this.mapToDomain(row));
   }
 
   findActive(): Session[] {
-    const db = getDatabase();
-    const stmt = db.prepare(
-      "SELECT * FROM sessions WHERE status = 'active' ORDER BY start_time DESC",
-    );
-    const rows = stmt.all() as SessionRow[]; // .all() returns unknown[]
-    return rows.map(rowToEntity);
+    const db = getDb();
+    const rows = db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.status, 'active'))
+      .orderBy(desc(sessions.startTime))
+      .all();
+    return rows.map((row) => this.mapToDomain(row));
   }
 
   updateName(id: string, name: string): void {
-    const db = getDatabase();
-    db.prepare('UPDATE sessions SET name = ? WHERE id = ?').run(name, id);
+    const db = getDb();
+    db.update(sessions).set({ name }).where(eq(sessions.id, id)).run();
   }
 
   updateGroup(id: string, groupLabel: string | null): void {
-    const db = getDatabase();
-    db.prepare('UPDATE sessions SET group_label = ? WHERE id = ?').run(groupLabel, id);
+    const db = getDb();
+    db.update(sessions).set({ groupLabel }).where(eq(sessions.id, id)).run();
   }
 
   findByGroup(groupLabel: string): Session[] {
-    const db = getDatabase();
-    const rows = db.prepare(
-      'SELECT * FROM sessions WHERE group_label = ? ORDER BY start_time DESC',
-    ).all(groupLabel) as SessionRow[]; // .all() returns unknown[]
-    return rows.map(rowToEntity);
+    const db = getDb();
+    const rows = db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.groupLabel, groupLabel))
+      .orderBy(desc(sessions.startTime))
+      .all();
+    return rows.map((row) => this.mapToDomain(row));
   }
 
   findGroups(): string[] {
-    const db = getDatabase();
-    const rows = db.prepare(
-      'SELECT DISTINCT group_label FROM sessions WHERE group_label IS NOT NULL ORDER BY group_label',
-    ).all() as Array<{ group_label: string }>; // .all() returns unknown[]
-    return rows.map((r) => r.group_label);
+    const db = getDb();
+    const rows = db
+      .select({ groupLabel: sessions.groupLabel })
+      .from(sessions)
+      .where(isNotNull(sessions.groupLabel))
+      .all();
+    return Array.from(new Set(rows.map((r) => r.groupLabel as string))).sort();
   }
 }

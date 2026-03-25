@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import path from 'node:path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:fs', () => ({
   default: {
@@ -15,21 +15,15 @@ const PROMPT_DIR = path.resolve(process.cwd(), 'src', 'prompts');
 
 describe('getPromptPath', () => {
   it('returns correct path for timeline', () => {
-    expect(getPromptPath('timeline')).toBe(
-      path.join(PROMPT_DIR, 'analyze-session.md'),
-    );
+    expect(getPromptPath('timeline')).toBe(path.join(PROMPT_DIR, 'analyze-session.md'));
   });
 
   it('returns correct path for failures', () => {
-    expect(getPromptPath('failures')).toBe(
-      path.join(PROMPT_DIR, 'detect-failures.md'),
-    );
+    expect(getPromptPath('failures')).toBe(path.join(PROMPT_DIR, 'detect-failures.md'));
   });
 
   it('returns correct path for improvements', () => {
-    expect(getPromptPath('improvements')).toBe(
-      path.join(PROMPT_DIR, 'suggest-improvements.md'),
-    );
+    expect(getPromptPath('improvements')).toBe(path.join(PROMPT_DIR, 'suggest-improvements.md'));
   });
 });
 

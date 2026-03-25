@@ -1,15 +1,18 @@
-import Database from 'better-sqlite3';
-import path from 'node:path';
 import fs from 'node:fs';
+import path from 'node:path';
+import Database from 'better-sqlite3';
+import { type BetterSQLite3Database, drizzle } from 'drizzle-orm/better-sqlite3';
+import * as drizzleSchema from './drizzle-schema';
 import {
-  CREATE_EVENTS_TABLE,
-  CREATE_SESSIONS_TABLE,
   CREATE_ANALYSES_TABLE,
-  CREATE_OTEL_METRICS_TABLE,
+  CREATE_EVENTS_TABLE,
   CREATE_INDEXES,
+  CREATE_OTEL_METRICS_TABLE,
+  CREATE_SESSIONS_TABLE,
 } from './schema';
 
 let instance: Database.Database | null = null;
+let drizzleInstance: BetterSQLite3Database<typeof drizzleSchema> | null = null;
 
 function getDbPath(): string {
   const dataDir = path.resolve(process.cwd(), 'data');
@@ -69,9 +72,19 @@ export function getDatabase(): Database.Database {
   return db;
 }
 
+export function getDb() {
+  if (drizzleInstance) {
+    return drizzleInstance;
+  }
+  const db = getDatabase();
+  drizzleInstance = drizzle(db, { schema: drizzleSchema });
+  return drizzleInstance;
+}
+
 export function closeDatabase(): void {
   if (instance) {
     instance.close();
     instance = null;
+    drizzleInstance = null;
   }
 }

@@ -1,24 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import { SqliteAnalysisRepository } from '@/server/infrastructure/db/analysis.sqlite-repo';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
+    const analysisRepo = new SqliteAnalysisRepository();
 
-    const analysis = db.prepare('SELECT * FROM analyses WHERE id = ?').get(id) as Record<string, unknown> | undefined; // .get() returns unknown
+    const analysis = analysisRepo.findById(id);
 
     if (!analysis) {
       return NextResponse.json({ error: 'Analysis not found' }, { status: 404 });
     }
 
-    return NextResponse.json({
-      ...analysis,
-      result: typeof analysis.result === 'string' ? JSON.parse(analysis.result) : analysis.result,
-    });
+    return NextResponse.json(analysis);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ ok: false, error: message }, { status: 500 });

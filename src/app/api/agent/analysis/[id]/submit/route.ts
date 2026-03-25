@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { SqliteAnalysisRepository } from '@/server/infrastructure/db/analysis.sqlite-repo';
 import { agentError } from '../../../_lib/response';
 
 interface SubmitBody {
@@ -8,26 +9,10 @@ interface SubmitBody {
   append?: boolean;
 }
 
-/**
- * POST /api/agent/analysis/:id/submit
- *
- * Lets the analysis agent submit results back to daemon.
- * The agent queries the API autonomously, builds its analysis, and POSTs the result here.
- *
- * Options:
- * - result: The analysis result (plans, failures, improvements)
- * - status: 'completed' (default) or 'failed'
- * - error: Error message if status is 'failed'
- * - append: If true, merge with existing result instead of replacing (for incremental submission)
- */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: analysisId } = await params;
-    // request.json() returns unknown; validated by the SubmitBody shape check below
-    const body = (await request.json()) as SubmitBody;
+    const body = (await request.json()) as SubmitBody; // request.json() returns unknown
 
     if (!body.result && body.status !== 'failed') {
       return agentError(
@@ -38,14 +23,8 @@ export async function POST(
       );
     }
 
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
-
-    // Find the analysis record
-    const row = db
-      .prepare('SELECT * FROM analyses WHERE id = ?')
-      // SQLite row is an untyped record; fields accessed defensively below
-      .get(analysisId) as Record<string, unknown> | undefined;
+    const analysisRepo = new SqliteAnalysisRepository();
+    const row = analysisRepo.findById(analysisId);
 
     if (!row) {
       return agentError(
@@ -61,37 +40,26 @@ export async function POST(
     const completedAt = new Date().toISOString();
 
     if (body.append && row.result) {
-      // Merge with existing result
-      let existing: Record<string, unknown> = {};
-      try {
-        // row.result is typed as unknown from the SQLite row; narrowed by typeof check above
-        existing =
-          typeof row.result === 'string'
-            ? (JSON.parse(row.result) as Record<string, unknown>)
-            : (row.result as Record<string, unknown>);
-      } catch {
-        existing = {};
-      }
-
-      // body.result is typed as unknown in SubmitBody; treated as key-value for merge
+      // row.result is JSON from DB (unknown shape); body.result is unknown from request — narrowing for merge
+      const existing = (row.result as Record<string, unknown>) ?? {};
       const incoming = body.result as Record<string, unknown>;
 
-      // Merge arrays (plans, failures, improvements) by concatenating
       const merged: Record<string, unknown> = { ...existing };
       for (const [key, value] of Object.entries(incoming)) {
         if (Array.isArray(value) && Array.isArray(existing[key])) {
-          merged[key] = [
-            ...(existing[key] as unknown[]), // Array.isArray guard ensures this is an array
-            ...value,
-          ];
+          merged[key] = [...(existing[key] as unknown[]), ...value];
         } else {
           merged[key] = value;
         }
       }
 
-      db.prepare(
-        `UPDATE analyses SET completed_at = ?, status = ?, result = ?, error = ? WHERE id = ?`,
-      ).run(completedAt, status, JSON.stringify(merged), body.error ?? null, analysisId);
+      analysisRepo.update({
+        ...row,
+        status,
+        completedAt,
+        result: merged,
+        error: body.error ?? null,
+      });
 
       return NextResponse.json({
         data: {
@@ -116,16 +84,13 @@ export async function POST(
       });
     }
 
-    // Replace result entirely
-    db.prepare(
-      `UPDATE analyses SET completed_at = ?, status = ?, result = ?, error = ? WHERE id = ?`,
-    ).run(
-      completedAt,
+    analysisRepo.update({
+      ...row,
       status,
-      JSON.stringify(body.result),
-      body.error ?? null,
-      analysisId,
-    );
+      completedAt,
+      result: body.result as Record<string, unknown>, // body.result is unknown from request JSON
+      error: body.error ?? null,
+    });
 
     return NextResponse.json({
       data: {
@@ -140,9 +105,7 @@ export async function POST(
         related: {
           view: `/api/agent/analysis/${analysisId}`,
         },
-        suggestions: [
-          `View result: GET /api/agent/analysis/${analysisId}`,
-        ],
+        suggestions: [`View result: GET /api/agent/analysis/${analysisId}`],
       },
     });
   } catch (error) {

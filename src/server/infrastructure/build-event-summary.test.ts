@@ -1,41 +1,59 @@
-import { buildEventSummarySync } from './build-event-summary';
+import { HookEvent } from '../domain/event/event.entity';
+import type { EventRepository } from '../domain/event/event.repository';
+import { buildEventSummary } from './build-event-summary';
 
-type MockEvent = {
-  id: string;
-  timestamp: string;
-  event_type: string;
-  tool_name: string | null;
-  success: number | null;
-  duration_ms: number | null;
-};
-
-function createMockDb(events: MockEvent[]) {
+function createMockRepo(events: HookEvent[]): EventRepository {
   return {
-    prepare: () => ({
-      all: () => events,
-    }),
-  } as unknown as Parameters<typeof buildEventSummarySync>[0];
+    findBySessionId: () => events,
+    save: () => {},
+    findByTimeRange: () => [],
+    findByType: () => [],
+    countBySessionId: () => events.length,
+    findPaginated: () => events,
+  };
 }
 
-describe('buildEventSummarySync', () => {
+function makeEvent(
+  overrides: Partial<{
+    id: string;
+    timestamp: string;
+    eventType: string;
+    toolName: string | null;
+    success: boolean | null;
+    durationMs: number | null;
+  }>,
+): HookEvent {
+  return new HookEvent(
+    overrides.id ?? 'e1',
+    'session-1',
+    overrides.timestamp ?? '2026-03-25T10:00:00.000Z',
+    (overrides.eventType ?? 'ToolUse') as HookEvent['eventType'], // test helper — string narrowed to union type
+    overrides.toolName ?? null,
+    overrides.success ?? null,
+    overrides.durationMs ?? null,
+    null,
+    {},
+  );
+}
+
+describe('buildEventSummary', () => {
   it('returns "No events found." for empty events', () => {
-    const db = createMockDb([]);
-    expect(buildEventSummarySync(db, 'session-1')).toBe('No events found.');
+    const repo = createMockRepo([]);
+    expect(buildEventSummary(repo, 'session-1')).toBe('No events found.');
   });
 
   it('produces valid markdown for a single event', () => {
-    const db = createMockDb([
-      {
+    const repo = createMockRepo([
+      makeEvent({
         id: 'e1',
-        timestamp: '2026-03-25T10:00:00.000Z',
-        event_type: 'ToolUse',
-        tool_name: 'Read',
-        success: 1,
-        duration_ms: 100,
-      },
+        eventType: 'ToolUse',
+        toolName: 'Read',
+        success: true,
+        durationMs: 100,
+      }),
     ]);
 
-    const result = buildEventSummarySync(db, 'session-1');
+    const result = buildEventSummary(repo, 'session-1');
     expect(result).toContain('## Event Summary');
     expect(result).toContain('**Total events**: 1');
     expect(result).toContain('**Failures**: 0');
@@ -44,26 +62,26 @@ describe('buildEventSummarySync', () => {
   });
 
   it('counts failures correctly', () => {
-    const db = createMockDb([
-      {
+    const repo = createMockRepo([
+      makeEvent({
         id: 'e1',
         timestamp: '2026-03-25T10:00:00.000Z',
-        event_type: 'PostToolUseFailure',
-        tool_name: 'Write',
-        success: 0,
-        duration_ms: 50,
-      },
-      {
+        eventType: 'PostToolUseFailure',
+        toolName: 'Write',
+        success: false,
+        durationMs: 50,
+      }),
+      makeEvent({
         id: 'e2',
         timestamp: '2026-03-25T10:00:01.000Z',
-        event_type: 'ToolUse',
-        tool_name: 'Read',
-        success: 0,
-        duration_ms: 30,
-      },
+        eventType: 'ToolUse',
+        toolName: 'Read',
+        success: false,
+        durationMs: 30,
+      }),
     ]);
 
-    const result = buildEventSummarySync(db, 'session-1');
+    const result = buildEventSummary(repo, 'session-1');
     expect(result).toContain('**Failures**: 2');
     expect(result).toContain('### Failures:');
     expect(result).toContain('Write');
@@ -71,56 +89,46 @@ describe('buildEventSummarySync', () => {
   });
 
   it('groups events in the same 5-min window', () => {
-    const db = createMockDb([
-      {
+    const repo = createMockRepo([
+      makeEvent({
         id: 'e1',
         timestamp: '2026-03-25T10:00:00.000Z',
-        event_type: 'ToolUse',
-        tool_name: 'Read',
-        success: 1,
-        duration_ms: 100,
-      },
-      {
+        eventType: 'ToolUse',
+        toolName: 'Read',
+        success: true,
+        durationMs: 100,
+      }),
+      makeEvent({
         id: 'e2',
         timestamp: '2026-03-25T10:02:00.000Z',
-        event_type: 'ToolUse',
-        tool_name: 'Write',
-        success: 1,
-        duration_ms: 200,
-      },
-      {
+        eventType: 'ToolUse',
+        toolName: 'Write',
+        success: true,
+        durationMs: 200,
+      }),
+      makeEvent({
         id: 'e3',
         timestamp: '2026-03-25T10:10:00.000Z',
-        event_type: 'ToolUse',
-        tool_name: 'Bash',
-        success: 1,
-        duration_ms: 300,
-      },
+        eventType: 'ToolUse',
+        toolName: 'Bash',
+        success: true,
+        durationMs: 300,
+      }),
     ]);
 
-    const result = buildEventSummarySync(db, 'session-1');
-    // First window should contain Read and Write grouped together
+    const result = buildEventSummary(repo, 'session-1');
     expect(result).toContain('Read → Write');
-    // Second window should be separate
     expect(result).toContain('Bash');
-    // Should have 2 windows
-    const windowLines = result.split('\n').filter(l => /^\d+\.\s\[/.test(l));
+    const windowLines = result.split('\n').filter((l) => /^\d+\.\s\[/.test(l));
     expect(windowLines).toHaveLength(2);
   });
 
   it('handles events without tool_name', () => {
-    const db = createMockDb([
-      {
-        id: 'e1',
-        timestamp: '2026-03-25T10:00:00.000Z',
-        event_type: 'SessionStart',
-        tool_name: null,
-        success: 1,
-        duration_ms: null,
-      },
+    const repo = createMockRepo([
+      makeEvent({ id: 'e1', eventType: 'SessionStart', toolName: null, success: true }),
     ]);
 
-    const result = buildEventSummarySync(db, 'session-1');
+    const result = buildEventSummary(repo, 'session-1');
     expect(result).toContain('**Total events**: 1');
     expect(result).toContain('SessionStart: 1');
   });

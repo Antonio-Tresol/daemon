@@ -94,16 +94,19 @@ export function parseOtlpLogs(payload: OtlpLogsPayload): HookEvent[] {
           bodyPayload = { raw: bodyText };
         }
 
+        const costUsd = typeof bodyPayload.cost_usd === 'number' ? bodyPayload.cost_usd : 0;
+
         const event: HookEvent = {
           id: uuidv4(),
           sessionId,
           timestamp,
           eventType: rawEventType as EventType, // OTel attribute is string, narrowing to union type
           toolName,
-          success: record.severityText !== 'ERROR' ? true : false,
+          success: record.severityText !== 'ERROR',
           durationMs: null,
           promptId: extractAttribute(record.attributes, 'prompt.id'),
           payload: bodyPayload,
+          costUsd,
         };
 
         events.push(event);

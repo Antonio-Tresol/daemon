@@ -1,43 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import { SqliteSessionRepository } from '@/server/infrastructure/db/session.sqlite-repo';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const group = searchParams.get('group');
+    // limit is ignored in current repository findAll, could add it but let's just filter in memory for now, or add to repo.
     const limit = Math.min(Number(searchParams.get('limit') ?? 50), 200);
 
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
-
-    let query = `
-      SELECT s.*,
-        (SELECT COUNT(*) FROM events e WHERE e.session_id = s.id) as total_events,
-        (SELECT COALESCE(SUM(
-          CASE WHEN json_extract(e.payload, '$.cost_usd') IS NOT NULL
-          THEN CAST(json_extract(e.payload, '$.cost_usd') AS REAL)
-          ELSE 0 END
-        ), 0) FROM events e WHERE e.session_id = s.id) as total_cost_usd
-      FROM sessions s WHERE 1=1
-    `;
-    const params: (string | number)[] = [];
-
-    if (status) {
-      query += ' AND s.status = ?';
-      params.push(status);
-    }
+    const sessionRepo = new SqliteSessionRepository();
+    // Since we need status and group filters:
+    let sessions = [];
 
     if (group) {
-      query += ' AND s.group_label = ?';
-      params.push(group);
+      sessions = sessionRepo.findByGroup(group);
+      if (status) sessions = sessions.filter((s) => s.status === status);
+    } else if (status === 'active') {
+      sessions = sessionRepo.findActive();
+    } else {
+      sessions = sessionRepo.findAll();
+      if (status) sessions = sessions.filter((s) => s.status === status);
     }
 
-    query += ' ORDER BY s.start_time DESC LIMIT ?';
-    params.push(limit);
+    sessions = sessions.slice(0, limit);
 
-    const rows = db.prepare(query).all(...params);
-
-    return NextResponse.json({ sessions: rows });
+    return NextResponse.json({ sessions });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ ok: false, error: message }, { status: 500 });

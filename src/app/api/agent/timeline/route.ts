@@ -1,17 +1,7 @@
-import { type NextRequest } from 'next/server';
-import { agentResponse, agentError } from '../_lib/response';
-import { parseAnalysisJson } from '@/shared/lib/parse-json';
-
-interface AnalysisRow {
-  id: string;
-  session_id: string;
-  analysis_type: string;
-  triggered_at: string;
-  completed_at: string | null;
-  status: string;
-  result: string | null;
-  error: string | null;
-}
+import type { NextRequest } from 'next/server';
+import type { AnalysisResult } from '@/server/domain/analysis/analysis.entity';
+import { SqliteAnalysisRepository } from '@/server/infrastructure/db/analysis.sqlite-repo';
+import { agentError, agentResponse } from '../_lib/response';
 
 interface TimelinePlan {
   name: string;
@@ -25,8 +15,8 @@ interface TimelinePlan {
   }>;
 }
 
-function parseResult(row: AnalysisRow): { plans?: TimelinePlan[] } | null {
-  return parseAnalysisJson<{ plans?: TimelinePlan[] }>(row.result);
+function parseResult(row: AnalysisResult): { plans?: TimelinePlan[] } | null {
+  return (row.result as { plans?: TimelinePlan[] }) ?? null;
 }
 
 export async function GET(request: NextRequest) {
@@ -43,14 +33,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
-
-    const row = db
-      .prepare(
-        "SELECT * FROM analyses WHERE session_id = ? AND analysis_type = 'timeline' AND status = 'completed' ORDER BY triggered_at DESC LIMIT 1",
-      )
-      .get(sessionId) as AnalysisRow | undefined; // .get() returns unknown
+    const analysisRepo = new SqliteAnalysisRepository();
+    const rows = analysisRepo.findPaginated({ sessionId, analysisType: 'timeline', limit: 5 });
+    const row = rows.find((r) => r.status === 'completed');
 
     if (!row) {
       return agentResponse([], {

@@ -1,17 +1,6 @@
-import { type NextRequest } from 'next/server';
-import { agentResponse, agentError } from '../_lib/response';
-
-interface EventRow {
-  id: string;
-  session_id: string;
-  timestamp: string;
-  event_type: string;
-  tool_name: string | null;
-  success: number | null;
-  duration_ms: number | null;
-  prompt_id: string | null;
-  payload: string;
-}
+import type { NextRequest } from 'next/server';
+import { SqliteEventRepository } from '@/server/infrastructure/db/event.sqlite-repo';
+import { agentError, agentResponse } from '../_lib/response';
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,56 +19,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { getDatabase } = await import('@/server/infrastructure/db/sqlite');
-    const db = getDatabase();
+    const eventRepo = new SqliteEventRepository();
 
-    let countQuery = 'SELECT COUNT(*) as count FROM events WHERE session_id = ?';
-    let query = 'SELECT * FROM events WHERE session_id = ?';
-    const params: (string | number)[] = [sessionId];
-    const countParams: (string | number)[] = [sessionId];
-
-    if (type) {
-      query += ' AND event_type = ?';
-      countQuery += ' AND event_type = ?';
-      params.push(type);
-      countParams.push(type);
-    }
-    if (toolName) {
-      query += ' AND tool_name = ?';
-      countQuery += ' AND tool_name = ?';
-      params.push(toolName);
-      countParams.push(toolName);
-    }
-
-    // SQLite COUNT(*) always returns { count: number } for this query shape
-    const totalRow = db.prepare(countQuery).get(...countParams) as { count: number };
-
-    query += ' ORDER BY timestamp ASC LIMIT ?';
-    params.push(limit);
-
-    // Rows match the EventRow interface defined above for the events table
-    const rows = db.prepare(query).all(...params) as EventRow[];
-
-    const events = rows.map((row) => {
-      let payload: Record<string, unknown> | null = null;
-      if (row.payload) {
-        try { payload = JSON.parse(row.payload); } catch { /* keep null */ }
-      }
-      return {
-        id: row.id,
-        sessionId: row.session_id,
-        timestamp: row.timestamp,
-        eventType: row.event_type,
-        toolName: row.tool_name,
-        success: row.success === null ? null : row.success === 1,
-        durationMs: row.duration_ms,
-        promptId: row.prompt_id,
-        payload,
-      };
+    const events = eventRepo.findPaginated({
+      sessionId,
+      eventType: type,
+      toolName,
+      limit,
+      offset: 0,
     });
 
     return agentResponse(events, {
-      total: totalRow.count,
+      total: eventRepo.countBySessionId(sessionId),
       returned: events.length,
       schema: '/api/agent/schemas/HookEvent',
       related: {
