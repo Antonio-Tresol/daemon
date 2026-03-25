@@ -2,7 +2,14 @@
   <img src="public/screenshots/latent-divergence-banner.png" alt="daemon — algorithmic flow field in void, bone, and ember" width="100%">
 </p>
 
-<h1 align="center"><em>daemon</em></h1>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/daemon-banner-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="public/daemon-banner-light.svg">
+    <img alt="daemon" width="500">
+  </picture>
+</p>
+
 <h3 align="center"><em>watches the watchers</em></h3>
 
 <p align="center">
