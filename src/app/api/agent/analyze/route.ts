@@ -72,11 +72,7 @@ export async function POST(request: NextRequest) {
 
     const validLevel = typeof level === 'number' ? level : 0;
 
-    // Run analysis via Claude Agent SDK
-    const analysisPromise = useCase.execute(sessionId, type as AnalysisType, validLevel);
-
-    // Wait briefly for the record to be created so we can return its ID
-    const analysis = await analysisPromise;
+    const analysis = await useCase.execute(sessionId, type as AnalysisType, validLevel);
 
     return NextResponse.json(
       {
@@ -85,7 +81,7 @@ export async function POST(request: NextRequest) {
           sessionId,
           analysisType: type,
           status: analysis.status,
-          level: typeof level === 'number' ? level : 0,
+          level: validLevel,
           triggeredAt: analysis.triggeredAt,
           completedAt: analysis.completedAt,
           error: analysis.error,

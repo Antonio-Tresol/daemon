@@ -23,8 +23,8 @@ export function useImprovements(sessionId?: string): UseImprovementsReturn {
 
     fetchImprovements(sessionId)
       .then((results) => {
-        const latest = results.length > 0 ? results[0] : null;
-        setAnalysis(latest ?? null);
+        const latest = results.find((r) => r.status === 'completed') ?? null;
+        setAnalysis(latest);
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Unknown error');
