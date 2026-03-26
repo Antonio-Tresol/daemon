@@ -1,0 +1,13 @@
+{
+  "name": "daemon",
+  "version": "0.1.0",
+  "description": "Instrument Claude Code sessions — stream events to daemon, analyze failures, get improvement suggestions, explore matryoshka timeline levels",
+  "author": {
+    "name": "Antonio Tresol"
+  },
+  "repository": "https://github.com/Antonio-Tresol/daemon",
+  "license": "MIT",
+  "keywords": ["observability", "harness", "analysis", "monitoring"],
+  "hooks": "./hooks/hooks.json",
+  "skills": "./skills"
+}
