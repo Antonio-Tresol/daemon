@@ -5,8 +5,19 @@ import type { AnalysisResult } from '../domain/analysis/analysis.entity';
  * Extracts plans, failures, and improvements arrays if present.
  */
 export function parseAnalysisResult(jsonString: string): NonNullable<AnalysisResult['result']> {
+  // Strip markdown code fences if present (e.g. ```json\n...\n```)
+  let cleaned = jsonString.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
+
+  // If it still doesn't look like JSON, try extracting JSON object from mixed text
+  if (!cleaned.trimStart().startsWith('{')) {
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleaned = jsonMatch[0];
+    }
+  }
+
   // JSON.parse returns unknown — we narrow each field individually below
-  const parsed = JSON.parse(jsonString) as Record<string, unknown>;
+  const parsed = JSON.parse(cleaned) as Record<string, unknown>;
 
   const result: NonNullable<AnalysisResult['result']> = {};
 

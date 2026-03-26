@@ -8,10 +8,3 @@ export {
   isValidAnalysisType,
 } from '@/server/domain/analysis/analysis.entity';
 
-import type { AnalysisType } from '@/server/domain/analysis/analysis.entity';
-
-export const PROMPT_FILES: Record<AnalysisType, string> = {
-  timeline: 'analyze-session.md',
-  failures: 'detect-failures.md',
-  improvements: 'suggest-improvements.md',
-} satisfies Record<AnalysisType, string>;

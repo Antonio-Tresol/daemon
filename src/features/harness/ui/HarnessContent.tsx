@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FailureTimeline } from '@/features/failures/ui/FailureTimeline';
 import { ImprovementsList } from '@/features/improvements/ui/ImprovementsList';
+import { AnalyzeButton } from '@/features/session/ui/AnalyzeButton';
 import { EditableText } from '@/shared/ui/EditableText';
 import { GroupFilter } from '@/shared/ui/GroupFilter';
 import { StatusIndicator } from '@/shared/ui/StatusIndicator';
@@ -32,6 +33,7 @@ export function HarnessContent({ className }: HarnessContentProps) {
   const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(undefined);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<HarnessTab>('failures');
+  const [analysisGeneration, setAnalysisGeneration] = useState(0);
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
 
   const loadSessions = useCallback(() => {
@@ -144,6 +146,13 @@ export function HarnessContent({ className }: HarnessContentProps) {
             />
           </div>
         )}
+
+        {selectedSessionId && (
+          <AnalyzeButton
+            sessionId={selectedSessionId}
+            onComplete={() => setAnalysisGeneration((g) => g + 1)}
+          />
+        )}
       </div>
 
       {/* Tab bar */}
@@ -167,8 +176,12 @@ export function HarnessContent({ className }: HarnessContentProps) {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'failures' && <FailureTimeline sessionId={selectedSessionId} />}
-      {activeTab === 'improvements' && <ImprovementsList sessionId={selectedSessionId} />}
+      {activeTab === 'failures' && (
+        <FailureTimeline key={`fl-${analysisGeneration}`} sessionId={selectedSessionId} />
+      )}
+      {activeTab === 'improvements' && (
+        <ImprovementsList key={`im-${analysisGeneration}`} sessionId={selectedSessionId} />
+      )}
     </div>
   );
 }

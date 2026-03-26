@@ -36,7 +36,7 @@ export function TimelineView({ sessionId, level: externalLevel, className }: Tim
     if (!sessionId || isBuildingLevel) return;
     setIsBuildingLevel(true);
     try {
-      await fetch('/api/analysis', {
+      await fetch('/api/agent/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, type: 'timeline', level: targetLevel }),

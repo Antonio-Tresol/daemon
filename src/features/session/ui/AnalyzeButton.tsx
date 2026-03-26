@@ -27,20 +27,22 @@ export function AnalyzeButton({ sessionId, className, onComplete }: AnalyzeButto
 
     const results = await Promise.allSettled(
       ANALYSIS_TYPES.map(async (type) => {
-        const res = await fetch('/api/analysis', {
+        const res = await fetch('/api/agent/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId, type, level: 0 }),
         });
 
-        const data = (await res.json()) as { ok?: boolean }; // fetch .json() returns unknown
+        const data = (await res.json()) as { data?: { id: string; status: string } };
+
+        const ok = res.ok && !!data.data?.id;
 
         setProgress((prev) => ({
           ...prev,
-          [type]: data.ok ? 'completed' : 'failed',
+          [type]: ok ? 'completed' : 'failed',
         }));
 
-        if (!res.ok || !data.ok) {
+        if (!ok) {
           throw new Error(`${type} analysis failed`);
         }
 
@@ -67,8 +69,8 @@ export function AnalyzeButton({ sessionId, className, onComplete }: AnalyzeButto
           status === 'idle' && 'border border-ember/40 text-ember hover:bg-ember/10',
           status === 'running' && 'border border-ember/60 bg-ember/10 text-ember cursor-wait',
           status === 'completed' &&
-            'border border-green-500/40 text-green-400 hover:bg-green-500/10',
-          status === 'failed' && 'border border-red-500/40 text-red-400 hover:bg-red-500/10',
+            'border border-border-bright text-text-secondary hover:bg-depth-2',
+          status === 'failed' && 'border border-ember/40 text-ember hover:bg-ember/10',
         )}
       >
         {status === 'idle' && (

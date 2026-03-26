@@ -26,8 +26,21 @@ Strict layer dependencies (lower layers cannot import higher):
 - Server components by default, `'use client'` only when needed
 - Use agent teams for parallel work when tasks are independent
 
-### PATH
-On this Windows machine, always prefix commands with:
-```
-export PATH="/c/Program Files/nodejs:$HOME/AppData/Roaming/npm:$PATH"
-```
+### API Routes
+Frontend components must use the correct API paths:
+- Event ingestion: `POST /api/events`
+- Sessions list: `GET /api/sessions`
+- Session detail: `GET /api/sessions/[id]`
+- Session update: `PATCH /api/sessions/[id]`
+- Analysis trigger: `POST /api/agent/analyze`
+- Analysis poll: `GET /api/agent/analysis/[id]`
+- Analysis submit: `POST /api/agent/analysis/[id]/submit`
+- Analysis fetch: `GET /api/analysis?type=X&sessionId=Y`
+- Agent sessions: `GET /api/agent/sessions`
+- Agent timeline: `GET /api/agent/timeline?sessionId=X`
+- Agent failures: `GET /api/agent/failures?sessionId=X`
+- Agent improvements: `GET /api/agent/improvements?sessionId=X`
+- Groups: `GET /api/groups`
+- Schemas: `GET /api/agent/schemas/[type]`
+- Docs: `GET /api/agent/docs`
+- GraphQL: `POST /api/agent/graphql`

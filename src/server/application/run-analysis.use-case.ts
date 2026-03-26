@@ -11,7 +11,7 @@ export class RunAnalysisUseCase {
     private readonly claudeRunner: ClaudeRunnerPort,
   ) {}
 
-  async execute(sessionId: string, analysisType: AnalysisType): Promise<AnalysisResult> {
+  async execute(sessionId: string, analysisType: AnalysisType, level = 0): Promise<AnalysisResult> {
     const analysisId = uuidv4();
     const now = new Date().toISOString();
 
@@ -19,7 +19,7 @@ export class RunAnalysisUseCase {
       id: analysisId,
       sessionId,
       analysisType,
-      level: 0,
+      level,
       triggeredAt: now,
       completedAt: null,
       status: 'pending',

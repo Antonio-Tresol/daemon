@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { RawSession, Session } from '@/entities/session/model';
 import { normalizeSession } from '@/entities/session/model';
+import { AnalyzeButton } from '@/features/session/ui/AnalyzeButton';
 import { TimelineView } from '@/features/timeline/ui/TimelineView';
 import { useWebSocket } from '@/shared/hooks/use-websocket';
 import { EditableText } from '@/shared/ui/EditableText';
@@ -13,6 +14,7 @@ export function TimelineContent() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>();
   const [groupFilter, setGroupFilter] = useState<string | null>(null);
+  const [analysisGeneration, setAnalysisGeneration] = useState(0);
   const { subscribe } = useWebSocket();
 
   useEffect(() => {
@@ -107,6 +109,13 @@ export function TimelineContent() {
           </div>
         )}
 
+        {selectedSessionId && (
+          <AnalyzeButton
+            sessionId={selectedSessionId}
+            onComplete={() => setAnalysisGeneration((g) => g + 1)}
+          />
+        )}
+
         {selectedSession && (
           <span className="text-xs font-mono text-text-muted ml-auto">
             {selectedSession.totalEvents} events captured
@@ -114,7 +123,7 @@ export function TimelineContent() {
         )}
       </div>
 
-      <TimelineView sessionId={selectedSessionId} />
+      <TimelineView key={`tl-${analysisGeneration}`} sessionId={selectedSessionId} />
     </div>
   );
 }

@@ -4,8 +4,11 @@ import {
   type AnalysisType,
   isValidAnalysisType,
 } from '@/server/domain/analysis/analysis.entity';
+import { RunAnalysisUseCase } from '@/server/application/run-analysis.use-case';
 import { SqliteAnalysisRepository } from '@/server/infrastructure/db/analysis.sqlite-repo';
+import { SqliteEventRepository } from '@/server/infrastructure/db/event.sqlite-repo';
 import { SqliteSessionRepository } from '@/server/infrastructure/db/session.sqlite-repo';
+import { AgentSdkClaudeRunner } from '@/server/infrastructure/agent-sdk-claude-runner';
 import { agentError } from '../_lib/response';
 
 export async function POST(request: NextRequest) {
@@ -63,45 +66,42 @@ export async function POST(request: NextRequest) {
     }
 
     const analysisRepo = new SqliteAnalysisRepository();
-    const analysisId = crypto.randomUUID();
-    const triggeredAt = new Date().toISOString();
+    const eventRepo = new SqliteEventRepository();
+    const claudeRunner = new AgentSdkClaudeRunner();
+    const useCase = new RunAnalysisUseCase(analysisRepo, eventRepo, claudeRunner);
 
-    analysisRepo.save({
-      id: analysisId,
-      sessionId,
-      analysisType: type as AnalysisType, // validated by isValidAnalysisType() guard above
-      level: typeof level === 'number' ? level : 0,
-      triggeredAt,
-      completedAt: null,
-      status: 'pending',
-      result: null,
-      error: null,
-    });
+    const validLevel = typeof level === 'number' ? level : 0;
+
+    // Run analysis via Claude Agent SDK
+    const analysisPromise = useCase.execute(sessionId, type as AnalysisType, validLevel);
+
+    // Wait briefly for the record to be created so we can return its ID
+    const analysis = await analysisPromise;
 
     return NextResponse.json(
       {
         data: {
-          id: analysisId,
+          id: analysis.id,
           sessionId,
           analysisType: type,
-          status: 'pending',
+          status: analysis.status,
           level: typeof level === 'number' ? level : 0,
-          triggeredAt,
-          completedAt: null,
-          error: null,
+          triggeredAt: analysis.triggeredAt,
+          completedAt: analysis.completedAt,
+          error: analysis.error,
         },
         _meta: {
           total: 1,
           returned: 1,
           schema: '/api/agent/schemas/AnalysisResult',
           related: {
-            poll: `/api/agent/analysis/${analysisId}`,
+            poll: `/api/agent/analysis/${analysis.id}`,
             session: `/api/agent/sessions?status=completed`,
           },
-          suggestions: [`Poll for results: GET /api/agent/analysis/${analysisId}`],
+          suggestions: [`View result: GET /api/agent/analysis/${analysis.id}`],
         },
       },
-      { status: 202 },
+      { status: analysis.status === 'completed' ? 200 : 202 },
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

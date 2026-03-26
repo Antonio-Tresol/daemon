@@ -13,13 +13,13 @@ Your job is to query the Command Center API, understand what's working and what'
 Find the most recent or active session:
 
 ```bash
-curl -s localhost:3000/api/agent/sessions?status=active | jq '.[0]'
+curl -s localhost:3000/api/agent/sessions?status=active | jq '.data[0]'
 ```
 
 If no active sessions, get the most recent:
 
 ```bash
-curl -s localhost:3000/api/agent/sessions?limit=1 | jq '.[0]'
+curl -s localhost:3000/api/agent/sessions?limit=1 | jq '.data[0]'
 ```
 
 Save the `id` field — you'll need it for all subsequent queries.

@@ -5,7 +5,7 @@ import { getOutputFormat } from './analysis-schemas';
 import { loadPrompt } from './load-prompt';
 
 const SEND_MESSAGE_TIMEOUT_MS = 60_000;
-const ANALYSIS_TIMEOUT_MS = 120_000;
+const ANALYSIS_TIMEOUT_MS = 300_000;
 
 /**
  * Collects the final result from a Query async generator.
