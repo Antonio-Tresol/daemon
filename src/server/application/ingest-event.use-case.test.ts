@@ -97,7 +97,7 @@ describe('IngestEventUseCase', () => {
 
     expect(sessionRepo.save).not.toHaveBeenCalled();
     expect(sessionRepo.update).toHaveBeenCalledOnce();
-    expect(existingSession.totalEvents).toBe(10);
+    expect(existingSession.totalEvents).toBe(11);
     expect(existingSession.totalCostUsd).toBeCloseTo(0.05);
   });
 

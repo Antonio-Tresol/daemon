@@ -35,8 +35,8 @@ export class IngestEventUseCase {
       payload: input.payload,
     });
 
-    this.eventRepo.save(event);
     this.ensureSession(event, input.cwd ?? null);
+    this.eventRepo.save(event);
 
     return event;
   }
@@ -50,8 +50,8 @@ export class IngestEventUseCase {
       return;
     }
 
-    const newTotalEvents = this.eventRepo.countBySessionId(event.sessionId);
-    session.ingestEvent(event, newTotalEvents);
+    const currentCount = this.eventRepo.countBySessionId(event.sessionId);
+    session.ingestEvent(event, currentCount + 1);
 
     if (cwd) {
       session.setCwd(cwd);
