@@ -64,9 +64,9 @@ export default function SetupPage() {
       <div className="max-w-2xl space-y-8">
         <div className="border border-ember/20 bg-ember/5 rounded-lg p-4">
           <p className="text-xs text-text-primary/80 leading-relaxed">
-            daemon monitors Claude Code sessions by installing lightweight HTTP hooks that post
-            events to this server. Your existing hooks and settings are preserved — the install
-            merges safely. Uninstall removes only daemon hooks.
+            daemon monitors Claude Code sessions via a plugin that installs lightweight HTTP hooks.
+            Events stream to this server automatically. Your existing hooks and settings are
+            preserved. To stop monitoring, just stop loading the plugin.
           </p>
         </div>
 
@@ -75,40 +75,46 @@ export default function SetupPage() {
           <CodeBlock title="Terminal">{`cd /path/to/daemon\nnpm run dev`}</CodeBlock>
         </Step>
 
-        <Step number={2} title="Install hooks">
+        <Step number={2} title="Install the plugin">
           <p>
-            Run the onboard script from the daemon directory. This merges HTTP hooks into your
-            global Claude Code settings without touching your existing hooks.
+            Load the daemon plugin to auto-install hooks and skills. No manual configuration
+            needed — hooks activate immediately.
           </p>
-          <CodeBlock title="Terminal">{`bash scripts/onboard.sh`}</CodeBlock>
+          <CodeBlock title="Terminal">{`claude --plugin-dir /path/to/daemon/plugin`}</CodeBlock>
           <p className="text-[10px] text-text-muted">
-            This runs setup-hooks.sh + setup-otel.sh and verifies the server is reachable. A backup
-            of your settings is created automatically.
+            This registers 7 HTTP hooks and 3 skills (/daemon:harness, /daemon:analyze,
+            /daemon:session). Your existing hooks and settings are preserved.
+          </p>
+          <p className="text-[10px] text-text-muted mt-1">
+            Alternative: run <code className="bg-depth-1 rounded-sm px-1 py-0.5 text-ember">bash scripts/onboard.sh</code> to
+            install hooks globally without the plugin.
           </p>
         </Step>
 
-        <Step number={3} title="Restart Claude Code">
+        <Step number={3} title="Start a session">
           <p>
-            Hooks are loaded at session start. Open a new Claude Code session in any terminal and
-            your events will start flowing into daemon automatically.
+            Open a Claude Code session with the plugin loaded. Events flow to daemon automatically.
           </p>
-          <CodeBlock title="Any terminal, any directory">{`claude`}</CodeBlock>
+          <CodeBlock title="Any terminal, any directory">{`claude --plugin-dir /path/to/daemon/plugin`}</CodeBlock>
+          <p className="text-[10px] text-text-muted">
+            Use /daemon:analyze to trigger session analysis, /daemon:harness to review improvements.
+          </p>
         </Step>
 
         <Step number={4} title="Verify">
-          <p>Run the verification script to confirm everything is connected:</p>
-          <CodeBlock title="Terminal">{`bash scripts/verify-setup.sh`}</CodeBlock>
+          <p>Check that events are arriving:</p>
+          <CodeBlock title="Terminal">{`curl -s localhost:3000/api/agent/sessions | jq '.data'`}</CodeBlock>
           <p>
-            You should see all three checks pass: hooks installed, OTel configured, server
-            reachable.
+            You should see your session with events. Open the daemon UI at localhost:3000 to
+            visualize your session timeline.
           </p>
         </Step>
 
         <div className="border-t border-border pt-8 space-y-4">
           <h3 className="text-sm font-medium text-text-primary">Uninstall</h3>
           <p className="text-xs text-text-primary/70 leading-relaxed">
-            To remove daemon monitoring, run the uninstall script. This surgically removes only the
-            daemon hooks — your other hooks and settings are untouched.
+            Simply stop using the --plugin-dir flag. If you installed hooks globally via the
+            onboard script, run the uninstall script to remove them:
           </p>
           <CodeBlock title="Terminal">{`bash scripts/uninstall-hooks.sh`}</CodeBlock>
         </div>
@@ -137,7 +143,7 @@ export default function SetupPage() {
           <p className="text-xs text-text-primary/70 leading-relaxed">
             Claude Code sessions can query their own monitoring data programmatically. Use the
             <code className="mx-1 bg-depth-1 rounded-sm px-1.5 py-0.5 text-ember font-mono text-[10px]">
-              /harness
+              /daemon:harness
             </code>
             skill to read failures and improvement suggestions, or curl the API directly:
           </p>
