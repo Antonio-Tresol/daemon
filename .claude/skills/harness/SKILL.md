@@ -1,12 +1,12 @@
 ---
-description: "Query the Command Center for harness engineering improvements, failures, and timeline — then apply them to improve the codebase for agents"
+description: "Query daemon for harness engineering improvements, failures, and timeline — then apply them to improve the codebase for agents"
 ---
 
 # Harness Engineering
 
-You are performing a harness engineering review. The Claude Command Center is running at `localhost:3000` and has been monitoring Claude Code sessions — capturing events, analyzing failures, and generating improvement suggestions.
+You are performing a harness engineering review. The Claude daemon is running at `localhost:3000` and has been monitoring Claude Code sessions — capturing events, analyzing failures, and generating improvement suggestions.
 
-Your job is to query the Command Center API, understand what's working and what's not, and make concrete improvements to the codebase's agent harness.
+Your job is to query the daemon API, understand what's working and what's not, and make concrete improvements to the codebase's agent harness.
 
 ## Step 1: Discover Sessions
 
@@ -66,7 +66,7 @@ For each suggestion that has a `config` field, show the ready-to-use configurati
 For each suggestion, offer to implement it:
 
 - **Hook suggestions**: Add to `.claude/settings.json` under the appropriate hook event
-- **Skill suggestions**: Create a new `.claude/skills/<name>.md` file
+- **Skill suggestions**: Create a new `.claude/skills/<name>/SKILL.md` file
 - **Context suggestions**: Update `CLAUDE.md` or create docs in `docs/`
 - **Architecture suggestions**: Add lints, structural tests, or hook enforcement
 - **Subagent suggestions**: Update `CLAUDE.md` with team strategy guidance
@@ -102,7 +102,7 @@ curl -s -X POST localhost:3000/api/agent/graphql \
 
 ## Important
 
-- The Command Center must be running at `localhost:3000` for this skill to work
+- The daemon must be running at `localhost:3000` for this skill to work
 - If the API returns errors, check if the server is running: `curl -s localhost:3000/api/agent | jq`
 - Prioritize high-severity improvements with trivial/small effort first — maximum impact, minimum cost
 - Always preserve existing hooks when adding new ones — merge, don't replace

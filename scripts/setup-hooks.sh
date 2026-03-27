@@ -40,7 +40,7 @@ try {
   // File doesn't exist or is invalid
 }
 
-// Define Command Center hooks using native HTTP type
+// Define daemon hooks using native HTTP type
 const ccHook = { type: 'http', url: eventsUrl };
 const ccEntry = (matcher) => ({ matcher: matcher || '', hooks: [ccHook] });
 
